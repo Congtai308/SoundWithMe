@@ -1,0 +1,39 @@
+/**
+ * Stable, frontend-facing error codes (Master Prompt §60 / §32).
+ * The API must never leak raw driver errors (e.g. Mongo E11000) to clients —
+ * map them to one of these at the service/exception-filter boundary instead.
+ */
+export const ERROR_CODES = {
+  // Auth
+  UNAUTHENTICATED: "UNAUTHENTICATED",
+  INVALID_CREDENTIALS: "INVALID_CREDENTIALS",
+  SESSION_EXPIRED: "SESSION_EXPIRED",
+
+  // Authorization
+  FORBIDDEN: "FORBIDDEN",
+  NOT_ROOM_MEMBER: "NOT_ROOM_MEMBER",
+  NOT_ROOM_HOST: "NOT_ROOM_HOST",
+  BLOCKED_USER: "BLOCKED_USER",
+
+  // Users
+  USER_NOT_FOUND: "USER_NOT_FOUND",
+  USER_ALREADY_EXISTS: "USER_ALREADY_EXISTS",
+  USERNAME_TAKEN: "USERNAME_TAKEN",
+
+  // Rooms
+  ROOM_NOT_FOUND: "ROOM_NOT_FOUND",
+  ROOM_FULL: "ROOM_FULL",
+  ROOM_CLOSED: "ROOM_CLOSED",
+
+  // Playback / Queue
+  TRACK_NOT_FOUND: "TRACK_NOT_FOUND",
+  QUEUE_ITEM_NOT_FOUND: "QUEUE_ITEM_NOT_FOUND",
+  STALE_PLAYBACK_VERSION: "STALE_PLAYBACK_VERSION",
+
+  // Generic
+  VALIDATION_ERROR: "VALIDATION_ERROR",
+  RATE_LIMITED: "RATE_LIMITED",
+  INTERNAL_ERROR: "INTERNAL_ERROR",
+} as const;
+
+export type ErrorCode = (typeof ERROR_CODES)[keyof typeof ERROR_CODES];

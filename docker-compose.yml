@@ -1,0 +1,23 @@
+# Local dev dependencies only. apps/web and apps/api run via `pnpm dev`
+# on the host for fast iteration; production containerization of the apps
+# themselves uses infrastructure/docker/*.Dockerfile separately.
+services:
+  mongodb:
+    image: mongo:5
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+volumes:
+  mongodb_data:
+  redis_data:
