@@ -56,3 +56,6 @@ See `SOUNDWITHME_ARCHITECTURE_FLOW.md` (project docs) and
 Per Master Prompt §42, the next step after this bootstrap is **Phase 1:
 Authentication** — see `docs/architecture/DECISIONS.md` "Open Decisions"
 for what needs to be confirmed first (auth provider, music provider).
+
+# SoundWithMe
+
