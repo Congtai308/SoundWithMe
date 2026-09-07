@@ -1,13 +1,13 @@
 import "reflect-metadata";
 import { NestFactory } from "@nestjs/core";
-import { ValidationPipe } from "@nestjs/common";
+import cookieParser from "cookie-parser";
 import { AppModule } from "./app.module";
 import { RedisIoAdapter } from "./realtime/adapters/redis-io.adapter";
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     // Never leak internal errors to clients in production (Master Prompt §60).
-    logger: ["error", "warn", "log"],
+    logger: ["error", "warn", "log", "debug", "verbose"],
   });
 
   app.setGlobalPrefix("api/v1");
@@ -18,13 +18,14 @@ async function bootstrap() {
   await redisIoAdapter.connectToRedis();
   app.useWebSocketAdapter(redisIoAdapter);
 
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true, // strip unknown properties from client payloads
-      forbidNonWhitelisted: true,
-      transform: true,
-    }),
-  );
+  app.use(cookieParser());
+
+  // NOTE: no global class-validator ValidationPipe here. This project uses
+  // Zod (per Master Prompt §46) via a per-route ZodValidationPipe instead —
+  // see common/pipes/zod-validation.pipe.ts. A global `whitelist: true`
+  // class-validator pipe would silently strip every field from a
+  // Zod-typed (decorator-less) DTO down to `{}`, which is a real bug this
+  // setup deliberately avoids rather than papering over.
 
   app.enableCors({
     origin: process.env.WEB_APP_URL ?? "http://localhost:3000",

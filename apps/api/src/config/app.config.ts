@@ -10,7 +10,19 @@ export const appConfig = registerAs("app", () => ({
   webAppUrl: process.env.WEB_APP_URL ?? "http://localhost:3000",
   mongodbUri: requireEnv("MONGODB_URI"),
   redisUrl: requireEnv("REDIS_URL"),
-  jwtSecret: process.env.JWT_SECRET, // required once auth module is implemented
+  jwtAccessSecret: requireEnv("JWT_ACCESS_SECRET"),
+  jwtRefreshSecret: requireEnv("JWT_REFRESH_SECRET"),
+  jwtAccessExpiresIn: process.env.JWT_ACCESS_EXPIRES_IN ?? "15m",
+  jwtRefreshExpiresInDays: Number(process.env.JWT_REFRESH_EXPIRES_IN_DAYS ?? 30),
+  google: {
+    // Required (not optional) even in dev: Google login is one of the
+    // three explicitly-requested auth methods, not an optional extra.
+    clientId: requireEnv("GOOGLE_CLIENT_ID"),
+    clientSecret: requireEnv("GOOGLE_CLIENT_SECRET"),
+    callbackUrl:
+      process.env.GOOGLE_CALLBACK_URL ??
+      "http://localhost:4000/api/v1/auth/google/callback",
+  },
   r2: {
     endpoint: process.env.R2_ENDPOINT,
     accessKey: process.env.R2_ACCESS_KEY,

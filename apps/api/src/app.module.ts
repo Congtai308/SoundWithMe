@@ -7,6 +7,8 @@ import { MongodbModule } from "./database/mongodb/mongodb.module";
 import { RedisModule } from "./database/redis/redis.module";
 import { HealthModule } from "./common/health/health.module";
 import { AllExceptionsFilter } from "./common/filters/all-exceptions.filter";
+import { UsersModule } from "./modules/users/users.module";
+import { AuthModule } from "./modules/auth/auth.module";
 
 @Module({
   imports: [
@@ -25,7 +27,9 @@ import { AllExceptionsFilter } from "./common/filters/all-exceptions.filter";
     MongodbModule,
     RedisModule,
     HealthModule,
-    // Feature modules (auth, users, rooms, playback, ...) are added here as
+    UsersModule,
+    AuthModule,
+    // Further feature modules (rooms, playback, ...) are added here as
     // they are implemented — intentionally not scaffolded as empty
     // placeholders per the "no placeholder implementation" rule.
   ],

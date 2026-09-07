@@ -56,11 +56,50 @@ being a deploy config change rather than a code change later.
 
 ---
 
+## ADR-004: In-house auth with three methods (password, Google OAuth, guest); stateful refresh-token rotation
+
+**Context**: Product requires three login paths at Phase 1: email/password,
+Google sign-in, and a frictionless guest mode (display name only, no
+credential). Guest mode in particular does not map cleanly onto most
+managed-auth providers' primary use case (persistent verified identities),
+which was the deciding factor between Clerk and in-house.
+
+**Decision**: Build auth in-house behind a stable internal boundary
+(`modules/auth` + `modules/users`), rather than adopting Clerk. Access
+tokens are short-lived JWTs (stateless, not persisted); refresh tokens are
+long-lived and tracked server-side by **hash** (never the raw token) in the
+`refreshTokens` collection, with rotation on every use — using a token
+invalidates it and issues a new one. Reuse of an already-rotated refresh
+token (a strong signal of theft) revokes the entire token chain for that
+session.
+
+**Alternatives**:
+
+- Clerk or another managed provider — faster to ship, but guest mode would
+  need to be bolted on awkwardly outside Clerk's own user model, defeating
+  much of the point of using a managed provider for identity.
+- Pure stateless JWT refresh tokens with no server-side record — simpler,
+  but forecloses "log out everywhere" / individual session revocation,
+  which was an explicitly open question and is now resolved by this ADR:
+  **yes, sessions are individually revocable**, because the tracked-hash
+  approach costs little and materially improves the security posture for a
+  social product where account takeover directly threatens other users
+  (spam, impersonation in rooms).
+
+**Trade-offs**: One extra collection and a lookup on every token refresh
+(not on every request — access-token verification stays stateless). Slightly
+more implementation complexity than pure stateless JWT.
+
+**Consequences**: Guest accounts are scoped to `authMethods: ["guest"]` and
+are not link-able to a real identity by design — this keeps them low-stakes
+and disposable rather than a permanent account users forget is unsecured.
+`MusicProvider` and queue-concurrency decisions remain open per below.
+
+---
+
 ## OPEN DECISIONS (not yet made — tracked here per Master Prompt §79)
 
-1. **Auth provider**: Clerk vs. in-house. Bootstrap includes an
-   `AuthProvider`-shaped seam (not yet implemented) so either choice slots
-   in without touching business logic elsewhere.
+1. ~~**Auth provider**~~ — **Resolved, see ADR-004.**
 2. **Music/metadata provider**: `MusicProvider` interface exists in
    `@soundwithme/types`; no concrete implementation is wired yet. Blocks
    real Discover/Search/Player work.
@@ -72,4 +111,4 @@ being a deploy config change rather than a code change later.
    or an embedded-player requirement applies instead.
 
 Each should be resolved (or explicitly deferred with a reason) before the
-corresponding module (`auth`, `music`, `queue`, audio delivery) is built.
+corresponding module (`music`, `queue`, audio delivery) is built.
