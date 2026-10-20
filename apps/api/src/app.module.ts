@@ -19,6 +19,7 @@ import { ChatModule } from "./modules/chat/chat.module";
 import { QueueModule } from "./modules/queue/queue.module";
 import { AppEventsModule } from "./common/events/app-events.service";
 import { MailModule } from "./modules/mail/mail.service";
+import { MessagesModule } from "./modules/messages/messages.module";
 import { NotificationsModule } from "./modules/notifications/notifications.module";
 import { PresenceModule } from "./modules/presence/presence.module";
 import { FriendsModule } from "./modules/friends/friends.module";
@@ -47,6 +48,7 @@ import path from "path";
     RedisModule,
     AppEventsModule,
     MailModule,
+    MessagesModule,
     HealthModule,
     UsersModule,
     AuthModule,

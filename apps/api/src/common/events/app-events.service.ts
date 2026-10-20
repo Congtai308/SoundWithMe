@@ -1,6 +1,6 @@
 import { Global, Injectable, Logger, Module } from "@nestjs/common";
 import { EventEmitter } from "events";
-import type { AppNotification, Room, RoomCloseReason } from "@soundwithme/types";
+import type { AppNotification, DirectMessage, Room, RoomCloseReason } from "@soundwithme/types";
 
 /**
  * Domain events services raise and the realtime gateways turn into socket
@@ -21,6 +21,10 @@ export interface AppEventMap {
   "user.notification": { userId: string; notification: AppNotification };
   /** One user's friends list or presence view changed: they should refetch. */
   "user.friendsChanged": { userIds: string[] };
+  /** A direct message was sent: both people's open tabs get it. */
+  "user.directMessage": { message: DirectMessage };
+  /** `readerId` read everything `otherId` sent them in a conversation. */
+  "user.messagesRead": { conversationId: string; readerId: string; otherId: string; readAt: string };
   /** A member left on their own (REST): their sockets leave the room too. */
   "room.left": { roomId: string; userId: string };
   /** Logins were revoked: one session (`sessionId`) or all of the user's (null). Their sockets disconnect. */

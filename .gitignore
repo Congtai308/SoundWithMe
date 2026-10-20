@@ -38,3 +38,6 @@ coverage/
 
 # Stray data files that must never be committed
 *.ini
+
+# Playwright MCP screenshots and logs
+.playwright-mcp/

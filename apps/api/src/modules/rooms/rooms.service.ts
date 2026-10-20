@@ -179,20 +179,7 @@ export class RoomsService {
    * rooms: only the host can invite (the link carries the invite code).
    */
   async inviteFriend(roomId: string, inviter: Actor, friendId: string): Promise<void> {
-    const room = await this.getRoomForActiveMember(roomId, inviter.id);
-    if (!(await this.friendships.areFriends(inviter.id, friendId))) {
-      throw new ForbiddenException({
-        success: false,
-        error: { code: ERROR_CODES.NOT_FRIENDS, message: "You can only invite your friends" },
-      });
-    }
-    if (room.type === "private" && room.hostId !== inviter.id) {
-      throw new ForbiddenException({
-        success: false,
-        error: { code: ERROR_CODES.NOT_ROOM_HOST, message: "Only the host can invite people to a private room" },
-      });
-    }
-    const link = room.type === "private" && room.inviteCode ? `/room/${room.id}?invite=${room.inviteCode}` : `/room/${room.id}`;
+    const { room, link } = await this.inviteLinkFor(roomId, inviter.id, friendId);
     await this.notifications.notify(friendId, {
       type: "room_invite",
       title: `${inviter.displayName} invited you`,
@@ -200,6 +187,29 @@ export class RoomsService {
       link,
       actorId: inviter.id,
     });
+  }
+
+  /**
+   * The link that lets a friend into a room you're in (bell invites and
+   * rooms shared in messages). Private rooms: only the host can invite,
+   * and the link carries the invite code.
+   */
+  async inviteLinkFor(roomId: string, inviterId: string, friendId: string): Promise<{ room: Room; link: string }> {
+    const room = await this.getRoomForActiveMember(roomId, inviterId);
+    if (!(await this.friendships.areFriends(inviterId, friendId))) {
+      throw new ForbiddenException({
+        success: false,
+        error: { code: ERROR_CODES.NOT_FRIENDS, message: "You can only invite your friends" },
+      });
+    }
+    if (room.type === "private" && room.hostId !== inviterId) {
+      throw new ForbiddenException({
+        success: false,
+        error: { code: ERROR_CODES.NOT_ROOM_HOST, message: "Only the host can invite people to a private room" },
+      });
+    }
+    const link = room.type === "private" && room.inviteCode ? `/room/${room.id}?invite=${room.inviteCode}` : `/room/${room.id}`;
+    return { room, link };
   }
 
   /** Persisted only when the track changes — never on play/pause/seek ticks. */

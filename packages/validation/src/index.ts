@@ -6,3 +6,4 @@ export * from "./users";
 export * from "./music";
 export * from "./karaoke";
 export * from "./social";
+export * from "./messages";

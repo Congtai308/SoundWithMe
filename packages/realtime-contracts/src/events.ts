@@ -1,5 +1,6 @@
 import type {
   AppNotification,
+  DirectMessage,
   PlaybackState,
   QueueItem,
   ChatMessage,
@@ -267,6 +268,8 @@ export interface ServerToClientEvents {
   [SOCKET_EVENTS.SKIP_STATE]: (payload: SkipVoteState) => void;
   [SOCKET_EVENTS.NOTIFICATION]: (payload: AppNotification) => void;
   [SOCKET_EVENTS.FRIENDS_CHANGED]: (payload: Record<string, never>) => void;
+  [SOCKET_EVENTS.DM_MESSAGE]: (payload: DirectMessage) => void;
+  [SOCKET_EVENTS.DM_READ]: (payload: { conversationId: string; readerId: string; readAt: string }) => void;
   [SOCKET_EVENTS.RTC_SIGNAL]: (payload: RtcSignalEvent) => void;
   [SOCKET_EVENTS.VOICE_RELAY_DEMAND]: (payload: VoiceRelayDemandPayload) => void;
   [SOCKET_EVENTS.VOICE_CHUNK]: (payload: VoiceChunkEvent) => void;

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCurrentUser } from "@/features/auth/hooks/use-auth";
 import { useRoomsList } from "@/features/rooms/hooks/use-rooms";
+import { useConversations } from "@/features/messages/hooks/use-messages";
 import { Icon } from "@/components/ui/Icon";
 import { BrandLogo } from "@/components/ui/BrandLogo";
 import { NAV_ITEMS, isActivePath } from "./nav-items";
@@ -22,6 +23,8 @@ export function Sidebar() {
   const { data: user } = useCurrentUser();
   const { data: rooms } = useRoomsList({ enabled: Boolean(user) });
   const hasLiveRooms = (rooms?.length ?? 0) > 0;
+  const { data: inbox } = useConversations({ enabled: Boolean(user) });
+  const unreadMessages = inbox?.unread ?? 0;
   const collapsed = useSidebarStore((s) => s.collapsed);
   const hydrate = useSidebarStore((s) => s.hydrate);
   const toggle = useSidebarStore((s) => s.toggle);
@@ -92,12 +95,24 @@ export function Sidebar() {
                     : "text-on-surface-variant hover:bg-surface-container hover:text-on-surface"
                 }`}
               >
-                <span className="flex items-center gap-sm">
+                <span className="relative flex items-center gap-sm">
                   <Icon name={item.icon} className="text-[20px]" filled={active} />
+                  {item.href === "/messages" && unreadMessages > 0 && (
+                    // The icon rail has no room for the count: a dot instead.
+                    <span aria-hidden="true" className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-primary md:hidden" />
+                  )}
                   <span className={`hidden md:inline ${active ? "text-headline-sm" : "text-body-md"}`}>
                     {item.label}
                   </span>
                 </span>
+                {item.href === "/messages" && unreadMessages > 0 && (
+                  <span
+                    aria-label={`${unreadMessages} unread`}
+                    className="font-technical hidden rounded-full bg-primary-container px-xs py-0.5 text-label-mono-sm text-on-primary-container md:inline"
+                  >
+                    {unreadMessages > 99 ? "99+" : unreadMessages}
+                  </span>
+                )}
                 {item.href === "/rooms" && hasLiveRooms && (
                   <span className="font-technical hidden rounded-full bg-tertiary-container px-xs py-0.5 text-label-mono-sm uppercase text-on-tertiary-container motion-safe:animate-pulse md:inline">
                     Live

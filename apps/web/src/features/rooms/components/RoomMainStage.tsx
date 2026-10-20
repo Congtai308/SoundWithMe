@@ -7,6 +7,7 @@ import { VideoSlot } from "@/features/player/components/VideoSlot";
 import { usePlayerStore } from "@/features/player/stores/player-store";
 import { LyricsPanel } from "@/features/lyrics/components/LyricsPanel";
 import { LikeButton } from "@/features/library/components/LikeButton";
+import { ShareTrackButton } from "@/features/messages/components/ShareTrackButton";
 import { AddToPlaylistButton } from "@/features/library/components/AddToPlaylistButton";
 import { useRoomLiveStore } from "../stores/room-live-store";
 import { ReactionLayer } from "./ReactionLayer";
@@ -168,6 +169,7 @@ export function RoomMainStage({
           <div className="flex shrink-0 items-center gap-1">
             <LikeButton trackId={track.id} />
             <AddToPlaylistButton trackId={track.id} />
+            <ShareTrackButton trackId={track.id} trackTitle={track.title} />
             <SkipVoteButton currentUserId={currentUserId} hasQueue={hasQueue} onVote={onSkipVote} />
           </div>
         )}

@@ -3,11 +3,12 @@
 import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { SOCKET_EVENTS } from "@soundwithme/constants";
-import type { AppNotification } from "@soundwithme/types";
+import type { AppNotification, DirectMessage } from "@soundwithme/types";
 import { getSocket } from "@/services/socket-client";
 import { useCurrentUser } from "@/features/auth/hooks/use-auth";
 import { showToast } from "@/components/ui/Toaster";
 import { FRIENDS_KEY } from "@/features/friends/hooks/use-friends";
+import { CONVERSATIONS_KEY, applyLiveMessage, applyLiveRead } from "@/features/messages/hooks/use-messages";
 import { addLiveNotification } from "../hooks/use-notifications";
 import { NOTIFICATION_ICON } from "./NotificationBell";
 
@@ -42,15 +43,36 @@ export function UserRealtime() {
       }
     };
     const onFriendsChanged = () => void queryClient.invalidateQueries({ queryKey: FRIENDS_KEY });
+    const onDirectMessage = (message: DirectMessage) => {
+      applyLiveMessage(queryClient, message, userId);
+      // The open conversation shows it already; elsewhere, a toast.
+      const openThread = new URLSearchParams(window.location.search).get("with");
+      if (message.senderId === userId || (window.location.pathname === "/messages" && openThread === message.senderId)) return;
+      showToast({
+        icon: "chat_bubble",
+        title: "New message",
+        body: message.kind === "track" ? `Shared “${message.track?.title ?? "a song"}”` : message.kind === "room" ? `Invited you to “${message.room?.name ?? "a room"}”` : message.content.slice(0, 120),
+        href: `/messages?with=${message.senderId}`,
+      });
+    };
+    const onDirectRead = (payload: { conversationId: string; readerId: string; readAt: string }) =>
+      applyLiveRead(queryClient, payload, userId);
     // After a reconnect, catch up on anything pushed while we were away.
-    const onConnect = () => void queryClient.invalidateQueries({ queryKey: ["notifications"] });
+    const onConnect = () => {
+      void queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      void queryClient.invalidateQueries({ queryKey: CONVERSATIONS_KEY });
+    };
 
     socket.on(SOCKET_EVENTS.NOTIFICATION, onNotification);
     socket.on(SOCKET_EVENTS.FRIENDS_CHANGED, onFriendsChanged);
+    socket.on(SOCKET_EVENTS.DM_MESSAGE, onDirectMessage);
+    socket.on(SOCKET_EVENTS.DM_READ, onDirectRead);
     socket.on("connect", onConnect);
     return () => {
       socket.off(SOCKET_EVENTS.NOTIFICATION, onNotification);
       socket.off(SOCKET_EVENTS.FRIENDS_CHANGED, onFriendsChanged);
+      socket.off(SOCKET_EVENTS.DM_MESSAGE, onDirectMessage);
+      socket.off(SOCKET_EVENTS.DM_READ, onDirectRead);
       socket.off("connect", onConnect);
     };
   }, [userId, queryClient]);

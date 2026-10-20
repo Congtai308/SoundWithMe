@@ -11,7 +11,7 @@ export const NAV_ITEMS: NavItem[] = [
   { href: "/discover", label: "Music", icon: "music_note" },
   { href: "/rooms", label: "Live Rooms", icon: "sensors" },
   { href: "/friends", label: "Friends & Presence", icon: "group" },
-  { href: "/messages", label: "Messages", icon: "chat_bubble", soon: true },
+  { href: "/messages", label: "Messages", icon: "chat_bubble" },
   { href: "/library", label: "Library", icon: "library_music" },
 ];
 

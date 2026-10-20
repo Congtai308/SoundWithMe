@@ -5,3 +5,4 @@ export * from "./room";
 export * from "./room-activity";
 export * from "./social";
 export * from "./api";
+export * from "./messages";

@@ -96,6 +96,14 @@ export class RoomGateway implements OnModuleInit, OnModuleDestroy {
       this.server.to(userRoom(userId)).emit(SOCKET_EVENTS.NOTIFICATION, notification);
     });
 
+    this.events.on("user.directMessage", ({ message }) => {
+      this.server.to([userRoom(message.senderId), userRoom(message.recipientId)]).emit(SOCKET_EVENTS.DM_MESSAGE, message);
+    });
+
+    this.events.on("user.messagesRead", ({ conversationId, readerId, otherId, readAt }) => {
+      this.server.to([userRoom(readerId), userRoom(otherId)]).emit(SOCKET_EVENTS.DM_READ, { conversationId, readerId, readAt });
+    });
+
     this.events.on("user.friendsChanged", ({ userIds }) => {
       if (userIds.length > 0) this.server.to(userIds.map(userRoom)).emit(SOCKET_EVENTS.FRIENDS_CHANGED, {});
     });

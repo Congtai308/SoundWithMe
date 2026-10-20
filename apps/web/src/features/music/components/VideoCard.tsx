@@ -3,6 +3,7 @@ import { Icon } from "@/components/ui/Icon";
 import type { TrackActionMode } from "@/features/rooms/hooks/use-track-actions";
 import { formatClock } from "@/features/rooms/components/TrackArt";
 import { LikeButton } from "@/features/library/components/LikeButton";
+import { ShareTrackButton } from "@/features/messages/components/ShareTrackButton";
 import { AddToPlaylistButton } from "@/features/library/components/AddToPlaylistButton";
 
 const PRIMARY_LABEL: Record<TrackActionMode, string> = {
@@ -81,6 +82,7 @@ export function VideoCard({ track, mode, onPick, onPlayNow }: VideoCardProps) {
         </div>
         <LikeButton trackId={track.id} size="sm" />
         <AddToPlaylistButton trackId={track.id} />
+        <ShareTrackButton trackId={track.id} trackTitle={track.title} />
       </div>
     </article>
   );

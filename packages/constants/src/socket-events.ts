@@ -54,6 +54,8 @@ export const SOCKET_EVENTS = {
   SKIP_STATE: "SKIP_STATE", // skip votes for the current song
   NOTIFICATION: "NOTIFICATION", // to one user: something new for the bell
   FRIENDS_CHANGED: "FRIENDS_CHANGED", // to one user: refresh the friends list / presence
+  DM_MESSAGE: "DM_MESSAGE", // to both people: a new direct message
+  DM_READ: "DM_READ", // to both people: one side read the conversation
   ERROR: "ERROR",
 } as const;
 
