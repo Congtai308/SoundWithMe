@@ -63,3 +63,22 @@ export function useLogout() {
     onSuccess: () => invalidate(),
   });
 }
+
+export function useResendVerification() {
+  return useMutation({ mutationFn: authApi.resendVerification });
+}
+
+export function useVerifyEmail() {
+  const invalidate = useInvalidateCurrentUser();
+  return useMutation({ mutationFn: authApi.verifyEmail, onSuccess: () => invalidate() });
+}
+
+export function useForgotPassword() {
+  return useMutation({ mutationFn: authApi.forgotPassword });
+}
+
+/** Every session ends on a reset, this one included. */
+export function useResetPassword() {
+  const invalidate = useInvalidateCurrentUser();
+  return useMutation({ mutationFn: authApi.resetPassword, onSuccess: () => invalidate() });
+}

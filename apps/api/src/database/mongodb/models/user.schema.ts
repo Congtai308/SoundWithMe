@@ -30,6 +30,11 @@ export class UserDocument extends Document {
   @Prop({ unique: true, sparse: true, index: true })
   googleId?: string;
 
+  // When the owner proved the address is theirs (a mailed link, or Google
+  // saying it's verified). Null for unverified and guest accounts.
+  @Prop({ type: Date, default: null })
+  emailVerifiedAt?: Date | null;
+
   @Prop({ type: String, default: null })
   avatarUrl?: string | null;
 

@@ -23,3 +23,23 @@ export function clientIp(req: IpRequest): string {
     .filter(Boolean);
   return entries.at(-1) ?? (socketIp || "unknown");
 }
+
+/**
+ * The address as rate limits should count it. One IPv6 subscriber usually
+ * holds a whole /64 and can rotate through it at will, so IPv6 addresses
+ * count per /64; IPv4 (and IPv4-mapped) addresses count individually.
+ */
+export function rateLimitAddress(ip: string): string {
+  const address = ip.toLowerCase().replace(/^::ffff:(?=\d+\.)/, "");
+  if (!address.includes(":")) return address;
+  const [head = "", tail = ""] = address.split("::", 2);
+  const headParts = head ? head.split(":") : [];
+  const tailParts = address.includes("::") ? (tail ? tail.split(":") : []) : [];
+  const groups = address.includes("::")
+    ? [...headParts, ...Array<string>(Math.max(8 - headParts.length - tailParts.length, 0)).fill("0"), ...tailParts]
+    : headParts;
+  return `${groups
+    .slice(0, 4)
+    .map((g) => (g || "0").replace(/^0+(?=.)/, ""))
+    .join(":")}::/64`;
+}

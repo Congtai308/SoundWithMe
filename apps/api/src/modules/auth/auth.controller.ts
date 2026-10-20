@@ -15,12 +15,18 @@ import { ConfigService } from "@nestjs/config";
 import { Throttle } from "@nestjs/throttler";
 import type { Request, Response } from "express";
 import {
+  forgotPasswordSchema,
   guestLoginSchema,
   loginSchema,
   registerSchema,
+  resetPasswordSchema,
+  verifyEmailSchema,
+  type ForgotPasswordInput,
   type GuestLoginInput,
   type LoginInput,
   type RegisterInput,
+  type ResetPasswordInput,
+  type VerifyEmailInput,
 } from "@soundwithme/validation";
 import { ERROR_CODES } from "@soundwithme/constants";
 import type { AuthenticatedUser } from "@soundwithme/types";
@@ -161,6 +167,50 @@ export class AuthController {
     await this.authService.logoutEverywhere(user.id);
     clearAuthCookies(res);
     return { success: true, data: { status: "ok" } };
+  }
+
+  /** Mails a new verification link to the signed-in user (at most a few an hour). */
+  @UseGuards(JwtAuthGuard, UserThrottlerGuard)
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
+  @HttpCode(HttpStatus.OK)
+  @Post("verify-email/send")
+  async resendVerification(@CurrentUser() user: AuthenticatedUser) {
+    await this.authService.resendVerification(user.id);
+    return { success: true, data: { status: "sent" } };
+  }
+
+  /** Opened from the mailed link; works signed in or not. */
+  @UseGuards(UserThrottlerGuard)
+  @Throttle({ default: { limit: 20, ttl: 60_000 } })
+  @HttpCode(HttpStatus.OK)
+  @Post("verify-email")
+  async verifyEmail(@Body(new ZodValidationPipe(verifyEmailSchema)) body: VerifyEmailInput) {
+    await this.authService.verifyEmail(body.token);
+    return { success: true, data: { status: "verified" } };
+  }
+
+  /** Always the same answer, so it can't be used to find out which emails have accounts. */
+  @UseGuards(UserThrottlerGuard)
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
+  @HttpCode(HttpStatus.OK)
+  @Post("password/forgot")
+  async forgotPassword(@Body(new ZodValidationPipe(forgotPasswordSchema)) body: ForgotPasswordInput) {
+    await this.authService.forgotPassword(body.email);
+    return { success: true, data: { status: "sent-if-exists" } };
+  }
+
+  @UseGuards(UserThrottlerGuard)
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
+  @HttpCode(HttpStatus.OK)
+  @Post("password/reset")
+  async resetPassword(
+    @Body(new ZodValidationPipe(resetPasswordSchema)) body: ResetPasswordInput,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    await this.authService.resetPassword(body);
+    // Every session ended, this browser's included: sign in again with the new password.
+    clearAuthCookies(res);
+    return { success: true, data: { status: "reset" } };
   }
 
   @UseGuards(JwtAuthGuard)

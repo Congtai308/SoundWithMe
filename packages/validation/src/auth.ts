@@ -24,6 +24,23 @@ export const guestLoginSchema = z.object({
 });
 export type GuestLoginInput = z.infer<typeof guestLoginSchema>;
 
+/** The token from a mailed link (verify email, reset password). */
+const mailedTokenSchema = z.string().trim().min(20).max(200);
+
+export const verifyEmailSchema = z.object({ token: mailedTokenSchema });
+export type VerifyEmailInput = z.infer<typeof verifyEmailSchema>;
+
+export const forgotPasswordSchema = z.object({
+  email: z.string().trim().toLowerCase().email(),
+});
+export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>;
+
+export const resetPasswordSchema = z.object({
+  token: mailedTokenSchema,
+  password: registerSchema.shape.password,
+});
+export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;
+
 export const refreshTokenSchema = z.object({
   refreshToken: z.string().min(1),
 });

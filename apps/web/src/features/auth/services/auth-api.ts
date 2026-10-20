@@ -1,5 +1,5 @@
 import type { AuthenticatedUser } from "@soundwithme/types";
-import type { GuestLoginInput, LoginInput, RegisterInput } from "@soundwithme/validation";
+import type { GuestLoginInput, LoginInput, RegisterInput, ResetPasswordInput } from "@soundwithme/validation";
 import { apiClient, API_BASE_URL } from "@/services/api-client";
 
 // Google login is a full-page redirect flow (GET -> Google consent ->
@@ -20,4 +20,12 @@ export const authApi = {
   me: () => apiClient.get<{ user: AuthenticatedUser }>("/auth/me"),
 
   logout: () => apiClient.post<{ status: string }>("/auth/logout"),
+
+  resendVerification: () => apiClient.post<{ status: string }>("/auth/verify-email/send"),
+
+  verifyEmail: (token: string) => apiClient.post<{ status: string }>("/auth/verify-email", { token }),
+
+  forgotPassword: (email: string) => apiClient.post<{ status: string }>("/auth/password/forgot", { email }),
+
+  resetPassword: (input: ResetPasswordInput) => apiClient.post<{ status: string }>("/auth/password/reset", input),
 };

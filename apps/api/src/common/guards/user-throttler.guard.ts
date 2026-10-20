@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { ThrottlerGuard } from "@nestjs/throttler";
-import { clientIp } from "../utils/client-ip";
+import { clientIp, rateLimitAddress } from "../utils/client-ip";
 
 interface TrackedRequest {
   user?: { id?: unknown } | null;
@@ -10,7 +10,7 @@ interface TrackedRequest {
 export function throttleTracker(req: Record<string, unknown>): string {
   const user = (req as TrackedRequest).user;
   if (typeof user?.id === "string") return `user:${user.id}`;
-  return `ip:${clientIp(req)}`;
+  return `ip:${rateLimitAddress(clientIp(req))}`;
 }
 
 /**

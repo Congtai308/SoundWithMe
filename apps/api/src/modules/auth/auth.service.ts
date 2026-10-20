@@ -1,12 +1,16 @@
-import { ConflictException, HttpException, HttpStatus, Injectable, UnauthorizedException } from "@nestjs/common";
+import { ConflictException, HttpException, HttpStatus, Injectable, Logger, UnauthorizedException } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
+import { createHash, randomBytes } from "crypto";
 import * as bcrypt from "bcrypt";
 import type { AuthTokens, AuthenticatedUser } from "@soundwithme/types";
-import type { GuestLoginInput, LoginInput, RegisterInput } from "@soundwithme/validation";
+import type { GuestLoginInput, LoginInput, RegisterInput, ResetPasswordInput } from "@soundwithme/validation";
 import { ERROR_CODES } from "@soundwithme/constants";
 import { UsersService, type CreateUserInput } from "../users/users.service";
 import type { UserDocument } from "../../database/mongodb/models/user.schema";
 import { TokensService } from "./tokens.service";
 import { RedisService } from "../../database/redis/redis.service";
+import { MailService } from "../mail/mail.service";
+import { rateLimitAddress } from "../../common/utils/client-ip";
 
 const PASSWORD_HASH_ROUNDS = 12;
 /**
@@ -30,6 +34,15 @@ const LOGIN_WINDOW_SECONDS = 15 * 60;
  */
 const DUMMY_PASSWORD_HASH = bcrypt.hash("not-a-real-password", PASSWORD_HASH_ROUNDS);
 
+/** Mailed one-time links: how long each works and which web page opens it. */
+const EMAIL_LINKS = {
+  verify: { ttlSeconds: 24 * 60 * 60, path: "/verify-email" },
+  reset: { ttlSeconds: 60 * 60, path: "/reset-password" },
+} as const;
+type EmailLinkKind = keyof typeof EMAIL_LINKS;
+/** Account mails one address receives per hour at most, whoever asks for them. */
+const MAILS_PER_ADDRESS_PER_HOUR = 3;
+
 interface GoogleProfile {
   googleId: string;
   email: string;
@@ -39,10 +52,14 @@ interface GoogleProfile {
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+
   constructor(
     private readonly usersService: UsersService,
     private readonly tokensService: TokensService,
     private readonly redisService: RedisService,
+    private readonly mailService: MailService,
+    private readonly configService: ConfigService,
   ) {}
 
   async register(
@@ -75,6 +92,8 @@ export class AuthService {
 
     const user = this.usersService.toAuthenticatedUser(userDoc);
     const tokens = await this.tokensService.issueTokenPair(user);
+    // Signing up must not fail because mail is down: the user can resend later.
+    void this.sendVerificationEmail(userDoc).catch((error: unknown) => this.logMailFailure(error));
     return { user, tokens };
   }
 
@@ -82,7 +101,7 @@ export class AuthService {
     input: LoginInput,
     clientAddress: string,
   ): Promise<{ user: AuthenticatedUser; tokens: AuthTokens }> {
-    const addressKey = `auth:login-attempts:${input.email}:${clientAddress}`;
+    const addressKey = `auth:login-attempts:${input.email}:${rateLimitAddress(clientAddress)}`;
     const accountKey = `auth:login-failures:${input.email}`;
     const redis = this.redisService.getClient();
     // The attempt is counted before the password is checked, so guesses sent
@@ -165,15 +184,23 @@ export class AuthService {
         // loses it and every session. Never moves an account between Google
         // accounts.
         if (existingByEmail.googleId) throw this.linkedToAnotherGoogleAccount();
-        const claimed = await this.usersService.claimForGoogle(existingByEmail.id, profile.googleId);
-        if (!claimed) throw this.linkedToAnotherGoogleAccount();
-        await this.tokensService.revokeAllForUser(claimed.id);
-        userDoc = claimed;
+        if (existingByEmail.emailVerifiedAt) {
+          // The owner already proved the address (mailed link): just add Google.
+          const linked = await this.usersService.linkGoogle(existingByEmail.id, profile.googleId);
+          if (!linked) throw this.linkedToAnotherGoogleAccount();
+          userDoc = linked;
+        } else {
+          const claimed = await this.usersService.claimForGoogle(existingByEmail.id, profile.googleId);
+          if (!claimed) throw this.linkedToAnotherGoogleAccount();
+          await this.tokensService.revokeAllForUser(claimed.id);
+          userDoc = claimed;
+        }
       } else {
         userDoc = await this.createWithUsername(usernamesFromEmail(profile.email), {
           displayName: profile.displayName,
           email: profile.email,
           googleId: profile.googleId,
+          emailVerifiedAt: new Date(),
           avatarUrl: profile.avatarUrl,
           authMethods: ["google"],
           isGuest: false,
@@ -186,6 +213,48 @@ export class AuthService {
     return { user, tokens };
   }
 
+  /** Mails a fresh verification link ("resend" for a signed-in user). */
+  async resendVerification(userId: string): Promise<void> {
+    const userDoc = await this.usersService.findById(userId);
+    if (!userDoc?.email || userDoc.emailVerifiedAt) return;
+    await this.sendVerificationEmail(userDoc);
+  }
+
+  async verifyEmail(token: string): Promise<void> {
+    const claim = await this.takeEmailLink("verify", token);
+    if (!claim) throw this.invalidLink();
+    if (await this.usersService.markEmailVerified(claim.userId, claim.email)) return;
+    // Already verified (an earlier link) is fine; a changed address is not.
+    const userDoc = await this.usersService.findById(claim.userId);
+    if (!userDoc?.emailVerifiedAt || userDoc.email !== claim.email) throw this.invalidLink();
+  }
+
+  /**
+   * Mails a reset link when the address has an account. The answer is the
+   * same either way, so the form doesn't reveal which emails exist.
+   */
+  async forgotPassword(email: string): Promise<void> {
+    const userDoc = await this.usersService.findByEmail(email);
+    if (!userDoc?.email || !(await this.withinMailBudget(userDoc.email))) return;
+    const url = await this.createEmailLink("reset", userDoc.id, userDoc.email);
+    await this.mailService.send({
+      to: userDoc.email,
+      subject: "Reset your SoundWithMe password",
+      text: `Hi ${userDoc.displayName},\n\nSomeone (hopefully you) asked to reset the password for this account. The link works once, for one hour.\n\nIf it wasn't you, ignore this email: your password stays as it is.`,
+      action: { label: "Choose a new password", url },
+    });
+  }
+
+  /** Sets the new password and signs out every session, whoever had the old password included. */
+  async resetPassword(input: ResetPasswordInput): Promise<void> {
+    const claim = await this.takeEmailLink("reset", input.token);
+    const userDoc = claim ? await this.usersService.findById(claim.userId) : null;
+    if (!claim || !userDoc || userDoc.email !== claim.email) throw this.invalidLink();
+    await this.usersService.resetPassword(userDoc.id, await bcrypt.hash(input.password, PASSWORD_HASH_ROUNDS));
+    await this.tokensService.revokeAllForUser(userDoc.id);
+    await this.redisService.getClient().del(`auth:login-failures:${claim.email}`);
+  }
+
   async refresh(refreshToken: string): Promise<AuthTokens> {
     return this.tokensService.rotateRefreshToken(refreshToken);
   }
@@ -196,6 +265,72 @@ export class AuthService {
 
   async logoutEverywhere(userId: string): Promise<void> {
     await this.tokensService.revokeAllForUser(userId);
+  }
+
+  private async sendVerificationEmail(userDoc: UserDocument): Promise<void> {
+    if (!userDoc.email || userDoc.emailVerifiedAt) return;
+    if (!(await this.withinMailBudget(userDoc.email))) {
+      throw new HttpException(
+        {
+          success: false,
+          error: { code: ERROR_CODES.RATE_LIMITED, message: "We just sent you an email. Check your inbox (and spam) first." },
+        },
+        HttpStatus.TOO_MANY_REQUESTS,
+      );
+    }
+    const url = await this.createEmailLink("verify", userDoc.id, userDoc.email);
+    await this.mailService.send({
+      to: userDoc.email,
+      subject: "Confirm your email for SoundWithMe",
+      text: `Hi ${userDoc.displayName},\n\nConfirm this is your email address, so you can get back into your account if you forget your password. The link works for 24 hours.\n\nIf you didn't sign up for SoundWithMe, ignore this email.`,
+      action: { label: "Confirm my email", url },
+    });
+  }
+
+  private async withinMailBudget(email: string): Promise<boolean> {
+    const redis = this.redisService.getClient();
+    const key = `auth:mail-budget:${email}`;
+    const sent = await redis.incr(key);
+    if (sent === 1) await redis.expire(key, 60 * 60);
+    return sent <= MAILS_PER_ADDRESS_PER_HOUR;
+  }
+
+  /**
+   * A one-time link. Only the token's hash is stored, with the user and the
+   * address it was mailed to, so reading Redis can't produce working links.
+   */
+  private async createEmailLink(kind: EmailLinkKind, userId: string, email: string): Promise<string> {
+    const token = randomBytes(32).toString("base64url");
+    const { ttlSeconds, path } = EMAIL_LINKS[kind];
+    await this.redisService
+      .getClient()
+      .set(`auth:email-link:${kind}:${hashToken(token)}`, JSON.stringify({ userId, email }), "EX", ttlSeconds);
+    const webAppUrl = this.configService.get<string>("app.webAppUrl");
+    return `${webAppUrl}${path}?token=${encodeURIComponent(token)}`;
+  }
+
+  /** Redeems a link: GETDEL, so it works once. */
+  private async takeEmailLink(kind: EmailLinkKind, token: string): Promise<{ userId: string; email: string } | null> {
+    const raw = await this.redisService.getClient().getdel(`auth:email-link:${kind}:${hashToken(token)}`);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as { userId?: unknown; email?: unknown };
+    return typeof parsed.userId === "string" && typeof parsed.email === "string"
+      ? { userId: parsed.userId, email: parsed.email }
+      : null;
+  }
+
+  private invalidLink(): HttpException {
+    return new HttpException(
+      {
+        success: false,
+        error: { code: ERROR_CODES.INVALID_LINK, message: "This link has expired or was already used. Ask for a new one." },
+      },
+      HttpStatus.BAD_REQUEST,
+    );
+  }
+
+  private logMailFailure(error: unknown): void {
+    this.logger.warn(`Could not send mail: ${error instanceof Error ? error.message : String(error)}`);
   }
 
   private linkedToAnotherGoogleAccount(): ConflictException {
@@ -257,6 +392,10 @@ function duplicateKeyField(error: unknown): string | null {
   if (typeof error !== "object" || error === null || (error as { code?: unknown }).code !== 11000) return null;
   const keyPattern = (error as { keyPattern?: Record<string, unknown> }).keyPattern ?? {};
   return Object.keys(keyPattern)[0] ?? "unknown";
+}
+
+function hashToken(token: string): string {
+  return createHash("sha256").update(token).digest("hex");
 }
 
 function randomSuffix(): string {

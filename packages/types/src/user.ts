@@ -45,6 +45,8 @@ export interface ListeningProfile {
 
 export type AuthenticatedUser = User & {
   email: string | null; // null for guest accounts
+  /** The owner proved the email is theirs (mailed link or Google). Always false for guests. */
+  emailVerified: boolean;
   /** null until the user finishes (or skips) music onboarding. */
   musicPreferences: MusicPreferences | null;
 };

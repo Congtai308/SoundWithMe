@@ -36,6 +36,17 @@ export const appConfig = registerAs("app", () => ({
     .flatMap((value) => (value ?? "").split(","))
     .map((key) => key.trim())
     .filter(Boolean),
+  // Outgoing mail (email verification, password reset). Gmail: host
+  // smtp.gmail.com, port 465, user = the Gmail address, pass = an App
+  // Password (Google Account → Security → App passwords). Without user/pass
+  // mails are only written to the API log, which is enough for local dev.
+  mail: {
+    host: process.env.SMTP_HOST ?? "smtp.gmail.com",
+    port: Number(process.env.SMTP_PORT ?? 465),
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS,
+    from: process.env.MAIL_FROM ?? process.env.SMTP_USER ?? "SoundWithMe <no-reply@localhost>",
+  },
   sentryDsn: process.env.SENTRY_DSN,
   postHogKey: process.env.POSTHOG_KEY,
 }));

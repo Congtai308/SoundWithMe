@@ -11,6 +11,7 @@ export interface CreateUserInput {
   email?: string;
   passwordHash?: string;
   googleId?: string;
+  emailVerifiedAt?: Date | null;
   avatarUrl?: string | null;
   authMethods: AuthMethod[];
   isGuest: boolean;
@@ -55,8 +56,40 @@ export class UsersService {
     return this.userModel
       .findOneAndUpdate(
         { _id: userId, googleId: null },
-        { $set: { googleId, authMethods: ["google"] }, $unset: { passwordHash: 1 } },
+        { $set: { googleId, authMethods: ["google"], emailVerifiedAt: new Date() }, $unset: { passwordHash: 1 } },
         { new: true },
+      )
+      .exec();
+  }
+
+  /**
+   * Links Google to an account whose email the owner already verified: the
+   * password stays, since whoever set it proved they own the address.
+   */
+  async linkGoogle(userId: string, googleId: string): Promise<UserDocument | null> {
+    return this.userModel
+      .findOneAndUpdate(
+        { _id: userId, googleId: null },
+        { $set: { googleId }, $addToSet: { authMethods: "google" } },
+        { new: true },
+      )
+      .exec();
+  }
+
+  async markEmailVerified(userId: string, email: string): Promise<boolean> {
+    // Only for the address the link was mailed to, in case it changed since.
+    const result = await this.userModel
+      .updateOne({ _id: userId, email, emailVerifiedAt: null }, { $set: { emailVerifiedAt: new Date() } })
+      .exec();
+    return result.modifiedCount > 0;
+  }
+
+  /** A new password from a reset link. Opening that link proves the email too. */
+  async resetPassword(userId: string, passwordHash: string): Promise<void> {
+    await this.userModel
+      .updateOne(
+        { _id: userId },
+        { $set: { passwordHash, emailVerifiedAt: new Date() }, $addToSet: { authMethods: "password" } },
       )
       .exec();
   }
@@ -131,6 +164,7 @@ export class UsersService {
       authMethods: user.authMethods,
       isGuest: user.isGuest,
       email: user.email ?? null,
+      emailVerified: Boolean(user.emailVerifiedAt),
       musicPreferences: user.musicPreferences
         ? {
             genres: user.musicPreferences.genres,

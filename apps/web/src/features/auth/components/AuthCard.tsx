@@ -1,6 +1,7 @@
 "use client";
 
 import { forwardRef, useState, type InputHTMLAttributes, type ReactNode } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -271,6 +272,11 @@ function LoginForm({ onSwitchTab }: { onSwitchTab: (tab: AuthTab) => void }) {
         </Field>
       </div>
       <SubmitButton pending={login.isPending} idle="Sign in & tune in" busy="Signing in…" />
+      <SwitchHint>
+        <Link href="/reset-password" className="font-semibold text-primary hover:underline">
+          Forgot your password?
+        </Link>
+      </SwitchHint>
       <SwitchHint>
         New here? <LinkButton onClick={() => onSwitchTab("register")}>Create an account</LinkButton>{" "}
         or <LinkButton onClick={() => onSwitchTab("guest")}>use a Fast Pass</LinkButton>
