@@ -40,8 +40,16 @@ const EMAIL_LINKS = {
   reset: { ttlSeconds: 60 * 60, path: "/reset-password" },
 } as const;
 type EmailLinkKind = keyof typeof EMAIL_LINKS;
-/** Account mails one address receives per hour at most, whoever asks for them. */
-const MAILS_PER_ADDRESS_PER_HOUR = 3;
+/**
+ * Account mails per hour. Verification and reset mails are counted apart,
+ * so spamming "forgot password" can't block a confirmation link. Reset
+ * mails count per address and requester, with a higher cap per address
+ * from everyone: an attacker can't use up the owner's own requests, and
+ * every link already mailed keeps working regardless.
+ */
+const VERIFY_MAILS_PER_HOUR = 3;
+const RESET_MAILS_PER_REQUESTER_PER_HOUR = 3;
+const RESET_MAILS_PER_ADDRESS_PER_HOUR = 10;
 
 interface GoogleProfile {
   googleId: string;
@@ -230,17 +238,26 @@ export class AuthService {
   }
 
   /**
-   * Mails a reset link when the address has an account. The answer is the
-   * same either way, so the form doesn't reveal which emails exist.
+   * Mails a reset link when the address has an account. Runs after the
+   * response: the answer, and how long it takes, are the same whether or
+   * not the email exists.
    */
-  async forgotPassword(email: string): Promise<void> {
+  forgotPassword(email: string, clientAddress: string): void {
+    void this.sendResetEmail(email, rateLimitAddress(clientAddress)).catch((error: unknown) => this.logMailFailure(error));
+  }
+
+  private async sendResetEmail(email: string, requester: string): Promise<void> {
     const userDoc = await this.usersService.findByEmail(email);
-    if (!userDoc?.email || !(await this.withinMailBudget(userDoc.email))) return;
+    if (!userDoc?.email) return;
+    const withinBudget =
+      (await this.withinMailBudget(`reset:${userDoc.email}:${requester}`, RESET_MAILS_PER_REQUESTER_PER_HOUR)) &&
+      (await this.withinMailBudget(`reset:${userDoc.email}`, RESET_MAILS_PER_ADDRESS_PER_HOUR));
+    if (!withinBudget) return;
     const url = await this.createEmailLink("reset", userDoc.id, userDoc.email);
     await this.mailService.send({
       to: userDoc.email,
       subject: "Reset your SoundWithMe password",
-      text: `Hi ${userDoc.displayName},\n\nSomeone (hopefully you) asked to reset the password for this account. The link works once, for one hour.\n\nIf it wasn't you, ignore this email: your password stays as it is.`,
+      text: "Someone (hopefully you) asked to reset the password of the SoundWithMe account for this email. The link works once, for one hour.\n\nIf it wasn't you, ignore this email: your password stays as it is.",
       action: { label: "Choose a new password", url },
     });
   }
@@ -269,7 +286,7 @@ export class AuthService {
 
   private async sendVerificationEmail(userDoc: UserDocument): Promise<void> {
     if (!userDoc.email || userDoc.emailVerifiedAt) return;
-    if (!(await this.withinMailBudget(userDoc.email))) {
+    if (!(await this.withinMailBudget(`verify:${userDoc.email}`, VERIFY_MAILS_PER_HOUR))) {
       throw new HttpException(
         {
           success: false,
@@ -282,17 +299,19 @@ export class AuthService {
     await this.mailService.send({
       to: userDoc.email,
       subject: "Confirm your email for SoundWithMe",
-      text: `Hi ${userDoc.displayName},\n\nConfirm this is your email address, so you can get back into your account if you forget your password. The link works for 24 hours.\n\nIf you didn't sign up for SoundWithMe, ignore this email.`,
+      // No user-supplied text (like the display name): this address isn't
+      // verified yet, so anyone could make us mail it words of their choosing.
+      text: "Confirm this is your email address, so you can get back into your SoundWithMe account if you forget your password. The link works for 24 hours.\n\nIf you didn't sign up for SoundWithMe, ignore this email.",
       action: { label: "Confirm my email", url },
     });
   }
 
-  private async withinMailBudget(email: string): Promise<boolean> {
+  private async withinMailBudget(bucket: string, perHour: number): Promise<boolean> {
     const redis = this.redisService.getClient();
-    const key = `auth:mail-budget:${email}`;
+    const key = `auth:mail-budget:${bucket}`;
     const sent = await redis.incr(key);
     if (sent === 1) await redis.expire(key, 60 * 60);
-    return sent <= MAILS_PER_ADDRESS_PER_HOUR;
+    return sent <= perHour;
   }
 
   /**

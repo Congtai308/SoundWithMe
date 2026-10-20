@@ -18,10 +18,14 @@ afterAll(() => h.stop());
 const stamp = () => `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
 let visitor = 0;
 
-async function call<T>(path: string, cookie = "", method = "GET", body?: unknown) {
+async function call<T>(path: string, cookie = "", method = "GET", body?: unknown, ip?: string) {
   const res = await fetch(`${h.baseUrl}/api/v1${path}`, {
     method,
-    headers: { "content-type": "application/json", cookie, "x-forwarded-for": `198.18.7.${(visitor++ % 250) + 1}` },
+    headers: {
+      "content-type": "application/json",
+      cookie,
+      "x-forwarded-for": ip ?? `198.18.${Math.floor(visitor / 250)}.${(visitor++ % 250) + 1}`,
+    },
     body: body === undefined ? undefined : JSON.stringify(body),
   });
   const json = (await res.json()) as { data: T; error?: { code: string } };
@@ -98,6 +102,7 @@ describe("Password reset", () => {
   it("sets a new password from the mailed link and signs out every session", async () => {
     const { email, cookies } = await register();
     expect((await call("/auth/password/forgot", "", "POST", { email })).status).toBe(200);
+    await until(() => outbox.some((m) => m.to === email && m.subject.includes("Reset")));
     const token = lastLinkTo(email);
 
     const reset = await call("/auth/password/reset", "", "POST", { token, password: "second-password-2" });
@@ -120,11 +125,27 @@ describe("Password reset", () => {
     const unknown = `nobody${stamp()}@example.com`;
     const res = await call("/auth/password/forgot", "", "POST", { email: unknown });
     expect(res.status).toBe(200);
+    await new Promise((r) => setTimeout(r, 200));
     expect(mailCount(unknown)).toBe(0);
 
-    const { email } = await register(); // sign-up mail: 1 of 3
+    const { email } = await register();
+    await until(() => mailCount(email) === 1); // the sign-up confirmation, counted apart
+    const resets = () => outbox.filter((m) => m.to === email && m.subject.includes("Reset")).length;
+    // One requester: 3 an hour.
+    for (let n = 0; n < 4; n++) await call("/auth/password/forgot", "", "POST", { email }, "203.0.113.50");
+    await new Promise((r) => setTimeout(r, 300));
+    expect(resets()).toBe(3);
+    // Others can still ask, up to 10 for the address.
+    for (let n = 0; n < 10; n++) await call("/auth/password/forgot", "", "POST", { email }, `203.0.113.${60 + n}`);
+    await until(() => resets() === 10);
+    await new Promise((r) => setTimeout(r, 300));
+    expect(resets()).toBe(10);
+  });
+
+  it("never puts the account's display name in mail to an unverified address", async () => {
+    const email = `phish${stamp()}@example.com`;
+    await call("/auth/register", "", "POST", { displayName: "Visit evil.example now", email, password: "first-password-1" });
     await until(() => mailCount(email) === 1);
-    for (let n = 0; n < 4; n++) expect((await call("/auth/password/forgot", "", "POST", { email })).status).toBe(200);
-    expect(mailCount(email)).toBe(3);
+    expect(outbox.find((m) => m.to === email)!.text).not.toContain("evil.example");
   });
 });

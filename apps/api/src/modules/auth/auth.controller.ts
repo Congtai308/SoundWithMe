@@ -194,8 +194,8 @@ export class AuthController {
   @Throttle({ default: { limit: 5, ttl: 60_000 } })
   @HttpCode(HttpStatus.OK)
   @Post("password/forgot")
-  async forgotPassword(@Body(new ZodValidationPipe(forgotPasswordSchema)) body: ForgotPasswordInput) {
-    await this.authService.forgotPassword(body.email);
+  forgotPassword(@Body(new ZodValidationPipe(forgotPasswordSchema)) body: ForgotPasswordInput, @Req() req: Request) {
+    this.authService.forgotPassword(body.email, clientIp(req));
     return { success: true, data: { status: "sent-if-exists" } };
   }
 
