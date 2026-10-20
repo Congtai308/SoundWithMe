@@ -28,3 +28,13 @@ coverage/
 
 # Misc
 *.tsbuildinfo
+.claude/settings.local.json
+
+# Local tools (cloudflared) downloaded by start.ps1
+.tools/
+
+# curl cookie jars from manual API testing (can hold session tokens)
+*cookies.txt
+
+# Stray data files that must never be committed
+*.ini
