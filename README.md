@@ -11,14 +11,14 @@ NestJS API (MongoDB, Redis, Socket.IO).
 
 | Area | What works |
 | --- | --- |
-| Accounts | Email + password, Google sign-in, guest accounts; refresh-token rotation, log out / log out everywhere |
+| Accounts | Email + password, Google sign-in, guest accounts; email verification and password reset by mail; refresh-token rotation, log out / log out everywhere |
 | Rooms | Public, private (invite link and/or passcode) and friends-only rooms; one live room per host; empty rooms close after 30 min |
 | Hosting | Up to 5 DJs, host transfer, mute in chat, kick (a permanent ban from that room) |
 | Playback | Server-authoritative synced YouTube player; queue ordered by votes; skip vote at half the listeners |
 | Karaoke | 1–4 mics per room, a line for the next mic, mics rotate with each song, voice FX, WebRTC with a server relay fallback; synced lyrics (LRCLIB) |
-| Social | Friends and online presence, notification bell, room invites |
+| Social | Friends and online presence, notification bell, room invites, direct messages (text, songs, room invites) |
 | Library | Favorites and playlists |
-| Not yet | Direct messages, email verification / password reset, mobile app (`apps/mobile`) |
+| Not yet | Mobile app (`apps/mobile`) |
 
 ## Prerequisites
 
@@ -36,6 +36,7 @@ cp .env.example apps/web/.env.local
 Fill in `apps/api/.env`. The API won't start without `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET`.
 `YOUTUBE_API_KEY` is optional but needed for search (without it, pasted links still work through oEmbed).
 `CLOUDFLARE_TURN_*` is optional (karaoke falls back to the server relay).
+`SMTP_USER`/`SMTP_PASS` send account mail through Gmail (use an App Password); without them the mails, links included, are printed to the API log.
 
 **Windows, everything at once:**
 
@@ -76,9 +77,10 @@ pnpm test        # API tests need MongoDB + Redis running
 - Passwords: 10 tries per email and address per 15 minutes. Room passcodes:
   10 wrong tries per room per hour.
 - Sockets close when their login session ends (logout, log out everywhere).
-- Sign-up doesn't verify the email yet. So Google sign-in with a verified
-  address takes over an existing password account with that email (its
-  password is removed), and registering reveals whether an email is taken.
+- Google sign-in with a verified address takes over an existing password
+  account whose email was never confirmed (its password is removed); a
+  confirmed account just gains Google. Registering still reveals whether an
+  email is taken.
 
 ## Project structure
 
