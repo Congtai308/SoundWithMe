@@ -1,25 +1,12 @@
 import { z } from "zod";
 
-// Username is the public handle — separate from displayName so it can be
-// used safely in URLs and stays stable even if displayName changes.
-const usernameSchema = z
-  .string()
-  .trim()
-  .min(3)
-  .max(24)
-  .regex(
-    /^[a-zA-Z0-9_]+$/,
-    "Username can only contain letters, numbers, and underscores",
-  );
-
 export const registerSchema = z.object({
-  username: usernameSchema,
   email: z.string().trim().toLowerCase().email(),
   // Length only enforced here; hashing/complexity handled server-side.
   // Not a substitute for a real breached-password check, which is a
   // reasonable later hardening step, not a Phase 1 blocker.
   password: z.string().min(8).max(128),
-  displayName: z.string().trim().min(1).max(50).optional(),
+  displayName: z.string().trim().min(1).max(50),
 });
 export type RegisterInput = z.infer<typeof registerSchema>;
 

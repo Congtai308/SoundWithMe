@@ -1,44 +1,31 @@
-import { Inject, Injectable } from "@nestjs/common";
+import { Inject, Injectable, type OnApplicationShutdown } from "@nestjs/common";
 import type { Redis } from "ioredis";
-import type { PlaybackState } from "@soundwithme/types";
-import { REDIS_CLIENT } from "./redis.constants";
+import { REDIS_CLIENT, REDIS_SUBSCRIBER } from "./redis.constants";
 
-// Room state has no fixed lifetime tied to "session length" up front —
-// TTL is refreshed on every write, so an idle room's state simply expires.
-const ROOM_STATE_TTL_SECONDS = 60 * 30;
-
+// Playback state lives in PlaybackService (modules/playback), which owns its
+// own key and atomic versioning — this service stays a thin client wrapper.
 @Injectable()
-export class RedisService {
-  constructor(@Inject(REDIS_CLIENT) private readonly client: Redis) {}
+export class RedisService implements OnApplicationShutdown {
+  constructor(
+    @Inject(REDIS_CLIENT) private readonly client: Redis,
+    @Inject(REDIS_SUBSCRIBER) private readonly subscriber: Redis,
+  ) {}
 
-  private roomStateKey(roomId: string): string {
-    return `room:${roomId}:state`;
+  /**
+   * Shutdown (not module-destroy) hook: runs after Nest has closed the HTTP
+   * and Socket.IO servers, so the Redis adapter has finished unsubscribing
+   * and publishing before its connections go away.
+   */
+  async onApplicationShutdown(): Promise<void> {
+    await Promise.all(
+      [this.subscriber, this.client]
+        .filter((connection) => connection.status !== "end")
+        .map((connection) => connection.quit()),
+    );
   }
 
   private roomPresenceKey(roomId: string): string {
     return `room:${roomId}:presence`;
-  }
-
-  async getPlaybackState(roomId: string): Promise<PlaybackState | null> {
-    const raw = await this.client.get(this.roomStateKey(roomId));
-    return raw ? (JSON.parse(raw) as PlaybackState) : null;
-  }
-
-  /**
-   * Persists the authoritative playback state. Callers are responsible for
-   * incrementing `version` themselves based on the previous read — this
-   * method does not do read-modify-write locking. See Architecture Review §7
-   * for the race-condition-handling discussion; if concurrent writers to the
-   * same room become a real issue, revisit with a Lua script / WATCH-based
-   * optimistic transaction rather than adding a generic lock speculatively.
-   */
-  async setPlaybackState(roomId: string, state: PlaybackState): Promise<void> {
-    await this.client.set(
-      this.roomStateKey(roomId),
-      JSON.stringify(state),
-      "EX",
-      ROOM_STATE_TTL_SECONDS,
-    );
   }
 
   async addPresence(roomId: string, userId: string): Promise<void> {

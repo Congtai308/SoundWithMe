@@ -1,5 +1,6 @@
 import {
   Body,
+  ConflictException,
   Controller,
   Get,
   HttpCode,
@@ -25,10 +26,16 @@ import { ERROR_CODES } from "@soundwithme/constants";
 import type { AuthenticatedUser } from "@soundwithme/types";
 import { ZodValidationPipe } from "../../common/pipes/zod-validation.pipe";
 import { CurrentUser } from "../../common/decorators/current-user.decorator";
-import { setAuthCookies, clearAuthCookies, REFRESH_TOKEN_COOKIE } from "../../common/utils/auth-cookies";
+import {
+  setAuthCookies,
+  clearAuthCookies,
+  REFRESH_TOKEN_COOKIE,
+} from "../../common/utils/auth-cookies";
 import { AuthService } from "./auth.service";
 import { JwtAuthGuard } from "./guards/jwt-auth.guard";
+import { UserThrottlerGuard } from "../../common/guards/user-throttler.guard";
 import { GoogleAuthGuard } from "./guards/google-auth.guard";
+import { clientIp } from "../../common/utils/client-ip";
 
 @Controller("auth")
 export class AuthController {
@@ -37,9 +44,10 @@ export class AuthController {
     private readonly configService: ConfigService,
   ) {}
 
-  // Stricter than the default global throttle (Master Prompt §56) — these
-  // endpoints are prime targets for credential stuffing / account-creation abuse.
-  @Throttle({ default: { limit: 5, ttl: 60_000 } })
+  // Per real client address (see clientIp). Roomy enough for many people on
+  // one wifi; password guessing is limited per email and address in AuthService.login.
+  @UseGuards(UserThrottlerGuard)
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
   @Post("register")
   async register(
     @Body(new ZodValidationPipe(registerSchema)) body: RegisterInput,
@@ -50,19 +58,22 @@ export class AuthController {
     return { success: true, data: { user } };
   }
 
-  @Throttle({ default: { limit: 10, ttl: 60_000 } })
+  @UseGuards(UserThrottlerGuard)
+  @Throttle({ default: { limit: 30, ttl: 60_000 } })
   @HttpCode(HttpStatus.OK)
   @Post("login")
   async login(
     @Body(new ZodValidationPipe(loginSchema)) body: LoginInput,
+    @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const { user, tokens } = await this.authService.login(body);
+    const { user, tokens } = await this.authService.login(body, clientIp(req));
     this.setCookies(res, tokens);
     return { success: true, data: { user } };
   }
 
-  @Throttle({ default: { limit: 10, ttl: 60_000 } })
+  @UseGuards(UserThrottlerGuard)
+  @Throttle({ default: { limit: 30, ttl: 60_000 } })
   @HttpCode(HttpStatus.OK)
   @Post("guest")
   async loginAsGuest(
@@ -83,23 +94,33 @@ export class AuthController {
   @Get("google/callback")
   @UseGuards(GoogleAuthGuard)
   async googleCallback(@Req() req: Request, @Res() res: Response) {
+    const webAppUrl = this.configService.get<string>("app.webAppUrl");
     // req.user here is the raw profile shape from GoogleStrategy.validate(),
     // NOT yet an AuthenticatedUser — that mapping happens inside the service.
-    const profile = req.user as {
-      googleId: string;
-      email: string;
-      displayName: string;
-      avatarUrl: string | null;
-    };
+    // Empty when sign-in failed (see GoogleAuthGuard).
+    const profile = req.user as
+      | { googleId: string; email: string; displayName: string; avatarUrl: string | null }
+      | undefined
+      | null;
+    if (!profile) {
+      res.redirect(`${webAppUrl}/login?error=google`);
+      return;
+    }
 
-    const { tokens } = await this.authService.loginOrRegisterWithGoogle(profile);
+    let tokens: { accessToken: string; refreshToken: string };
+    try {
+      ({ tokens } = await this.authService.loginOrRegisterWithGoogle(profile));
+    } catch (error: unknown) {
+      if (!(error instanceof ConflictException)) throw error;
+      res.redirect(`${webAppUrl}/login?error=google-linked`);
+      return;
+    }
     this.setCookies(res, tokens);
-
-    const webAppUrl = this.configService.get<string>("app.webAppUrl");
-    res.redirect(`${webAppUrl}/home`);
+    res.redirect(`${webAppUrl}/discover`);
   }
 
-  @Throttle({ default: { limit: 20, ttl: 60_000 } })
+  @UseGuards(UserThrottlerGuard)
+  @Throttle({ default: { limit: 60, ttl: 60_000 } })
   @HttpCode(HttpStatus.OK)
   @Post("refresh")
   async refresh(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
@@ -107,7 +128,10 @@ export class AuthController {
     if (!refreshToken) {
       throw new UnauthorizedException({
         success: false,
-        error: { code: ERROR_CODES.REFRESH_TOKEN_INVALID, message: "No refresh token provided" },
+        error: {
+          code: ERROR_CODES.REFRESH_TOKEN_INVALID,
+          message: "No refresh token provided",
+        },
       });
     }
 
@@ -145,8 +169,13 @@ export class AuthController {
     return { success: true, data: { user } };
   }
 
-  private setCookies(res: Response, tokens: { accessToken: string; refreshToken: string }) {
-    const refreshExpiresInDays = this.configService.get<number>("app.jwtRefreshExpiresInDays")!;
+  private setCookies(
+    res: Response,
+    tokens: { accessToken: string; refreshToken: string },
+  ) {
+    const refreshExpiresInDays = this.configService.get<number>(
+      "app.jwtRefreshExpiresInDays",
+    )!;
     setAuthCookies(res, tokens, refreshExpiresInDays);
   }
 }

@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width,initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #000;
+    }
+  </style>
+</head>
+<body>
+<!-- STITCH_THREEJS_START:ANIMATION_36 class="fixed inset-0 w-full h-full bg-transparent" -->
+<div class="fixed inset-0 w-full h-full bg-transparent" style="display:block;">
+<script src="https://ajax.googleapis.com/ajax/libs/threejs/r125/three.min.js"></script>
+<div id="threejs-container-ANIMATION_36" style="width:100%;height:100%"></div>
+<script>
+(function() {
+  const container = document.getElementById('threejs-container-ANIMATION_36');
+  const devicePixelRatio = window.devicePixelRatio || 1;
+  # SOUNDWITHME — COMPLETE UI & DESIGN SPECIFICATION FOR CLAUDE
+**Version:** 1.0.0 — Production-Ready  
+**Design System:** Obsidian Audio Atmosphere  
+**Visual Style:** Dark, Ethereal, Deep Violet & Electric Cyan Glassmorphism, Hi-Res Audio Focused  
+**Target Clients:** Next.js (Web Desktop/Responsive) & React Native / Expo (Mobile Ready)
+
+---
+
+## 1. DESIGN SYSTEM & DESIGN TOKENS (Obsidian Audio Atmosphere)
+
+### 1.1 Color Palette & Theme Tokens
+```json
+{
+  "theme": "DARK",
+  "background": {
+    "app": "#0b0c10",
+    "surface": "#121318",
+    "surface_dim": "#121318",
+    "surface_bright": "#38393f",
+    "surface_container_lowest": "#0d0e13",
+    "surface_container_low": "#1a1b21",
+    "surface_container_high": "#23242c"
+  },
+  "brand": {
+    "primary": "#8b5cf6",
+    "primary_glow": "rgba(139, 92, 246, 0.4)",
+    "secondary": "#06b6d4",
+    "secondary_glow": "rgba(6, 182, 212, 0.35)",
+    "accent_pink": "#ec4899",
+    "accent_emerald": "#10b981",
+    "accent_amber": "#f59e0b"
+  },
+  "text": {
+    "primary": "#f8fafc",
+    "secondary": "#94a3b8",
+    "muted": "#64748b",
+    "inverse": "#090a0f"
+  },
+  "borders": {
+    "subtle": "rgba(255, 255, 255, 0.08)",
+    "medium": "rgba(255, 255, 255, 0.15)",
+    "active_glow": "rgba(139, 92, 246, 0.5)"
+  },
+  "glass": {
+    "card": "rgba(26, 27, 33, 0.65)",
+    "backdrop_blur": "blur(20px)",
+    "highlight_border": "linear-gradient(135deg, rgba(255,255,255,0.15), rgba(255,255,255,0.02))"
+  },
+  "typography": {
+    "font_family": "Plus Jakarta Sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+    "scale": {
+      "display": "42px / 1.2",
+      "h1": "32px / 1.25",
+      "h2": "24px / 1.3",
+      "h3": "20px / 1.4",
+      "body": "14px / 1.5",
+      "caption": "12px / 1.5"
+    }
+  },
+  "radius": {
+    "sm": "6px",
+    "md": "12px",
+    "lg": "16px",
+    "full": "9999px"
+  }
+}
+```
+
+---
+
+## 2. GLOBAL SHELL ARCHITECTURE & PERSISTENT COMPONENTS
+
+### 2.1 Persistent Top Navigation Header
+- **Logo:** `SoundWithMe` kèm icon tai nghe neon gradient (`#8B5CF6` → `#06B6D4`).
+- **Global Search:** Input tìm kiếm toàn năng (bài hát, nghệ sĩ, album, room, bạn bè) với phím tắt `Ctrl+K`.
+- **Active Sync Status Indicator:** `● 14,280 synced right now` (hoặc độ trễ đồng bộ trực tiếp).
+- **Navigation Links:** `Home (/home)`, `Discover (/discover)`, `Rooms (/rooms)`, `Friends (/friends)`.
+- **Right Controls:** Nút chuông thông báo (kèm unread count), Nút **+ Create Room**, Avatar người dùng với trạng thái hoạt động.
+
+### 2.2 Persistent Audio Dock (Bottom Mini/Floating Player)
+*Hiển thị xuyên suốt tất cả các trang:*
+- **Track Info:** Thumbnail bìa xoay đĩa than vinyl, Tên bài hát, Nghệ sĩ, Nhãn `Dolby Atmos` / `Hi-Res Lossless`.
+- **Playback Controls:** Shuffle, Prev, Play/Pause gradient rực rỡ, Next, Repeat.
+- **Authoritative Progress Bar:** Thanh trượt tiến độ gradient (`#8B5CF6` → `#06B6D4`), thời gian hiện tại / tổng thời lượng, con trỏ thể hiện vị trí đồng bộ người nghe.
+- **Social Action CTA:** Nút phát sáng đặc trưng **`[🎧 Listen Together]`** (kích hoạt modal mời nghe chung 1-chạm).
+- **Audio Extras:** Nút Mic/Karaoke toggle, Nút Volume slider, Mini equalizer sóng âm.
+
+---
+
+## 3. COMPREHENSIVE UI SCREENS & PAGE BREAKDOWN
+
+### Screen 1: Landing Page & Public Hero (`/`)
+- **Hero Section:**
+  - Tiêu đề: *"Music connects us wherever you are"*
+  - Subtitle: *"Listen together. Discover together. Share the moment in real-time."*
+  - Dual CTA: `[Start Listening Together →]` (Primary gradient) & `[Explore Live Rooms]` (Secondary outline).
+- **Live Rooms Carousel:** Thẻ các phòng đang live náo nhiệt nhất, số người nghe đang sync, avatar Host và bài hát đang phát.
+- **How It Works (3 bước trực quan):**
+  1. *01. Create a Room* — Thiết lập vibe và playlist phòng.
+  2. *02. Invite Friends* — Gửi link hoặc mời bạn bè chỉ 1 click.
+  3. *03. Synchronize in Milliseconds* — Cùng nghe, cùng chat, cùng thả cảm xúc.
+- **Social Proof & Stats:** 99.9% Lossless Sync, <5ms drift, hàng triệu bài hát và kết nối.
+
+### Screen 2: Register & Sonic Identity (`/register` / `/onboarding`)
+- **Card:** Ultra-frosted glassmorphism đặt giữa nền cực quang sóng âm chill êm ái.
+- **Social Auth:** 1-Click `Continue with Google` & `Continue with Apple`.
+- **Sonic Avatar Selector:** 12+ avatar nghệ thuật tai nghe neon dạ quang (Cyan, Violet, Midnight Pink) + upload ảnh cá nhân.
+- **Form Fields:** `Display Name`, `Email`, `Password` (show/hide toggle), kèm viền focus phát quang.
+- **Acoustic Wavelength (Gu âm nhạc khởi tạo):** Thẻ pill chọn nhanh:
+  - 🌙 `Late Night` | 🎧 `Lo-Fi Chill` | ⚡ `Synthwave` | 💜 `Midnight R&B`
+- **Action:** Nút `Start Listening Together →` chuyển hướng thẳng vào trải nghiệm.
+
+### Screen 3: Home Dashboard (`/home`)
+- **Friends are Listening Live:** Khối story ngang hiển thị bạn bè đang nghe gì ngay lúc này kèm nút bấm nhanh `🎧 Listen Together` để tham gia tức thì.
+- **Featured Live Listening Rooms:** Thẻ phòng với ảnh bìa gradient, thể loại (Vibe), số người online, host badge.
+- **Your Daily Sonic Mixes:** Playlist gợi ý cá nhân hóa dựa trên lịch sử nghe chung.
+- **Trending Tracks in Community:** Bảng xếp hạng các bài hát được nghe cùng nhau nhiều nhất hôm nay.
+
+### Screen 4: Discover & Vibe Explorer (`/discover`)
+- **Vibe Filter Pills:** 🌙 Late Night, ❤️ Romantic, 🔥 Hype, 😭 Sad, ☀️ Happy, 🧠 Focus, 🚗 Road Trip, 🎉 Party.
+- **Sonic Taste Match:** Khối gợi ý kết bạn dựa trên độ tương thích gu âm nhạc (ví dụ: *"Match 94% với Alex — cùng thích The Weeknd & Joji"*).
+- **Live Audio Rooms Grid:** Lưới phân loại phòng theo từng mood nhạc.
+- **Top Collaborative Playlists:** Danh sách phát nhóm thịnh hành có nhiều người đóng góp.
+
+### Screen 5: Listening Room — 3-Column Studio & Social Room (`/room/[roomId]`)
+*(Màn hình cốt lõi nhất — Tương tác đa chiều)*
+- **Cột Trái — Shared Queue (Hàng đợi phát nhạc):**
+  - Danh sách bài hát tiếp theo (*Tiểu Thuyết Tình Yêu, Càng Xa Càng Nhớ, Kho Báu...*).
+  - Trạng thái bài hát đang phát nổi bật với viền tím neon và sóng âm equalizer.
+  - Tên người đóng góp (*Added by: Em bé xinh*).
+  - Nút `+ Add Song`, chế độ tự động phát `Auto-play next`.
+- **Cột Giữa — Stage Video/Audio Player & Synced Lyrics:**
+  - Khung chiếu Video / Visualizer 16:9 sắc nét, nhãn `● LIVE`, mascot động tương tác theo nhịp beat.
+  - Bộ điều khiển phát nhạc của Host / Participant, chất lượng Lossless 24-bit, nhãn `● SYNCED`.
+  - Khối **Synced Lyrics (Lời bài hát đồng bộ thời gian thực)**, dòng chữ đang phát nổi bật sáng rực, nút tinh chỉnh lệch pha (`0.0s | -0.5s | +0.5s`).
+  - Top Tabs: 🎵 *Music Controls*, 🎮 *Play Games (Caro & Cờ vua)*, 📖 *Read Stories*.
+- **Cột Phải — Listeners & Live Chat cộng đồng:**
+  - Chỉ số người nghe: `● 11 online` kèm dải avatar tròn hiển thị trạng thái phát biểu.
+  - Luồng tin nhắn live chat thời gian thực, huy hiệu Host/Member.
+  - Floating Emoji Reaction Bar: ❤️ 🔥 😂 😭 💜 👏 🎵 (thả trôi hoạt họa trên màn hình).
+
+### Screen 6: Full-Screen Synced Karaoke Lyrics Mode
+*(Chế độ lời bài hát toàn màn hình cho phòng nghe)*
+- **Khu vực Đĩa than Vinyl (Trái):**
+  - Đĩa than phát quang xoay mượt mà, sóng âm tròn tỏa nhịp điệu.
+  - Metadata: Tên bài *Kho Báu*, Nghệ sĩ *Trọng Hiếu ft. Mai Âm Nhạc*, chuẩn *Dolby Atmos / Hi-Res Lossless*.
+  - Avatar bạn bè đang cùng nghe và trạng thái cảm xúc.
+- **Khu vực Kinetic Karaoke Typography (Phải):**
+  - Typography chữ lớn (42px) phát sáng hào quang:  
+    *"Vì em chính là kho báu mà anh đã tìm thấy giữa cuộc đời này!"*
+  - Gạch chân chạy theo từng âm tiết bài hát; phụ đề dịch nghĩa tiếng Anh bên dưới.
+  - Thanh công cụ: Nút chỉnh cỡ chữ `A- / A+`, thanh trượt tách giọng ca sĩ (*Vocal Slider: 85%*), độ trễ lossless `<0.8ms`.
+- **Dock đáy:** Điều khiển micro karaoke, timeline chính xác và cụm reaction.
+
+### Screen 7: Create Room & Instant Invite Modal (`/room/create`)
+- **Tên & Mô tả phòng:** Ô nhập liệu viền phát quang.
+- **Room Types (Phân quyền phòng):**
+  - 🌐 **Public:** Mọi người đều có thể tìm thấy và tham gia.
+  - 👥 **Friends Only:** Chỉ bạn bè trong danh sách bạn bè nhìn thấy.
+  - 🔒 **Private / Secret:** Cần link mời trực tiếp hoặc mật khẩu.
+  - 🎧 **Duo (Couple/Pair):** Phòng nghe riêng tư chỉ dành cho 2 người.
+- **Permissions Control:** Toggle cho phép ai được đổi bài (Host only / Vote / Everyone), ai được add bài vào Queue, bật/tắt chat và micro.
+- **Instant Invite Flow:** Tạo mã mời phòng dạng link `soundwith.me/r/late-night-vibes` kèm nút Copy 1 chạm và danh sách bạn bè gợi ý mời.
+
+### Screen 8: Friends & Listen Together Presence (`/friends`)
+- **Danh sách Bạn bè & Trạng thái Hoạt động:**
+  - *Online & Listening:* Hiển thị bài hát họ đang nghe theo thời gian thực (ví dụ: *"Alex đang nghe Starboy"*).
+  - Nút hành động trực tiếp: **`[🎧 Listen Together]`** (gửi lời mời nghe chung tức thì), nút nhắn tin riêng, nút xem phòng họ đang ở.
+- **Friend Requests:** Duyệt lời mời kết bạn mới, xem độ tương đồng gu âm nhạc (Music Taste Match %).
+
+### Screen 9: Direct Messages & Sonic Sharing (`/messages`)
+- **Bố cục:** Danh sách hội thoại bên trái, khung chat 1-1 bên phải.
+- **Sonic Message Card:** Bong bóng tin nhắn chia sẻ bài hát tích hợp sẵn mini waveform nghe thử 30s trực tiếp trong chat.
+- **Active Invite Banner:** Banner đỉnh khung chat: *"Emma đang rủ bạn nghe chung phòng 'Midnight Lo-Fi' — [Chấp nhận tham gia]"*.
+
+### Screen 10: Collaborative Playlist & Curation (`/library/playlist/[id]`)
+- **Playlist Header:** Bìa album nghệ thuật, tên playlist, tổng thời lượng, mô tả, danh sách avatar các cộng tác viên (collaborators).
+- **Track List Table:** STT, Tên bài hát & Nghệ sĩ, Album, Ngày thêm, Avatar thành viên đã thêm bài đó, nút Play/Like/Add to Queue.
+- **Tính năng nhóm:** Nút mời bạn bè cùng cộng tác thêm bài hát vào playlist.
+
+### Screen 11: Artist Hub & Fan Rooms (`/artist/[id]`)
+- **Banner Nghệ sĩ:** Header tràn viền điện ảnh, thống kê người nghe hàng tháng, nút Follow nghệ sĩ.
+- **Popular Tracks:** Top bài hát thịnh hành nhất của nghệ sĩ.
+- **Live Fan Rooms:** Các phòng nghe công khai đang cùng phát nhạc của nghệ sĩ này để người hâm mộ tụ họp.
+
+### Screen 12: Profile & "Your Sound" Analytics (`/profile`)
+- **Header:** Avatar người dùng, Bio, Số người theo dõi, Số bạn bè, Huy hiệu âm nhạc (`🎧 First Listen`, `🌙 Night Owl`, `🔥 Room Starter`).
+- **Your Sound Radar & Thống kê:**
+  - Top Artists & Top Genres.
+  - Most listened mood (Vibe phổ biến nhất).
+  - Tổng số giờ đã cùng nghe chung với bạn bè.
+- **Tabs:** Phòng đã tạo, Playlist cá nhân, Lịch sử nghe gần đây.
+
+### Screen 13: Listening Session Summary Modal / Page (`/room/[roomId]/summary`)
+- **Thông điệp:** *"Your session is over 🎧"*
+- **Chỉ số buổi nghe:**
+  - Thời lượng phòng nghe (Duration).
+  - Số lượng người đã cùng tham gia.
+  - Tổng số bài hát đã phát & Bài hát được replay nhiều nhất.
+  - Số lượng reactions đã thả.
+- **Actions:** `[Save as Playlist]`, `[Share Moment]`, `[Start Another Room]`.
+
+### Screen 14: Sonic Constellation & Cosmic Synergy (Đột phá & Độc quyền)
+- **3D Universe Graph:** Bản đồ sao không gian 3D thể hiện gu âm nhạc và sự kết nối giữa các người dùng dưới dạng các chòm sao (Constellations).
+- **Haptic Telepathy Pulse:** Tính năng cảm nhận nhịp beat đồng bộ qua haptic và hiệu ứng rung thị giác.
+- **Midnight Eclipse Mode:** Sự kiện âm nhạc diễn ra vào đúng 00:00 hàng đêm kết nối những người cô đơn cùng chung tần số âm nhạc.
+
+---
+
+## 4. REALTIME SOCKET.IO & PLAYBACK PROTOCOL SPECIFICATION
+
+```typescript
+// 1. Authoritative Playback State
+interface PlaybackState {
+  roomId: string;
+  trackId: string;
+  title: string;
+  artist: string;
+  artworkUrl: string;
+  durationMs: number;
+  isPlaying: boolean;
+  positionMs: number;       // Vị trí chuẩn tại thời điểm serverTimestamp
+  serverTimestamp: number;  // Epoch ms từ Redis
+  version: number;          // Sequence counter chống race condition
+  updatedBy: string;        // Host userId
+}
+
+// 2. Client Synchronized Position Calculation
+function getCalculatedPosition(state: PlaybackState): number {
+  if (!state.isPlaying) return state.positionMs;
+  const elapsed = Date.now() - state.serverTimestamp;
+  return Math.min(state.positionMs + elapsed, state.durationMs);
+}
+
+// 3. Core Realtime Socket Events
+export enum SocketEvents {
+  // Room
+  ROOM_JOIN = "room:join",
+  ROOM_LEAVE = "room:leave",
+  ROOM_USER_JOINED = "room:user_joined",
+  ROOM_USER_LEFT = "room:user_left",
+  
+  // Playback Control
+  PLAYBACK_PLAY = "playback:play",
+  PLAYBACK_PAUSE = "playback:pause",
+  PLAYBACK_SEEK = "playback:seek",
+  PLAYBACK_SYNC = "playback:sync",
+  
+  // Shared Queue
+  QUEUE_ADD = "queue:add",
+  QUEUE_REMOVE = "queue:remove",
+  QUEUE_REORDER = "queue:reorder",
+  QUEUE_UPDATED = "queue:updated",
+  
+  // Social
+  CHAT_MESSAGE = "chat:message",
+  REACTION_SEND = "reaction:send",
+  INVITE_LISTEN_TOGETHER = "invite:listen_together"
+}
+```
+
+---
+
+## 5. HƯỚNG DẪN IMPORT VÀO CLAUDE ĐỂ TIẾP TỤC TRIỂN KHAI
+
+Để bàn giao và nạp file này vào Claude khi bắt đầu phát triển code, sử dụng câu lệnh:
+
+```text
+"Tôi đang xây dựng dự án SoundWithMe dựa trên bản UI Specification & Architecture đính kèm. 
+Hãy đọc kỹ toàn bộ Design Tokens, Shell Components và danh sách 14 màn hình chi tiết trên.
+Chúng ta sẽ bắt đầu triển khai Phase 1 (Next.js App Router + Tailwind CSS + Zustand + Socket.IO client)."
+```
+
+})();
+</script>
+</div>
+<!-- STITCH_THREEJS_END:ANIMATION_36 -->
+</body>
+</html>

@@ -6,6 +6,7 @@ import type { Request } from "express";
 import type { AccessTokenPayload } from "@soundwithme/types";
 import { ERROR_CODES } from "@soundwithme/constants";
 import { UsersService } from "../../users/users.service";
+import { TokensService } from "../tokens.service";
 
 const ACCESS_TOKEN_COOKIE = "swm_access_token";
 
@@ -18,6 +19,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, "jwt") {
   constructor(
     configService: ConfigService,
     private readonly usersService: UsersService,
+    private readonly tokensService: TokensService,
   ) {
     super({
       // Cookie first (web client), bearer header as a fallback (future
@@ -36,6 +38,13 @@ export class JwtStrategy extends PassportStrategy(Strategy, "jwt") {
   }
 
   async validate(payload: AccessTokenPayload) {
+    // A logged-out session's access token stops working at once, not when it expires.
+    if (payload.sid && !(await this.tokensService.isSessionActive(payload.sid))) {
+      throw new UnauthorizedException({
+        success: false,
+        error: { code: ERROR_CODES.UNAUTHENTICATED, message: "This session has ended" },
+      });
+    }
     const user = await this.usersService.findById(payload.sub);
     if (!user) {
       throw new UnauthorizedException({

@@ -15,7 +15,7 @@ export interface Album {
  * Which upstream catalog a track's metadata/provider ID resolves against.
  * "internal" is reserved for a dev/mock provider only — see MusicProvider note.
  */
-export type MusicProviderName = "internal" | "spotify" | "applemusic";
+export type MusicProviderName = "internal" | "spotify" | "applemusic" | "youtube";
 
 export interface Track {
   id: string;
@@ -30,7 +30,22 @@ export interface Track {
    * NOT a raw file URL. Resolved server-side into a short-lived signed
    * playback URL at request time — never persisted as a permanent link.
    */
-  playbackSource: "range-request" | "hls";
+  /**
+   * How a client plays this track: its own media element over a CDN URL
+   * (range-request / hls), or the provider's embedded player ("youtube-embed",
+   * where providerTrackId is the YouTube video id).
+   */
+  playbackSource: "range-request" | "hls" | "youtube-embed";
+}
+
+/**
+ * Display-layer shape returned by search/list endpoints — denormalizes the
+ * artist name so the client doesn't need a second round-trip per track.
+ * NOT the storage model: the `tracks` collection still stores only
+ * `artistId` (Architecture Review §4 — don't embed what you can join).
+ */
+export interface TrackWithArtist extends Track {
+  artistName: string;
 }
 
 /**
@@ -48,4 +63,21 @@ export interface MusicProvider {
     supportsRangeRequests: boolean;
     supportsHls: boolean;
   }>;
+}
+
+export interface LyricLine {
+  /** When the line starts, in ms into the recording the lyrics were timed to. */
+  timeMs: number;
+  text: string;
+}
+
+/** GET /tracks/:id/lyrics — matched from LRCLIB and cached server-side. */
+export interface Lyrics {
+  trackName: string;
+  artistName: string;
+  /** Length of the recording the timestamps belong to (often the album cut, not the music video). */
+  durationMs: number;
+  /** Time-stamped lines, sorted; empty when only plain lyrics exist. */
+  lines: LyricLine[];
+  plain: string | null;
 }

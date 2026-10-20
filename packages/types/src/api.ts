@@ -13,6 +13,8 @@ export type ApiError = {
   error: {
     code: string;
     message: string;
+    /** Extra, code-specific facts the client can act on (e.g. the room you already host). */
+    details?: Record<string, string | number | boolean | null>;
   };
 };
 

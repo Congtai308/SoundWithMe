@@ -29,6 +29,13 @@ export const appConfig = registerAs("app", () => ({
     secretKey: process.env.R2_SECRET_KEY,
     bucket: process.env.R2_BUCKET,
   },
+  // Optional: only YouTube *search* needs it; link resolution uses oEmbed.
+  // Several keys (comma-separated, plus YOUTUBE_API_KEY_BACKUP) are used in
+  // order: when one runs out of daily quota, the next takes over.
+  youtubeApiKeys: [process.env.YOUTUBE_API_KEY, process.env.YOUTUBE_API_KEY_BACKUP]
+    .flatMap((value) => (value ?? "").split(","))
+    .map((key) => key.trim())
+    .filter(Boolean),
   sentryDsn: process.env.SENTRY_DSN,
   postHogKey: process.env.POSTHOG_KEY,
 }));

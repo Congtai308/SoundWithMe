@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+
+<html class="dark h-full" lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>SoundWithMe — Listening Room: Em bé iu</title>
+<!-- Google Fonts: Plus Jakarta Sans -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS v3 with Forms & Container Queries -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+          },
+          colors: {
+            obsidian: {
+              950: '#07080b',
+              900: '#0B0C10',
+              850: '#111217',
+              800: '#161720',
+              700: '#1f212d',
+              600: '#2a2d3d'
+            },
+            accent: {
+              magenta: '#d946ef',
+              violet: '#8b5cf6',
+              cyan: '#06b6d4',
+              pink: '#f43f5e'
+            }
+          },
+          animation: {
+            'float-slow': 'float 6s ease-in-out infinite',
+            'pulse-glow': 'pulseGlow 2.5s ease-in-out infinite',
+            'equalizer-1': 'eq1 0.9s ease-in-out infinite alternate',
+            'equalizer-2': 'eq2 1.2s ease-in-out infinite alternate',
+            'equalizer-3': 'eq3 0.7s ease-in-out infinite alternate',
+            'petal-fall-1': 'petalFall 11s linear infinite',
+            'petal-fall-2': 'petalFall2 14s linear infinite',
+            'petal-fall-3': 'petalFall3 17s linear infinite',
+          },
+          keyframes: {
+            float: {
+              '0%, 100%': { transform: 'translateY(0px) rotate(0deg)' },
+              '50%': { transform: 'translateY(-7px) rotate(3deg)' },
+            },
+            pulseGlow: {
+              '0%, 100%': { opacity: '0.4', transform: 'scale(1)' },
+              '50%': { opacity: '0.8', transform: 'scale(1.05)' },
+            },
+            eq1: { '0%': { height: '25%' }, '100%': { height: '95%' } },
+            eq2: { '0%': { height: '70%' }, '100%': { height: '30%' } },
+            eq3: { '0%': { height: '40%' }, '100%': { height: '100%' } },
+            petalFall: {
+              '0%': { transform: 'translate(0px, -20px) rotate(0deg)', opacity: '0' },
+              '10%': { opacity: '0.7' },
+              '90%': { opacity: '0.7' },
+              '100%': { transform: 'translate(140px, 100vh) rotate(360deg)', opacity: '0' }
+            },
+            petalFall2: {
+              '0%': { transform: 'translate(0px, -20px) rotate(45deg)', opacity: '0' },
+              '15%': { opacity: '0.6' },
+              '85%': { opacity: '0.6' },
+              '100%': { transform: 'translate(-120px, 100vh) rotate(540deg)', opacity: '0' }
+            },
+            petalFall3: {
+              '0%': { transform: 'translate(0px, -20px) rotate(20deg)', opacity: '0' },
+              '20%': { opacity: '0.8' },
+              '80%': { opacity: '0.8' },
+              '100%': { transform: 'translate(80px, 100vh) rotate(280deg)', opacity: '0' }
+            }
+          }
+        }
+      }
+    }
+  </script>
+<!-- BEGIN: Custom Glass & Scrollbar Styles -->
+<style data-purpose="custom-layout-styles">
+    /* Custom subtle glassmorphism */
+    .glass-panel {
+      background: rgba(17, 18, 23, 0.72);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+    .glass-card {
+      background: rgba(26, 28, 38, 0.55);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .glass-card-active {
+      background: linear-gradient(135deg, rgba(139, 92, 246, 0.16) 0%, rgba(217, 70, 239, 0.12) 100%);
+      border: 1px solid rgba(217, 70, 239, 0.35);
+      box-shadow: 0 0 20px -3px rgba(217, 70, 239, 0.25);
+    }
+
+    /* Custom thin scrollbars */
+    ::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(11, 12, 16, 0.5);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(139, 92, 246, 0.25);
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(217, 70, 239, 0.5);
+    }
+
+    /* Range slider custom styling */
+    input[type=range] {
+      -webkit-appearance: none;
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 9999px;
+      height: 4px;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      height: 12px;
+      width: 12px;
+      border-radius: 50%;
+      background: #ec4899;
+      cursor: pointer;
+      box-shadow: 0 0 8px #ec4899;
+    }
+  </style>
+<!-- END: Custom Glass & Scrollbar Styles -->
+</head>
+<body class="h-full bg-obsidian-950 text-slate-200 font-sans antialiased overflow-hidden select-none relative">
+<!-- BEGIN: Ambient Background & Falling Blossom Layer -->
+<div class="fixed inset-0 pointer-events-none z-0 overflow-hidden" data-purpose="background-ambient-container">
+<!-- Atmospheric Wallpaper with subtle glow overlay -->
+<img alt="Atmospheric SoundWithMe Wallpaper" class="w-full h-full object-cover object-center opacity-45 mix-blend-screen scale-105 transform filter blur-[0.6px]" src="https://lh3.googleusercontent.com/aida/AEtjO1UgTXVzyGThXwCRWfW6UtJZsBOLImVYYDStfPzlq_7MPtvDG_GJKZ7eqUSMLMDTcX2I7SnYMsHJwQJqwHh2KnP1lONRowj0tHs2Oaaj-kVmiCh3Lu7gOP4VluyzLgXLZCSI5VBBKEiBOcePOdDE-luEltJBkZzAe9-BsYxorxFby3u0PVFogS8Ztnsn0pePJoQiUyrijnjlSffO1vtRy_o5VQ4QFNxAsnCq_bfQ1bI9b5a4UBKgNU6GlEft"/>
+<div class="absolute inset-0 bg-gradient-to-t from-obsidian-950 via-obsidian-950/80 to-obsidian-950/60"></div>
+<div class="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-violet-900/20 via-transparent to-transparent"></div>
+<!-- Animated Sakura Petals Canvas / CSS Particles -->
+<div class="absolute top-[-20px] left-[15%] w-3 h-2 bg-pink-400/40 rounded-full blur-[0.5px] animate-petal-fall-1"></div>
+<div class="absolute top-[-20px] left-[32%] w-2.5 h-1.5 bg-rose-300/50 rounded-full blur-[0.4px] animate-petal-fall-2" style="animation-delay: 2.5s;"></div>
+<div class="absolute top-[-20px] left-[55%] w-3 h-2.5 bg-fuchsia-400/40 rounded-full blur-[0.5px] animate-petal-fall-3" style="animation-delay: 1.2s;"></div>
+<div class="absolute top-[-20px] left-[78%] w-2 h-2 bg-pink-300/40 rounded-full blur-[0.4px] animate-petal-fall-1" style="animation-delay: 4.8s;"></div>
+<div class="absolute top-[-20px] left-[90%] w-3 h-2 bg-purple-300/45 rounded-full blur-[0.6px] animate-petal-fall-2" style="animation-delay: 6s;"></div>
+<div class="absolute top-[-20px] left-[45%] w-2.5 h-2 bg-pink-400/35 rounded-full blur-[0.5px] animate-petal-fall-3" style="animation-delay: 7.5s;"></div>
+</div>
+<!-- END: Ambient Background & Falling Blossom Layer -->
+<!-- BEGIN: Main Viewport Container -->
+<div class="relative z-10 flex flex-col h-screen w-full">
+<!-- BEGIN: Top Global Room Bar -->
+<header class="h-14 border-b border-white/10 bg-obsidian-900/85 backdrop-blur-md px-4 flex items-center justify-between shrink-0" data-purpose="top-navigation-bar">
+<!-- Left: Room Identifier & Status Marquee/Banner -->
+<div class="flex items-center space-x-3 overflow-hidden">
+<!-- Logo / Icon -->
+<a class="flex items-center space-x-2 text-violet-400 hover:text-white transition group" href="#">
+<div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-violet-600 via-fuchsia-500 to-cyan-400 p-[1.5px] shadow-lg shadow-violet-500/20">
+<div class="w-full h-full bg-obsidian-900 rounded-[7px] flex items-center justify-center">
+<svg class="w-4 h-4 text-fuchsia-400 group-hover:scale-110 transition" fill="currentColor" viewbox="0 0 24 24">
+<path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"></path>
+</svg>
+</div>
+</div>
+<div class="flex flex-col">
+<div class="flex items-center space-x-1.5">
+<span class="font-bold text-sm text-white tracking-wide">Em bé iu</span>
+<span class="text-[10px] text-zinc-400 font-mono">/em-be-iu-swf</span>
+</div>
+</div>
+</a>
+<!-- Announcement / Room Vibe Subtitle Pill -->
+<div class="hidden xl:flex items-center space-x-2 px-3 py-1 bg-violet-950/40 border border-violet-500/20 rounded-full text-xs text-zinc-300 max-w-2xl truncate">
+<span class="text-fuchsia-400 font-semibold flex items-center space-x-1 shrink-0">
+<span>ListenWithMe</span>
+<span>🎵👩</span>
+</span>
+<span class="text-zinc-500">—</span>
+<span class="truncate">Có những lúc đang nghe nhạc cùng nhau mà <em class="not-italic text-zinc-400">chẳng biết nói gì thêm...</em> thì <strong class="font-medium text-emerald-400 hover:underline cursor-pointer">thách nhau ván cờ đi 😄</strong> Cờ vua, cờ caro, <span class="text-amber-300 font-medium">tạo phòng 2 giây</span>, chơi ngay trong lúc nhạc vẫn đang chạy. Vừa nghe, vừa đấu, vừa cười — <span class="text-fuchsia-300 font-semibold">kiểu gì cũng vui hơn ngồi một mình 🎶</span></span>
+</div>
+</div>
+<!-- Right: User Account, Share & Room Controls -->
+<div class="flex items-center space-x-2 sm:space-x-3 shrink-0">
+<!-- User Badge -->
+<div class="flex items-center space-x-2 bg-obsidian-800/80 hover:bg-obsidian-700/80 border border-white/10 px-2.5 py-1 rounded-full text-xs transition cursor-pointer">
+<div class="w-5 h-5 rounded-full bg-gradient-to-r from-fuchsia-500 to-indigo-500 flex items-center justify-center text-[10px] font-bold text-white shadow-sm">
+            K
+          </div>
+<div class="flex flex-col text-left">
+<span class="font-medium text-zinc-200 text-xs leading-none">KháchW804X</span>
+<span class="text-[9px] text-zinc-400 leading-none">Guest</span>
+</div>
+</div>
+<!-- Notification Bell -->
+<button aria-label="Notifications" class="w-8 h-8 rounded-full flex items-center justify-center text-zinc-400 hover:text-white hover:bg-white/5 transition" type="button">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</button>
+<!-- Share Room Button -->
+<button class="flex items-center space-x-1.5 bg-white/10 hover:bg-white/15 active:scale-95 border border-white/10 px-3 py-1.5 rounded-lg text-xs font-medium text-zinc-200 transition" type="button">
+<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<path d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+<span class="hidden sm:inline">Share</span>
+</button>
+<!-- Leave / Close Room -->
+<button aria-label="Leave room" class="w-8 h-8 rounded-lg flex items-center justify-center text-zinc-400 hover:text-rose-400 hover:bg-rose-500/10 transition" type="button">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</button>
+</div>
+</header>
+<!-- END: Top Global Room Bar -->
+<!-- BEGIN: 3-Column Core Workspace -->
+<div class="flex-1 flex overflow-hidden" data-purpose="3-column-workspace">
+<!-- ======================================================== -->
+<!-- COLUMN 1: LEFT - SHARED QUEUE (w-72 to w-80)             -->
+<!-- ======================================================== -->
+<!-- BEGIN: Left Column Queue -->
+<aside class="w-72 lg:w-80 border-r border-white/10 bg-obsidian-900/60 backdrop-blur-xl flex flex-col shrink-0" data-purpose="left-queue-sidebar">
+<!-- Queue Header -->
+<div class="px-4 py-3.5 border-b border-white/10 flex items-center justify-between shrink-0">
+<div class="flex items-center space-x-2">
+<h2 class="text-sm font-bold text-white tracking-wide">Queue</h2>
+<span class="text-[11px] px-1.5 py-0.5 rounded-full bg-white/10 text-zinc-300 font-mono">14 songs</span>
+</div>
+<button class="text-xs flex items-center space-x-1 text-fuchsia-400 hover:text-fuchsia-300 transition font-medium" type="button">
+<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<path d="M12 4v16m8-8H4" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+<span>Add Song</span>
+</button>
+</div>
+<!-- Track List Scrollable -->
+<div class="flex-1 overflow-y-auto px-2 py-2 space-y-1">
+<!-- Track 1 -->
+<div class="group flex items-center p-2 rounded-lg hover:bg-white/5 transition cursor-pointer">
+<span class="w-5 text-center text-xs text-zinc-500 font-mono font-medium group-hover:hidden">1</span>
+<button aria-label="Play song" class="w-5 hidden group-hover:flex items-center justify-center text-zinc-300">
+<svg class="w-3.5 h-3.5 fill-current" viewbox="0 0 24 24"><path d="M8 5v14l11-7z"></path></svg>
+</button>
+<div class="w-10 h-10 rounded bg-obsidian-800 flex-shrink-0 overflow-hidden ml-1 border border-white/5 relative">
+<div class="w-full h-full bg-gradient-to-br from-red-950 via-zinc-900 to-stone-900 flex items-center justify-center text-[10px] font-bold text-rose-300">ROCK</div>
+</div>
+<div class="ml-2.5 flex-1 min-w-0">
+<p class="text-xs font-medium text-zinc-200 truncate">Tiểu Thuyết Tình Yêu — Rock Version</p>
+<p class="text-[10px] text-zinc-500 truncate">Added by: <span class="text-zinc-400 font-medium">Em bé xinh</span></p>
+</div>
+<div class="opacity-0 group-hover:opacity-100 flex items-center space-x-1 transition text-zinc-400">
+<button aria-label="Favorite" class="p-1 hover:text-rose-400"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"><path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" stroke-linecap="round" stroke-linejoin="round"></path></svg></button>
+<button aria-label="Menu" class="p-1 hover:text-white"><svg class="w-3.5 h-3.5" fill="currentColor" viewbox="0 0 24 24"><circle cx="12" cy="5" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="12" cy="19" r="2"></circle></svg></button>
+</div>
+</div>
+<!-- Track 2 -->
+<div class="group flex items-center p-2 rounded-lg hover:bg-white/5 transition cursor-pointer">
+<span class="w-5 text-center text-xs text-zinc-500 font-mono font-medium group-hover:hidden">2</span>
+<button aria-label="Play song" class="w-5 hidden group-hover:flex items-center justify-center text-zinc-300">
+<svg class="w-3.5 h-3.5 fill-current" viewbox="0 0 24 24"><path d="M8 5v14l11-7z"></path></svg>
+</button>
+<div class="w-10 h-10 rounded bg-obsidian-800 flex-shrink-0 overflow-hidden ml-1 border border-white/5 relative">
+<div class="w-full h-full bg-gradient-to-br from-indigo-950 via-zinc-900 to-slate-900 flex items-center justify-center text-[10px] font-bold text-indigo-300">HY</div>
+</div>
+<div class="ml-2.5 flex-1 min-w-0">
+<p class="text-xs font-medium text-zinc-200 truncate">CÀNG XA CÀNG NHỚ — cover by HY</p>
+<p class="text-[10px] text-zinc-500 truncate">Added by: <span class="text-zinc-400 font-medium">Em bé xinh</span></p>
+</div>
+<div class="opacity-0 group-hover:opacity-100 flex items-center space-x-1 transition text-zinc-400">
+<button aria-label="Favorite" class="p-1 hover:text-rose-400"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"><path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" stroke-linecap="round" stroke-linejoin="round"></path></svg></button>
+<button aria-label="Menu" class="p-1 hover:text-white"><svg class="w-3.5 h-3.5" fill="currentColor" viewbox="0 0 24 24"><circle cx="12" cy="5" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="12" cy="19" r="2"></circle></svg></button>
+</div>
+</div>
+<!-- Track 3 (CURRENTLY PLAYING - Highlighted Glowing Card) -->
+<div class="glass-card-active rounded-xl p-2.5 flex items-center relative overflow-hidden group cursor-pointer transition">
+<!-- Neon Indicator Line on Left edge -->
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-fuchsia-500 to-cyan-400"></div>
+<div class="w-5 flex items-center justify-center mr-0.5">
+<!-- Animated Soundwave equalizer -->
+<div class="flex items-end space-x-[2px] h-3.5 w-3.5">
+<span class="w-[2px] bg-fuchsia-400 rounded-full animate-equalizer-1"></span>
+<span class="w-[2px] bg-pink-400 rounded-full animate-equalizer-2"></span>
+<span class="w-[2px] bg-cyan-400 rounded-full animate-equalizer-3"></span>
+</div>
+</div>
+<!-- Thumbnail -->
+<div class="w-10 h-10 rounded-md bg-zinc-800 flex-shrink-0 overflow-hidden border border-fuchsia-400/40 relative">
+<div class="w-full h-full bg-gradient-to-tr from-fuchsia-900 via-purple-900 to-indigo-900 flex items-center justify-center font-bold text-xs text-white">MV</div>
+<div class="absolute inset-0 bg-black/20"></div>
+</div>
+<!-- Title & Meta -->
+<div class="ml-2.5 flex-1 min-w-0">
+<p class="text-xs font-semibold text-white truncate group-hover:text-fuchsia-300 transition">
+                (S)TRONG Trọng Hiếu - Kho Báu | Offic...
+              </p>
+<p class="text-[10px] text-fuchsia-300/80 truncate flex items-center space-x-1">
+<span class="inline-block w-1.5 h-1.5 rounded-full bg-fuchsia-400 animate-pulse"></span>
+<span>Playing now • Em bé xinh</span>
+</p>
+</div>
+<!-- Playing Card Controls -->
+<div class="flex items-center space-x-1 text-fuchsia-300 shrink-0">
+<button aria-label="Favorite" class="p-1 hover:text-white">
+<svg class="w-3.5 h-3.5 fill-rose-500 text-rose-500" viewbox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"></path></svg>
+</button>
+</div>
+</div>
+<!-- Track 4 -->
+<div class="group flex items-center p-2 rounded-lg hover:bg-white/5 transition cursor-pointer">
+<span class="w-5 text-center text-xs text-zinc-500 font-mono font-medium group-hover:hidden">4</span>
+<button aria-label="Play song" class="w-5 hidden group-hover:flex items-center justify-center text-zinc-300"><svg class="w-3.5 h-3.5 fill-current" viewbox="0 0 24 24"><path d="M8 5v14l11-7z"></path></svg></button>
+<div class="w-10 h-10 rounded bg-obsidian-800 flex-shrink-0 overflow-hidden ml-1 border border-white/5">
+<div class="w-full h-full bg-gradient-to-br from-amber-950 to-orange-900 flex items-center justify-center text-[10px] font-bold text-amber-300">DAT</div>
+</div>
+<div class="ml-2.5 flex-1 min-w-0">
+<p class="text-xs font-medium text-zinc-200 truncate">HẠ CÒN VƯƠNG NẮNG | DATKAA x KI...</p>
+<p class="text-[10px] text-zinc-500 truncate">Added by: <span class="text-zinc-400 font-medium">Em bé xinh</span></p>
+</div>
+<div class="opacity-0 group-hover:opacity-100 flex items-center space-x-1 transition text-zinc-400">
+<button aria-label="Favorite" class="p-1 hover:text-rose-400"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"><path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" stroke-linecap="round" stroke-linejoin="round"></path></svg></button>
+<button aria-label="Menu" class="p-1 hover:text-white"><svg class="w-3.5 h-3.5" fill="currentColor" viewbox="0 0 24 24"><circle cx="12" cy="5" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="12" cy="19" r="2"></circle></svg></button>
+</div>
+</div>
+<!-- Track 5 -->
+<div class="group flex items-center p-2 rounded-lg hover:bg-white/5 transition cursor-pointer">
+<span class="w-5 text-center text-xs text-zinc-500 font-mono font-medium group-hover:hidden">5</span>
+<button aria-label="Play song" class="w-5 hidden group-hover:flex items-center justify-center text-zinc-300"><svg class="w-3.5 h-3.5 fill-current" viewbox="0 0 24 24"><path d="M8 5v14l11-7z"></path></svg></button>
+<div class="w-10 h-10 rounded bg-obsidian-800 flex-shrink-0 overflow-hidden ml-1 border border-white/5">
+<div class="w-full h-full bg-gradient-to-br from-cyan-950 to-blue-950 flex items-center justify-center text-[10px] font-bold text-cyan-300">R&amp;B</div>
+</div>
+<div class="ml-2.5 flex-1 min-w-0">
+<p class="text-xs font-medium text-zinc-200 truncate">Vầng Trăng Cô Đơn (R&amp;B Version) – N...</p>
+<p class="text-[10px] text-zinc-500 truncate">Added by: <span class="text-zinc-400 font-medium">Em bé xinh</span></p>
+</div>
+<div class="opacity-0 group-hover:opacity-100 flex items-center space-x-1 transition text-zinc-400">
+<button aria-label="Favorite" class="p-1 hover:text-rose-400"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"><path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" stroke-linecap="round" stroke-linejoin="round"></path></svg></button>
+<button aria-label="Menu" class="p-1 hover:text-white"><svg class="w-3.5 h-3.5" fill="currentColor" viewbox="0 0 24 24"><circle cx="12" cy="5" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="12" cy="19" r="2"></circle></svg></button>
+</div>
+</div>
+<!-- Track 6 -->
+<div class="group flex items-center p-2 rounded-lg hover:bg-white/5 transition cursor-pointer">
+<span class="w-5 text-center text-xs text-zinc-500 font-mono font-medium group-hover:hidden">6</span>
+<button aria-label="Play song" class="w-5 hidden group-hover:flex items-center justify-center text-zinc-300"><svg class="w-3.5 h-3.5 fill-current" viewbox="0 0 24 24"><path d="M8 5v14l11-7z"></path></svg></button>
+<div class="w-10 h-10 rounded bg-obsidian-800 flex-shrink-0 overflow-hidden ml-1 border border-white/5">
+<div class="w-full h-full bg-gradient-to-br from-violet-950 to-zinc-900 flex items-center justify-center text-[10px] font-bold text-violet-300">HT</div>
+</div>
+<div class="ml-2.5 flex-1 min-w-0">
+<p class="text-xs font-medium text-zinc-200 truncate">Tựa Vào Vai Anh | Hamlet Trương | Lyri...</p>
+<p class="text-[10px] text-zinc-500 truncate">Added by: <span class="text-zinc-400 font-medium">Em bé xinh</span></p>
+</div>
+<div class="opacity-0 group-hover:opacity-100 flex items-center space-x-1 transition text-zinc-400">
+<button aria-label="Favorite" class="p-1 hover:text-rose-400"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"><path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" stroke-linecap="round" stroke-linejoin="round"></path></svg></button>
+<button aria-label="Menu" class="p-1 hover:text-white"><svg class="w-3.5 h-3.5" fill="currentColor" viewbox="0 0 24 24"><circle cx="12" cy="5" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="12" cy="19" r="2"></circle></svg></button>
+</div>
+</div>
+<!-- Track 7 -->
+<div class="group flex items-center p-2 rounded-lg hover:bg-white/5 transition cursor-pointer">
+<span class="w-5 text-center text-xs text-zinc-500 font-mono font-medium group-hover:hidden">7</span>
+<button aria-label="Play song" class="w-5 hidden group-hover:flex items-center justify-center text-zinc-300"><svg class="w-3.5 h-3.5 fill-current" viewbox="0 0 24 24"><path d="M8 5v14l11-7z"></path></svg></button>
+<div class="w-10 h-10 rounded bg-obsidian-800 flex-shrink-0 overflow-hidden ml-1 border border-white/5">
+<div class="w-full h-full bg-gradient-to-br from-emerald-950 to-zinc-900 flex items-center justify-center text-[10px] font-bold text-emerald-300">QH</div>
+</div>
+<div class="ml-2.5 flex-1 min-w-0">
+<p class="text-xs font-medium text-zinc-200 truncate">[Lyric] Vẫn Tin Mình Có Nhau | Quang...</p>
+<p class="text-[10px] text-zinc-500 truncate">Added by: <span class="text-zinc-400 font-medium">Em bé xinh</span></p>
+</div>
+<div class="opacity-0 group-hover:opacity-100 flex items-center space-x-1 transition text-zinc-400">
+<button aria-label="Favorite" class="p-1 hover:text-rose-400"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"><path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" stroke-linecap="round" stroke-linejoin="round"></path></svg></button>
+<button aria-label="Menu" class="p-1 hover:text-white"><svg class="w-3.5 h-3.5" fill="currentColor" viewbox="0 0 24 24"><circle cx="12" cy="5" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="12" cy="19" r="2"></circle></svg></button>
+</div>
+</div>
+<!-- Track 8 -->
+<div class="group flex items-center p-2 rounded-lg hover:bg-white/5 transition cursor-pointer">
+<span class="w-5 text-center text-xs text-zinc-500 font-mono font-medium group-hover:hidden">8</span>
+<button aria-label="Play song" class="w-5 hidden group-hover:flex items-center justify-center text-zinc-300"><svg class="w-3.5 h-3.5 fill-current" viewbox="0 0 24 24"><path d="M8 5v14l11-7z"></path></svg></button>
+<div class="w-10 h-10 rounded bg-obsidian-800 flex-shrink-0 overflow-hidden ml-1 border border-white/5">
+<div class="w-full h-full bg-gradient-to-br from-teal-950 to-zinc-900 flex items-center justify-center text-[10px] font-bold text-teal-300">NL</div>
+</div>
+<div class="ml-2.5 flex-1 min-w-0">
+<p class="text-xs font-medium text-zinc-200 truncate">Người Dưng Ngược Lối (giọng Nam ho...)</p>
+<p class="text-[10px] text-zinc-500 truncate">Added by: <span class="text-zinc-400 font-medium">Em bé xinh</span></p>
+</div>
+<div class="opacity-0 group-hover:opacity-100 flex items-center space-x-1 transition text-zinc-400">
+<button aria-label="Favorite" class="p-1 hover:text-rose-400"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"><path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" stroke-linecap="round" stroke-linejoin="round"></path></svg></button>
+<button aria-label="Menu" class="p-1 hover:text-white"><svg class="w-3.5 h-3.5" fill="currentColor" viewbox="0 0 24 24"><circle cx="12" cy="5" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="12" cy="19" r="2"></circle></svg></button>
+</div>
+</div>
+<!-- Track 9 -->
+<div class="group flex items-center p-2 rounded-lg hover:bg-white/5 transition cursor-pointer">
+<span class="w-5 text-center text-xs text-zinc-500 font-mono font-medium group-hover:hidden">9</span>
+<button aria-label="Play song" class="w-5 hidden group-hover:flex items-center justify-center text-zinc-300"><svg class="w-3.5 h-3.5 fill-current" viewbox="0 0 24 24"><path d="M8 5v14l11-7z"></path></svg></button>
+<div class="w-10 h-10 rounded bg-obsidian-800 flex-shrink-0 overflow-hidden ml-1 border border-white/5">
+<div class="w-full h-full bg-gradient-to-br from-rose-950 to-zinc-900 flex items-center justify-center text-[10px] font-bold text-rose-300">VN</div>
+</div>
+<div class="ml-2.5 flex-1 min-w-0">
+<p class="text-xs font-medium text-zinc-200 truncate">Vẫn Nhớ (R&amp;B Version) – NDMT</p>
+<p class="text-[10px] text-zinc-500 truncate">Added by: <span class="text-zinc-400 font-medium">Em bé xinh</span></p>
+</div>
+<div class="opacity-0 group-hover:opacity-100 flex items-center space-x-1 transition text-zinc-400">
+<button aria-label="Favorite" class="p-1 hover:text-rose-400"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"><path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" stroke-linecap="round" stroke-linejoin="round"></path></svg></button>
+<button aria-label="Menu" class="p-1 hover:text-white"><svg class="w-3.5 h-3.5" fill="currentColor" viewbox="0 0 24 24"><circle cx="12" cy="5" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="12" cy="19" r="2"></circle></svg></button>
+</div>
+</div>
+<!-- Track 10 -->
+<div class="group flex items-center p-2 rounded-lg hover:bg-white/5 transition cursor-pointer">
+<span class="w-5 text-center text-xs text-zinc-500 font-mono font-medium group-hover:hidden">10</span>
+<button aria-label="Play song" class="w-5 hidden group-hover:flex items-center justify-center text-zinc-300"><svg class="w-3.5 h-3.5 fill-current" viewbox="0 0 24 24"><path d="M8 5v14l11-7z"></path></svg></button>
+<div class="w-10 h-10 rounded bg-obsidian-800 flex-shrink-0 overflow-hidden ml-1 border border-white/5">
+<div class="w-full h-full bg-gradient-to-br from-indigo-950 to-zinc-900 flex items-center justify-center text-[10px] font-bold text-indigo-300">LQ</div>
+</div>
+<div class="ml-2.5 flex-1 min-w-0">
+<p class="text-xs font-medium text-zinc-200 truncate">Lãng Quên Chiều Thu (R&amp;B Version) – ...</p>
+<p class="text-[10px] text-zinc-500 truncate">Added by: <span class="text-zinc-400 font-medium">Em bé xinh</span></p>
+</div>
+<div class="opacity-0 group-hover:opacity-100 flex items-center space-x-1 transition text-zinc-400">
+<button aria-label="Favorite" class="p-1 hover:text-rose-400"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"><path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" stroke-linecap="round" stroke-linejoin="round"></path></svg></button>
+<button aria-label="Menu" class="p-1 hover:text-white"><svg class="w-3.5 h-3.5" fill="currentColor" viewbox="0 0 24 24"><circle cx="12" cy="5" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="12" cy="19" r="2"></circle></svg></button>
+</div>
+</div>
+</div>
+<!-- Floating Quick Chat Indicator Bubble (bottom left corner inspired by reference) -->
+<div class="p-3 border-t border-white/10 flex items-center justify-between text-xs text-zinc-400 bg-obsidian-950/40">
+<div class="flex items-center space-x-2">
+<span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+<span class="text-[11px]">Auto-play next</span>
+</div>
+<button aria-label="Quick room chat toggle" class="w-8 h-8 rounded-full bg-fuchsia-600/80 hover:bg-fuchsia-500 text-white flex items-center justify-center shadow-lg shadow-fuchsia-600/30 transition hover:scale-105 active:scale-95">
+<svg class="w-4 h-4" fill="currentColor" viewbox="0 0 20 20"><path clip-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zm-5 0H8v2h2V9z" fill-rule="evenodd"></path></svg>
+</button>
+</div>
+</aside>
+<!-- END: Left Column Queue -->
+<!-- ======================================================== -->
+<!-- COLUMN 2: CENTER - MAIN STAGE, SYNCED PLAYER & LYRICS    -->
+<!-- ======================================================== -->
+<!-- BEGIN: Center Column Stage -->
+<main class="flex-1 flex flex-col min-w-0 bg-transparent overflow-y-auto px-4 lg:px-8 py-3 space-y-4" data-purpose="center-main-stage">
+<!-- Interactive Top Tabs: Music Controls, Play Games, Read Stories -->
+<div class="flex items-center justify-between border-b border-white/10 pb-2.5 shrink-0">
+<div class="flex items-center space-x-2 sm:space-x-4 text-xs sm:text-sm font-medium">
+<button class="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-fuchsia-600/20 border border-fuchsia-500/40 text-fuchsia-300 font-semibold shadow-sm transition" type="button">
+<span>🎵</span>
+<span>Music Controls</span>
+</button>
+<button class="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-zinc-400 hover:text-zinc-200 hover:bg-white/5 transition" type="button">
+<span>🎮</span>
+<span>Play Games (Caro &amp; Cờ vua)</span>
+</button>
+<button class="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-zinc-400 hover:text-zinc-200 hover:bg-white/5 transition" type="button">
+<span>📖</span>
+<span>Read Stories</span>
+</button>
+</div>
+<button aria-label="Expand player layout" class="text-zinc-400 hover:text-white transition p-1.5 rounded-md hover:bg-white/5" type="button">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"><path d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+</button>
+</div>
+<!-- Main Video / Music Player Cinema Stage Frame -->
+<div class="w-full relative rounded-2xl overflow-hidden glass-panel border border-white/10 shadow-2xl group" data-purpose="cinematic-player-container">
+<!-- Cinema Player Ratio Box (16:9 cinematic aspect) -->
+<div class="relative aspect-video max-h-[380px] w-full bg-obsidian-950/90 overflow-hidden flex items-center justify-center">
+<!-- Atmospheric Video Stream Simulation with Video Scene inside -->
+<div class="absolute inset-0 z-0 overflow-hidden">
+<img alt="Background Stage Lighting" class="w-full h-full object-cover filter blur-md opacity-30 scale-110" src="https://lh3.googleusercontent.com/aida/AEtjO1UgTXVzyGThXwCRWfW6UtJZsBOLImVYYDStfPzlq_7MPtvDG_GJKZ7eqUSMLMDTcX2I7SnYMsHJwQJqwHh2KnP1lONRowj0tHs2Oaaj-kVmiCh3Lu7gOP4VluyzLgXLZCSI5VBBKEiBOcePOdDE-luEltJBkZzAe9-BsYxorxFby3u0PVFogS8Ztnsn0pePJoQiUyrijnjlSffO1vtRy_o5VQ4QFNxAsnCq_bfQ1bI9b5a4UBKgNU6GlEft"/>
+<div class="absolute inset-0 bg-gradient-to-t from-obsidian-950 via-obsidian-950/40 to-black/60"></div>
+</div>
+<!-- Embedded Center Video Content Simulation -->
+<div class="relative z-10 w-[72%] max-w-lg aspect-video rounded-xl overflow-hidden shadow-2xl border border-white/20 group/screen">
+<!-- Reconstructed frame preview simulating music video scene -->
+<div class="w-full h-full bg-zinc-800 flex items-center justify-center relative overflow-hidden">
+<div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent z-10"></div>
+<!-- Simulating school yard / MV setting seen in reference screenshot -->
+<div class="w-full h-full flex items-center justify-center bg-cover bg-center" style="background-image: radial-gradient(circle at center, #3f3f46 0%, #18181b 100%);">
+<div class="text-center px-4 py-6 z-20">
+<div class="inline-block px-3 py-1 rounded-full bg-black/60 backdrop-blur-md border border-white/20 text-xs text-white font-medium mb-2">
+                      (S)TRONG Trọng Hiếu - Kho Báu
+                    </div>
+<p class="text-[11px] text-zinc-300 font-light">Official Music Video • HD 1080p</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Top Left: LIVE Broadcast Badge -->
+<div class="absolute top-4 left-4 z-20 flex items-center space-x-2">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold tracking-wider bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 backdrop-blur-md shadow-lg shadow-emerald-950/50">
+<span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse mr-1.5"></span>
+                LIVE
+              </span>
+</div>
+<!-- Cute Animated Mascot Companion in bottom-left corner (from reference) -->
+<div class="absolute bottom-4 left-5 z-20 flex items-center space-x-2 animate-float-slow filter drop-shadow-[0_10px_10px_rgba(0,0,0,0.5)]">
+<!-- Pixel / Stylized Dancer Mascot with headphones & mic -->
+<div class="w-12 h-14 relative flex items-center justify-center">
+<div class="w-10 h-10 rounded-full bg-gradient-to-tr from-amber-400 to-yellow-300 border-2 border-white flex items-center justify-center shadow-lg relative">
+<span class="text-base">😎</span>
+<!-- Headphone headband -->
+<div class="absolute -top-1 w-9 h-3 border-t-2 border-fuchsia-500 rounded-t-full"></div>
+<!-- Mini microphone -->
+<span class="absolute -bottom-1 -right-2 text-xs">🎤</span>
+</div>
+</div>
+<div class="hidden sm:block px-2.5 py-1 rounded-lg bg-black/60 backdrop-blur-md border border-white/10 text-[10px] text-pink-300 font-medium">
+                Vibe cùng phòng 💃✨
+              </div>
+</div>
+<!-- Bottom Right: Video / Audio Mode Switch Toggle -->
+<div class="absolute bottom-4 right-4 z-20">
+<button class="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-obsidian-850/80 hover:bg-obsidian-700/80 border border-white/15 text-xs text-zinc-200 backdrop-blur-md transition shadow-lg" type="button">
+<svg class="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"><path d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+<span class="font-medium">Video</span>
+</button>
+</div>
+</div>
+<!-- Player Controls & Current Song Meta Bar -->
+<div class="p-4 bg-obsidian-900/90 border-t border-white/10">
+<!-- Song Title & Subtitle Info -->
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mb-3">
+<div>
+<h3 class="text-base sm:text-lg font-bold text-white tracking-wide hover:text-fuchsia-300 transition cursor-pointer">
+                  (S)TRONG Trọng Hiếu - Kho Báu | Official Music Video
+                </h3>
+<p class="text-xs text-zinc-400 mt-0.5">
+                  Added by <span class="text-fuchsia-400 font-medium">Em bé xinh</span> • SoundWithMe Sync Engine
+                </p>
+</div>
+<div class="flex items-center space-x-2 text-xs">
+<span class="px-2 py-0.5 rounded bg-white/5 border border-white/10 text-cyan-400 font-mono text-[10px]">Lossless 24-bit</span>
+<span class="flex items-center space-x-1 px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+<span>SYNCED</span>
+</span>
+</div>
+</div>
+<!-- Progress Timeline Bar -->
+<div class="space-y-1 mb-2">
+<div class="relative w-full h-1.5 bg-white/10 rounded-full overflow-hidden cursor-pointer group/progress">
+<!-- Played Gradient Track (4:00 out of 4:13 is ~97%) -->
+<div class="h-full w-[96%] bg-gradient-to-r from-violet-500 via-fuchsia-500 to-cyan-400 rounded-full relative">
+<div class="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full shadow-[0_0_8px_#ec4899] opacity-0 group-hover/progress:opacity-100 transition"></div>
+</div>
+</div>
+<div class="flex items-center justify-between text-[11px] font-mono text-zinc-400">
+<span>4:00</span>
+<span>4:13</span>
+</div>
+</div>
+<!-- Main Playback Actions Bar -->
+<div class="flex items-center justify-between pt-1">
+<!-- Left Controls: Volume & Loop -->
+<div class="flex items-center space-x-3 w-1/3">
+<button aria-label="Volume toggle" class="text-zinc-400 hover:text-white transition" type="button">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"><path d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+</button>
+<input aria-label="Volume level" class="w-20 cursor-pointer accent-fuchsia-500" max="100" min="0" type="range" value="70"/>
+<button aria-label="Loop toggle" class="text-fuchsia-400 hover:text-fuchsia-300 transition" type="button">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+</button>
+</div>
+<!-- Center Primary Buttons: Previous, Big Pause/Play, Next -->
+<div class="flex items-center justify-center space-x-4 w-1/3">
+<!-- Previous Track -->
+<button aria-label="Previous track" class="text-zinc-400 hover:text-white active:scale-95 transition" type="button">
+<svg class="w-4 h-4 fill-current" viewbox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"></path></svg>
+</button>
+<!-- Big Radiant Play/Pause Button (In pause state since playing) -->
+<button aria-label="Pause playback" class="w-11 h-11 rounded-full bg-gradient-to-r from-fuchsia-500 to-pink-500 hover:from-fuchsia-400 hover:to-pink-400 active:scale-95 text-white flex items-center justify-center shadow-lg shadow-fuchsia-500/40 hover:shadow-fuchsia-500/60 transition" type="button">
+<!-- Pause Bars -->
+<div class="flex items-center space-x-1">
+<span class="w-1.5 h-4 bg-white rounded-full"></span>
+<span class="w-1.5 h-4 bg-white rounded-full"></span>
+</div>
+</button>
+<!-- Next Track -->
+<button aria-label="Next track" class="text-zinc-400 hover:text-white active:scale-95 transition" type="button">
+<svg class="w-4 h-4 fill-current" viewbox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"></path></svg>
+</button>
+</div>
+<!-- Right: Live sync & Queue Actions -->
+<div class="flex items-center justify-end space-x-2 w-1/3 text-xs">
+<button class="px-2.5 py-1 rounded-full bg-rose-500/10 border border-rose-500/30 text-rose-400 font-medium flex items-center space-x-1 hover:bg-rose-500/20 transition" type="button">
+<span class="w-2 h-2 rounded-full bg-rose-500"></span>
+<span class="font-bold">LIVE</span>
+</button>
+<button aria-label="Download or offline" class="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-white/5 transition" type="button">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Integrated Real-time Synced Karaoke Lyrics Section -->
+<div class="glass-panel rounded-2xl p-4 sm:p-5 border border-white/10 flex flex-col relative overflow-hidden" data-purpose="karaoke-lyrics-container">
+<!-- Lyrics Header with Timing Calibration -->
+<div class="flex items-center justify-between border-b border-white/10 pb-3 mb-4">
+<div class="flex items-center space-x-2">
+<span class="text-sm font-bold text-fuchsia-400 tracking-wider">🎵 LYRICS</span>
+<span class="text-xs text-zinc-400 font-medium">— Nơi Ấy Con Tìm Về <span class="text-zinc-500">• Hồ Quang Hiếu</span></span>
+</div>
+<div class="flex items-center space-x-2 text-xs">
+<!-- Sync Timing Calibration Pills -->
+<div class="bg-obsidian-850 px-2 py-0.5 rounded-lg border border-white/10 flex items-center space-x-1.5 font-mono text-[11px] text-zinc-400">
+<button class="hover:text-white transition px-1">0.0s</button>
+<span class="text-zinc-600">|</span>
+<button class="hover:text-cyan-400 transition px-1">-0.5s</button>
+<span class="text-zinc-600">|</span>
+<button class="hover:text-cyan-400 transition px-1">+0.5s</button>
+</div>
+<!-- Fullscreen expand lyrics -->
+<button aria-label="Full screen lyrics" class="p-1.5 rounded text-zinc-400 hover:text-white hover:bg-white/5 transition">
+<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"><path d="M5 15l7-7 7 7" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+</button>
+</div>
+</div>
+<!-- Synchronized Lyric Lines Stream -->
+<div class="text-center py-4 space-y-4 font-medium transition-all">
+<!-- Previous Line (soft muted) -->
+<p class="text-zinc-500 text-sm tracking-wide transition duration-300">
+              Ngày con cất tiếng khóc chào đời
+            </p>
+<!-- CURRENT ACTIVE GLOWING LINE -->
+<div class="relative py-1">
+<p class="text-base sm:text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-white via-cyan-200 to-fuchsia-200 drop-shadow-[0_0_15px_rgba(6,182,212,0.6)] scale-105 transition-transform duration-300">
+                Ngày mẹ đã nói niềm vui trào dâng ngập trời
+              </p>
+<div class="absolute left-1/2 -translate-x-1/2 -bottom-1 w-16 h-0.5 bg-gradient-to-r from-transparent via-cyan-400 to-transparent rounded-full opacity-60"></div>
+</div>
+<!-- Next Line -->
+<p class="text-zinc-400/80 text-sm tracking-wide transition duration-300">
+              Mang yêu thương của cha đã dành
+            </p>
+<!-- Following Line -->
+<p class="text-zinc-500/70 text-xs sm:text-sm tracking-wide transition duration-300">
+              Để trong mái ấm từng ngày qua con lớn lên
+            </p>
+<!-- Faint Line -->
+<p class="text-zinc-600/60 text-xs tracking-wide transition duration-300">
+              Là lời ru mẹ đưa bên cánh võng...
+            </p>
+</div>
+</div>
+</main>
+<!-- END: Center Column Stage -->
+<!-- ======================================================== -->
+<!-- COLUMN 3: RIGHT - LISTENERS, LIVE CHAT & SOCIAL DOCK     -->
+<!-- ======================================================== -->
+<!-- BEGIN: Right Column Listeners & Chat -->
+<aside class="w-80 lg:w-88 border-l border-white/10 bg-obsidian-900/70 backdrop-blur-xl flex flex-col shrink-0" data-purpose="right-chat-sidebar">
+<!-- Section Header: Listeners Count & Volume state -->
+<div class="px-4 py-3.5 border-b border-white/10 flex items-center justify-between shrink-0">
+<div class="flex items-center space-x-2">
+<h2 class="text-sm font-bold text-white tracking-wide">Listeners</h2>
+<div class="flex items-center space-x-1 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-medium">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+<span>11 online</span>
+</div>
+</div>
+<div class="flex items-center space-x-2">
+<button aria-label="Room audio muted toggle" class="p-1 rounded text-zinc-400 hover:text-white transition" type="button">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"><path d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+</button>
+</div>
+</div>
+<!-- Active Listeners Avatar Horizontal Strip -->
+<div class="px-4 py-2.5 border-b border-white/5 bg-obsidian-950/30 flex items-center space-x-2 overflow-x-auto">
+<!-- Host Avatar -->
+<div class="relative shrink-0 group cursor-pointer" title="Em bé xinh (Host)">
+<div class="w-7 h-7 rounded-full bg-gradient-to-tr from-pink-500 to-violet-500 ring-2 ring-fuchsia-400 flex items-center justify-center text-[10px] font-bold text-white shadow-sm">
+              E
+            </div>
+<span class="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 ring-2 ring-obsidian-900"></span>
+</div>
+<!-- Listener 2 -->
+<div class="relative shrink-0 cursor-pointer" title="KháchW804X (You)">
+<div class="w-7 h-7 rounded-full bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center text-[10px] font-bold text-white">
+              K
+            </div>
+<span class="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 ring-2 ring-obsidian-900"></span>
+</div>
+<!-- Listener 3 -->
+<div class="relative shrink-0 cursor-pointer" title="Pun nè">
+<div class="w-7 h-7 rounded-full bg-gradient-to-tr from-purple-500 to-indigo-500 flex items-center justify-center text-[10px] font-bold text-white">
+              P
+            </div>
+<span class="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 ring-2 ring-obsidian-900"></span>
+</div>
+<!-- Listener 4 -->
+<div class="relative shrink-0 cursor-pointer" title="Tào Mạnh Đức">
+<div class="w-7 h-7 rounded-full bg-gradient-to-tr from-amber-500 to-rose-600 flex items-center justify-center text-[10px] font-bold text-white">
+              T
+            </div>
+<span class="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 ring-2 ring-obsidian-900"></span>
+</div>
+<!-- Listener 5 -->
+<div class="relative shrink-0 cursor-pointer" title="Crispin">
+<div class="w-7 h-7 rounded-full bg-gradient-to-tr from-emerald-500 to-teal-600 flex items-center justify-center text-[10px] font-bold text-white">
+              C
+            </div>
+<span class="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 ring-2 ring-obsidian-900"></span>
+</div>
+<!-- Listener 6 -->
+<div class="relative shrink-0 cursor-pointer" title="Clone">
+<div class="w-7 h-7 rounded-full bg-zinc-700 flex items-center justify-center text-[10px] font-bold text-zinc-300">
+              8+
+            </div>
+</div>
+</div>
+<!-- Chat Stream Header / Label -->
+<div class="px-4 py-2 flex items-center justify-between text-xs text-zinc-400 border-b border-white/5">
+<span class="font-semibold uppercase tracking-wider text-[10px]">Chat</span>
+<span class="text-[10px] text-zinc-500">Live room chat</span>
+</div>
+<!-- Chat Stream Message Feed (scrollable) -->
+<div class="flex-1 overflow-y-auto px-4 py-3 space-y-3.5" data-purpose="chat-messages-scroll">
+<!-- Message 1 -->
+<div class="flex items-start space-x-2.5 text-xs">
+<div class="w-6 h-6 rounded-full bg-fuchsia-600 flex-shrink-0 flex items-center justify-center text-[9px] font-bold text-white">
+              E
+            </div>
+<div class="flex-1 min-w-0">
+<div class="flex items-baseline space-x-2">
+<span class="font-semibold text-fuchsia-400">Em bé xinh</span>
+<span class="text-[9px] text-zinc-500">last month</span>
+</div>
+<p class="text-zinc-200 mt-0.5 bg-white/5 rounded-lg px-2.5 py-1.5 inline-block max-w-full break-words">
+                mình mới update thêm bài mới
+              </p>
+</div>
+</div>
+<!-- Message 2 -->
+<div class="flex items-start space-x-2.5 text-xs">
+<div class="w-6 h-6 rounded-full bg-fuchsia-600 flex-shrink-0 flex items-center justify-center text-[9px] font-bold text-white">
+              E
+            </div>
+<div class="flex-1 min-w-0">
+<div class="flex items-baseline space-x-2">
+<span class="font-semibold text-fuchsia-400">Em bé xinh</span>
+<span class="text-[9px] text-zinc-500">last month</span>
+</div>
+<p class="text-zinc-200 mt-0.5 bg-white/5 rounded-lg px-2.5 py-1.5 inline-block max-w-full break-words">
+                chúc mọi người buổi trưa vui vẻ nhá
+              </p>
+</div>
+</div>
+<!-- Message 3 -->
+<div class="flex items-start space-x-2.5 text-xs">
+<div class="w-6 h-6 rounded-full bg-fuchsia-600 flex-shrink-0 flex items-center justify-center text-[9px] font-bold text-white">
+              E
+            </div>
+<div class="flex-1 min-w-0">
+<div class="flex items-baseline space-x-2">
+<span class="font-semibold text-fuchsia-400">Em bé xinh</span>
+<span class="text-[9px] text-zinc-500">last month</span>
+</div>
+<p class="text-zinc-200 mt-0.5 bg-white/5 rounded-lg px-2.5 py-1.5 inline-block max-w-full break-words">
+                mất bài đó , số người nghe room này tụt hẳn 🥺
+              </p>
+</div>
+</div>
+<!-- Message 4 -->
+<div class="flex items-start space-x-2.5 text-xs">
+<div class="w-6 h-6 rounded-full bg-purple-600 flex-shrink-0 flex items-center justify-center text-[9px] font-bold text-white">
+              P
+            </div>
+<div class="flex-1 min-w-0">
+<div class="flex items-baseline space-x-2">
+<span class="font-semibold text-purple-400">Pun nè</span>
+<span class="text-[9px] text-zinc-500">last month</span>
+</div>
+<p class="text-zinc-200 mt-0.5 bg-white/5 rounded-lg px-2.5 py-1.5 inline-block max-w-full break-words">
+                Chào mọi người nhen
+              </p>
+</div>
+</div>
+<!-- Message 5 -->
+<div class="flex items-start space-x-2.5 text-xs">
+<div class="w-6 h-6 rounded-full bg-fuchsia-600 flex-shrink-0 flex items-center justify-center text-[9px] font-bold text-white">
+              E
+            </div>
+<div class="flex-1 min-w-0">
+<div class="flex items-baseline space-x-2">
+<span class="font-semibold text-fuchsia-400">Em bé xinh</span>
+<span class="text-[9px] text-zinc-500">last month</span>
+</div>
+<p class="text-zinc-200 mt-0.5 bg-white/5 rounded-lg px-2.5 py-1.5 inline-block max-w-full break-words">
+                buổi tối vui vẻ nha mọi người
+              </p>
+</div>
+</div>
+<!-- Message 6 -->
+<div class="flex items-start space-x-2.5 text-xs">
+<div class="w-6 h-6 rounded-full bg-amber-600 flex-shrink-0 flex items-center justify-center text-[9px] font-bold text-white">
+              T
+            </div>
+<div class="flex-1 min-w-0">
+<div class="flex items-baseline space-x-2">
+<span class="font-semibold text-amber-400">Tào Mạnh Đức</span>
+<span class="text-[9px] text-zinc-500">last month</span>
+</div>
+<p class="text-zinc-200 mt-0.5 bg-white/5 rounded-lg px-2.5 py-1.5 inline-block max-w-full break-words">
+                hi
+              </p>
+</div>
+</div>
+<!-- Message 7 -->
+<div class="flex items-start space-x-2.5 text-xs">
+<div class="w-6 h-6 rounded-full bg-emerald-600 flex-shrink-0 flex items-center justify-center text-[9px] font-bold text-white">
+              C
+            </div>
+<div class="flex-1 min-w-0">
+<div class="flex items-baseline space-x-2">
+<span class="font-semibold text-emerald-400">Crispin</span>
+<span class="text-[9px] text-zinc-500">last week</span>
+</div>
+<p class="text-zinc-200 mt-0.5 bg-white/5 rounded-lg px-2.5 py-1.5 inline-block max-w-full break-words">
+                Hi from India
+              </p>
+</div>
+</div>
+<!-- Message 8 -->
+<div class="flex items-start space-x-2.5 text-xs">
+<div class="w-6 h-6 rounded-full bg-indigo-600 flex-shrink-0 flex items-center justify-center text-[9px] font-bold text-white">
+              C
+            </div>
+<div class="flex-1 min-w-0">
+<div class="flex items-baseline space-x-2">
+<span class="font-semibold text-indigo-400">Clone</span>
+<span class="text-[9px] text-zinc-500">last week</span>
+</div>
+<p class="text-zinc-200 mt-0.5 bg-white/5 rounded-lg px-2.5 py-1.5 inline-block max-w-full break-words">
+                hiiiiiii
+              </p>
+</div>
+</div>
+</div>
+<!-- Quick Floating Reaction Emote Dock -->
+<div class="px-3 py-1.5 border-t border-white/5 bg-obsidian-950/40 flex items-center justify-around text-base">
+<button class="hover:scale-125 active:scale-95 transition transform" title="Love" type="button">❤️</button>
+<button class="hover:scale-125 active:scale-95 transition transform" title="Fire" type="button">🔥</button>
+<button class="hover:scale-125 active:scale-95 transition transform" title="Laugh" type="button">😂</button>
+<button class="hover:scale-125 active:scale-95 transition transform" title="Cry" type="button">😭</button>
+<button class="hover:scale-125 active:scale-95 transition transform" title="Heart" type="button">💜</button>
+<button class="hover:scale-125 active:scale-95 transition transform" title="Clap" type="button">👏</button>
+<button class="hover:scale-125 active:scale-95 transition transform" title="Music" type="button">🎵</button>
+</div>
+<!-- Bottom Chat Input Bar -->
+<div class="p-3 border-t border-white/10 bg-obsidian-900/95 shrink-0">
+<div class="relative flex items-center">
+<!-- Sign In To Chat Action Button styled like the reference -->
+<button class="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-violet-600/30 to-fuchsia-600/30 hover:from-violet-600/40 hover:to-fuchsia-600/40 border border-violet-500/30 hover:border-violet-400/50 text-xs font-semibold text-fuchsia-200 flex items-center justify-center space-x-2 transition shadow-lg shadow-violet-950/50 active:scale-[0.99]" type="button">
+<svg class="w-4 h-4 text-fuchsia-400" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<path d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+<span>Sign in to chat</span>
+</button>
+</div>
+<div class="text-[10px] text-zinc-500 text-center mt-2">
+            Đăng nhập để lưu danh sách phát &amp; bình luận cùng bạn bè
+          </div>
+</div>
+</aside>
+<!-- END: Right Column Listeners & Chat -->
+</div>
+<!-- END: 3-Column Core Workspace -->
+</div>
+<!-- END: Main Viewport Container -->
+<!-- BEGIN: Interactive Component Logic Scripts -->
+<script data-purpose="playback-simulator">
+    // Lightweight UI interactive feedback simulator
+    document.addEventListener('DOMContentLoaded', () => {
+      const reactionButtons = document.querySelectorAll('button[title]');
+      reactionButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+          btn.classList.add('scale-150');
+          setTimeout(() => {
+            btn.classList.remove('scale-150');
+          }, 200);
+        });
+      });
+    });
+  </script>
+<!-- END: Interactive Component Logic Scripts -->
+</body></html>

@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+
+<html class="dark h-full" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>SoundWithMe — Tune In Together</title>
+<!-- Tailwind CSS v3 with Plugins -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Google Fonts Preconnect -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&amp;family=Space+Grotesk:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            obsidian: "#0b0c10",
+            surface: "#12131a",
+            brandViolet: "#a078ff",
+            brandCyan: "#4cd7f6",
+            primary: "#d0bcff",
+            secondary: "#4cd7f6",
+          },
+          fontFamily: {
+            sans: ["Plus Jakarta Sans", "system-ui", "-apple-system", "sans-serif"],
+            mono: ["Space Grotesk", "monospace"]
+          },
+          boxShadow: {
+            'glow-cyan': '0 0 28px -4px rgba(76, 215, 246, 0.45)',
+            'glow-violet': '0 0 32px -4px rgba(160, 120, 255, 0.45)',
+            'card-glass': '0 25px 60px -15px rgba(0, 0, 0, 0.85), 0 0 45px -10px rgba(160, 120, 255, 0.22)'
+          },
+          animation: {
+            'spin-slow': 'spin 20s linear infinite',
+            'pulse-subtle': 'pulse 3.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+          }
+        }
+      }
+    }
+  </script>
+<style>
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: #0b0c10;
+      color: #e3e1e9;
+      overflow-x: hidden;
+    }
+
+    /* Custom subtle scrollbar */
+    ::-webkit-scrollbar {
+      width: 4px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(11, 12, 16, 0.6);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(160, 120, 255, 0.3);
+      border-radius: 9999px;
+    }
+
+    /* Ambient glass container border */
+    .glass-border {
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background-clip: padding-box, border-box;
+      background-origin: padding-box, border-box;
+      background-image: 
+        linear-gradient(135deg, rgba(18, 19, 26, 0.88), rgba(12, 13, 19, 0.94)),
+        linear-gradient(135deg, rgba(160, 120, 255, 0.4), rgba(76, 215, 246, 0.25), rgba(255, 178, 183, 0.15));
+    }
+
+    .vibe-chip.active {
+      background: linear-gradient(135deg, rgba(160, 120, 255, 0.28), rgba(76, 215, 246, 0.18));
+      border-color: rgba(160, 120, 255, 0.65);
+      color: #ffffff;
+      box-shadow: 0 0 16px -2px rgba(160, 120, 255, 0.35);
+    }
+  </style>
+</head>
+<body class="relative min-h-screen flex flex-col justify-between select-none antialiased bg-[#0b0c10] text-[#e3e1e9] overflow-y-auto">
+<!-- BEGIN: Cinematic Chill Wallpaper & Aurora Overlay -->
+<aside aria-hidden="true" class="fixed inset-0 pointer-events-none z-0 overflow-hidden" data-purpose="ambient-backdrop">
+<!-- Cinematic ultra-res image background -->
+<div class="absolute inset-0 scale-105 filter blur-[1.5px] transition-transform duration-1000">
+<img alt="Cinematic midnight ambient aurora" class="w-full h-full object-cover object-center" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAyQc7a6f_u13dlZBEIldXM83ORQHXqTqv5rNnzAZCy8fuCLn7iJOmVDv_fis0a5XUaiBX5R-PQrY5jQ2gP5qbmJ3rsstSzneFQlLch4w46VC_6paG_6KHxfZRX2PjJvdfRxmXjydikGOXjGdXflYM4lqheeCMsU4AiJvIrAo7TdWIF2lWQkrzyZG02f0FAjLkMNYJHtZzKmAfFEpLLix3CRSTOKd6apbZPn5zG_Fa1-uWAODMId-B3JA"/>
+</div>
+<!-- Cozy midnight backdrop overlay #0b0c10 at ~75% opacity with gentle blur -->
+<div class="absolute inset-0 bg-[#0b0c10]/75 backdrop-blur-[12px]"></div>
+<!-- Dreamy Aurora glow highlights -->
+<div class="absolute -top-32 left-1/3 w-[650px] h-[650px] bg-purple-600/15 rounded-full blur-[140px]"></div>
+<div class="absolute -bottom-24 right-1/4 w-[550px] h-[550px] bg-cyan-500/15 rounded-full blur-[130px]"></div>
+</aside>
+<!-- END: Cinematic Chill Wallpaper -->
+<!-- BEGIN: Clean Minimal Header -->
+<header class="relative z-30 w-full px-6 py-4 lg:px-12 flex items-center justify-between border-b border-white/[0.06] backdrop-blur-md bg-[#0b0c10]/40" data-purpose="global-navigation">
+<!-- SoundWithMe Logo with subtle pulse dot -->
+<a class="flex items-center space-x-3 group cursor-pointer" href="#">
+<div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-purple-500 via-indigo-500 to-cyan-400 p-[1.5px] shadow-lg shadow-purple-500/20 group-hover:shadow-cyan-500/30 transition-all">
+<div class="w-full h-full bg-[#12131a] rounded-[10px] flex items-center justify-center">
+<svg class="w-4 h-4 text-white transform group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewbox="0 0 24 24">
+<path d="M3 18v-6a9 9 0 0 1 18 0v6"></path>
+<path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"></path>
+<circle cx="12" cy="12" fill="currentColor" r="2"></circle>
+</svg>
+</div>
+</div>
+<div class="flex items-center space-x-2">
+<span class="font-bold text-base tracking-tight text-white group-hover:text-purple-200 transition-colors">SoundWithMe</span>
+<span class="relative flex h-2 w-2">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
+<span class="relative inline-flex rounded-full h-2 w-2 bg-cyan-400"></span>
+</span>
+</div>
+</a>
+<!-- Top Right Nav Action Links -->
+<div class="flex items-center space-x-3 sm:space-x-5 text-xs font-medium">
+<a class="text-slate-300 hover:text-white px-3 py-1.5 rounded-lg hover:bg-white/5 transition-all" href="#explore">
+        Explore Rooms
+      </a>
+<a class="px-4 py-2 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 text-white font-semibold transition-all hover:scale-105 active:scale-95" href="#signin">
+        Sign In
+      </a>
+</div>
+</header>
+<!-- END: Clean Minimal Header -->
+<!-- BEGIN: Central Glassmorphism Register Card -->
+<main class="relative z-20 flex-1 flex items-center justify-center px-4 py-8 sm:py-10">
+<div class="w-full max-w-[480px] rounded-3xl glass-border p-6 sm:p-8 backdrop-blur-2xl shadow-card-glass relative overflow-hidden transition-all duration-300" data-purpose="auth-modal-card">
+<!-- Ambient corner luminescence -->
+<div class="absolute -top-20 -right-20 w-44 h-44 bg-purple-500/20 rounded-full blur-3xl pointer-events-none"></div>
+<div class="absolute -bottom-20 -left-20 w-44 h-44 bg-cyan-400/15 rounded-full blur-3xl pointer-events-none"></div>
+<!-- Header: Title & Poetic Subtitle -->
+<div class="text-center mb-6">
+<h1 class="text-2xl sm:text-[28px] font-bold tracking-tight text-white">
+          Tune In Together
+        </h1>
+<p class="text-xs sm:text-sm text-slate-300/80 mt-1 font-light leading-relaxed">
+          Connect through synchronized sound, wherever you are.
+        </p>
+</div>
+<!-- Quick 1-Tap Social Auth: Google & Apple -->
+<div class="grid grid-cols-2 gap-3 mb-5">
+<!-- Google SSO -->
+<button class="w-full py-2.5 px-3 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 text-white font-medium text-xs flex items-center justify-center space-x-2 transition-all duration-150 active:scale-[0.98] group" type="button">
+<svg class="w-4 h-4 flex-shrink-0" viewbox="0 0 24 24">
+<path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"></path>
+<path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"></path>
+<path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" fill="#FBBC05"></path>
+<path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" fill="#EA4335"></path>
+</svg>
+<span class="truncate">Google</span>
+</button>
+<!-- Apple SSO -->
+<button class="w-full py-2.5 px-3 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 text-white font-medium text-xs flex items-center justify-center space-x-2 transition-all duration-150 active:scale-[0.98] group" type="button">
+<svg class="w-4 h-4 fill-current text-white flex-shrink-0" viewbox="0 0 24 24">
+<path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.85c.66-.82 1.11-1.96.99-3.1-.95.04-2.1.64-2.78 1.44-.6.69-1.12 1.83-.98 2.95 1.05.08 2.11-.47 2.77-1.29z"></path>
+</svg>
+<span class="truncate">Apple</span>
+</button>
+</div>
+<!-- Divider -->
+<div class="relative flex items-center justify-center my-5">
+<div class="border-t border-white/[0.08] w-full"></div>
+<span class="px-3 text-[11px] font-normal text-slate-400 bg-[#12131a] whitespace-nowrap rounded-full">
+          or continue with email
+        </span>
+<div class="border-t border-white/[0.08] w-full"></div>
+</div>
+<!-- BEGIN: Choose Aesthetic Sonic Avatar -->
+<div class="mb-4">
+<div class="flex items-center justify-between mb-2">
+<label class="text-[11px] font-medium tracking-wide text-slate-300 uppercase">Choose Avatar</label>
+<span class="text-[10px] text-purple-300 font-mono">Headphone series</span>
+</div>
+<div class="flex items-center space-x-3 overflow-x-auto pb-1 scrollbar-none" id="avatar-selector-row">
+<!-- Avatar 1 (Active / Selected with glowing ring) -->
+<button aria-label="Avatar Neon Violet" class="avatar-option flex-shrink-0 relative p-0.5 rounded-full ring-2 ring-cyan-400 shadow-glow-cyan transition-all transform scale-105 focus:outline-none" type="button">
+<div class="w-10 h-10 rounded-full bg-gradient-to-tr from-purple-700 via-indigo-600 to-cyan-500 flex items-center justify-center text-lg select-none">
+              🎧
+            </div>
+</button>
+<!-- Avatar 2 -->
+<button aria-label="Avatar Stardust" class="avatar-option flex-shrink-0 relative p-0.5 rounded-full ring-1 ring-white/10 hover:ring-purple-400 opacity-70 hover:opacity-100 transition-all focus:outline-none" type="button">
+<div class="w-10 h-10 rounded-full bg-gradient-to-tr from-pink-600 via-purple-700 to-indigo-800 flex items-center justify-center text-lg select-none">
+              🌙
+            </div>
+</button>
+<!-- Avatar 3 -->
+<button aria-label="Avatar Waveform" class="avatar-option flex-shrink-0 relative p-0.5 rounded-full ring-1 ring-white/10 hover:ring-purple-400 opacity-70 hover:opacity-100 transition-all focus:outline-none" type="button">
+<div class="w-10 h-10 rounded-full bg-gradient-to-tr from-cyan-600 via-teal-700 to-blue-900 flex items-center justify-center text-lg select-none">
+              🌊
+            </div>
+</button>
+<!-- Avatar 4 -->
+<button aria-label="Avatar Spark" class="avatar-option flex-shrink-0 relative p-0.5 rounded-full ring-1 ring-white/10 hover:ring-purple-400 opacity-70 hover:opacity-100 transition-all focus:outline-none" type="button">
+<div class="w-10 h-10 rounded-full bg-gradient-to-tr from-amber-500 via-rose-600 to-purple-800 flex items-center justify-center text-lg select-none">
+              ✨
+            </div>
+</button>
+<!-- Avatar 5 -->
+<button aria-label="Avatar Vinyl" class="avatar-option flex-shrink-0 relative p-0.5 rounded-full ring-1 ring-white/10 hover:ring-purple-400 opacity-70 hover:opacity-100 transition-all focus:outline-none" type="button">
+<div class="w-10 h-10 rounded-full bg-gradient-to-tr from-slate-700 via-slate-800 to-zinc-950 flex items-center justify-center text-lg select-none border border-white/10">
+              💿
+            </div>
+</button>
+<!-- Custom Upload Button (+) -->
+<button aria-label="Upload custom photo" class="flex-shrink-0 w-10 h-10 rounded-full border border-dashed border-white/25 hover:border-purple-400 text-slate-400 hover:text-white flex items-center justify-center transition-all hover:scale-105 active:scale-95 bg-white/[0.02] hover:bg-white/[0.06]" type="button">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<path d="M12 4.5v15m7.5-7.5h-15" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</button>
+</div>
+</div>
+<!-- END: Choose Sonic Avatar -->
+<!-- BEGIN: Clean Essential Registration Form -->
+<form class="space-y-3" onsubmit="event.preventDefault();">
+<!-- Display Name -->
+<div>
+<label class="block text-[11px] font-medium text-slate-300 mb-1 uppercase tracking-wider" for="display-name">Display Name</label>
+<div class="relative">
+<input class="block w-full px-3.5 py-2.5 bg-[#0e0f17]/90 border border-white/10 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-purple-400 focus:border-purple-400 transition-all" id="display-name" name="displayName" placeholder="e.g. Alex Vance" required="" type="text"/>
+</div>
+</div>
+<!-- Email Address -->
+<div>
+<label class="block text-[11px] font-medium text-slate-300 mb-1 uppercase tracking-wider" for="email">Email Address</label>
+<div class="relative">
+<input class="block w-full px-3.5 py-2.5 bg-[#0e0f17]/90 border border-white/10 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-purple-400 focus:border-purple-400 transition-all" id="email" name="email" placeholder="alex@soundwith.me" required="" type="email"/>
+</div>
+</div>
+<!-- Password with Eye Toggle -->
+<div>
+<label class="block text-[11px] font-medium text-slate-300 mb-1 uppercase tracking-wider" for="password">Password</label>
+<div class="relative">
+<input class="block w-full pl-3.5 pr-10 py-2.5 bg-[#0e0f17]/90 border border-white/10 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-purple-400 focus:border-purple-400 transition-all" id="password" name="password" placeholder="At least 8 characters" required="" type="password"/>
+<button aria-label="Toggle password visibility" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-200 transition-colors" id="toggle-pwd-btn" type="button">
+<svg class="w-4 h-4" fill="none" id="eye-icon" stroke="currentColor" viewbox="0 0 24 24">
+<path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"></path>
+<path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"></path>
+</svg>
+</button>
+</div>
+</div>
+<!-- Favorite Vibe Picker (Intuitive Micro-Interaction Mood Chips) -->
+<div class="pt-1">
+<label class="block text-[11px] font-medium text-slate-300 mb-1.5 uppercase tracking-wider">Favorite Vibe</label>
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+<button class="vibe-chip active py-1.5 px-2 rounded-xl text-[11px] font-medium border border-white/10 transition-all text-center" type="button">
+              🌙 Late Night
+            </button>
+<button class="vibe-chip py-1.5 px-2 rounded-xl text-[11px] font-medium border border-white/10 text-slate-300 hover:text-white hover:border-white/20 transition-all text-center" type="button">
+              🎧 Lo-Fi Chill
+            </button>
+<button class="vibe-chip py-1.5 px-2 rounded-xl text-[11px] font-medium border border-white/10 text-slate-300 hover:text-white hover:border-white/20 transition-all text-center" type="button">
+              ⚡ Synthwave
+            </button>
+<button class="vibe-chip py-1.5 px-2 rounded-xl text-[11px] font-medium border border-white/10 text-slate-300 hover:text-white hover:border-white/20 transition-all text-center" type="button">
+              💜 Midnight R&amp;B
+            </button>
+</div>
+</div>
+<!-- Primary Action Button: Start Listening Together -->
+<div class="pt-3">
+<button class="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-[#a078ff] via-[#7e57c2] to-[#4cd7f6] hover:opacity-95 text-white font-bold text-sm tracking-wide shadow-glow-violet hover:shadow-glow-cyan flex items-center justify-center space-x-2 transform active:scale-[0.99] transition-all duration-200" type="submit">
+<span>Start Listening Together</span>
+<span class="text-base leading-none">→</span>
+</button>
+</div>
+</form>
+<!-- END: Registration Form -->
+<!-- Bottom Helper Text Link -->
+<div class="mt-5 text-center">
+<p class="text-xs text-slate-400">
+          Already have an account? 
+          <a class="text-purple-300 hover:text-purple-200 font-semibold underline underline-offset-4 ml-1 transition-colors" href="#signin">
+            Sign In
+          </a>
+</p>
+</div>
+</div>
+</main>
+<!-- END: Central Glassmorphism Register Card -->
+<!-- BEGIN: Ambient Bottom Mini-Player -->
+<aside class="relative z-30 w-full bg-[#0b0c10]/85 border-t border-white/[0.08] backdrop-blur-xl px-4 py-2.5 sm:px-8" data-purpose="persistent-synced-mini-player">
+<div class="max-w-7xl mx-auto flex items-center justify-between gap-4">
+<!-- Track Details & Rotating Vinyl -->
+<div class="flex items-center space-x-3 min-w-0">
+<!-- Spinning Vinyl Visual -->
+<div class="relative w-10 h-10 rounded-full bg-slate-900 border border-white/20 flex-shrink-0 flex items-center justify-center overflow-hidden animate-spin-slow shadow-md">
+<img alt="Now playing vinyl cover" class="w-full h-full object-cover scale-150" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAyQc7a6f_u13dlZBEIldXM83ORQHXqTqv5rNnzAZCy8fuCLn7iJOmVDv_fis0a5XUaiBX5R-PQrY5jQ2gP5qbmJ3rsstSzneFQlLch4w46VC_6paG_6KHxfZRX2PjJvdfRxmXjydikGOXjGdXflYM4lqheeCMsU4AiJvIrAo7TdWIF2lWQkrzyZG02f0FAjLkMNYJHtZzKmAfFEpLLix3CRSTOKd6apbZPn5zG_Fa1-uWAODMId-B3JA"/>
+<div class="absolute w-2.5 h-2.5 rounded-full bg-[#0b0c10] border border-white/40"></div>
+</div>
+<div class="min-w-0 truncate">
+<div class="flex items-center space-x-2">
+<span class="text-xs font-semibold text-white truncate hover:underline cursor-pointer">The Night We Met</span>
+<span class="w-1 h-1 rounded-full bg-slate-500"></span>
+<span class="text-[11px] text-slate-400 font-normal truncate">Lord Huron</span>
+</div>
+<div class="flex items-center space-x-1.5 mt-0.5">
+<span class="relative flex h-1.5 w-1.5">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
+<span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-cyan-400"></span>
+</span>
+<span class="text-[10px] text-purple-300/90 font-medium">28 listening with you</span>
+</div>
+</div>
+</div>
+<!-- Playback Controls -->
+<div class="hidden sm:flex items-center space-x-3">
+<button aria-label="Previous track" class="text-slate-400 hover:text-white transition-colors p-1" type="button">
+<svg class="w-4 h-4 fill-currentColor" viewbox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"></path></svg>
+</button>
+<button aria-label="Play track" class="w-8 h-8 rounded-full bg-white text-slate-950 flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-md" type="button">
+<svg class="w-3.5 h-3.5 fill-current ml-0.5" viewbox="0 0 24 24"><path d="M8 5v14l11-7z"></path></svg>
+</button>
+<button aria-label="Next track" class="text-slate-400 hover:text-white transition-colors p-1" type="button">
+<svg class="w-4 h-4 fill-currentColor" viewbox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"></path></svg>
+</button>
+</div>
+<!-- Listen Together Action Button -->
+<div class="flex items-center space-x-3">
+<button class="flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-purple-500/20 to-cyan-500/20 hover:from-purple-500/35 hover:to-cyan-500/35 border border-purple-400/40 text-purple-200 hover:text-white text-xs font-semibold shadow-sm transition-all hover:scale-105 active:scale-95" type="button">
+<span>🎧</span>
+<span>Listen Together</span>
+</button>
+</div>
+</div>
+</aside>
+<!-- END: Ambient Bottom Mini-Player -->
+<!-- Interactive Scripts -->
+<script>
+    // Password visibility toggle
+    const toggleBtn = document.getElementById('toggle-pwd-btn');
+    const pwdInput = document.getElementById('password');
+
+    if (toggleBtn && pwdInput) {
+      toggleBtn.addEventListener('click', () => {
+        const isPassword = pwdInput.getAttribute('type') === 'password';
+        pwdInput.setAttribute('type', isPassword ? 'text' : 'password');
+        toggleBtn.classList.toggle('text-purple-400');
+      });
+    }
+
+    // Interactive mood chips toggle
+    const vibeChips = document.querySelectorAll('.vibe-chip');
+    vibeChips.forEach(chip => {
+      chip.addEventListener('click', () => {
+        vibeChips.forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+      });
+    });
+
+    // Interactive avatar selection
+    const avatarButtons = document.querySelectorAll('.avatar-option');
+    avatarButtons.forEach(avatar => {
+      avatar.addEventListener('click', () => {
+        avatarButtons.forEach(btn => {
+          btn.classList.remove('ring-2', 'ring-cyan-400', 'shadow-glow-cyan', 'scale-105');
+          btn.classList.add('ring-1', 'ring-white/10', 'opacity-70');
+        });
+        avatar.classList.add('ring-2', 'ring-cyan-400', 'shadow-glow-cyan', 'scale-105');
+        avatar.classList.remove('ring-1', 'ring-white/10', 'opacity-70');
+      });
+    });
+  </script>
+</body></html>

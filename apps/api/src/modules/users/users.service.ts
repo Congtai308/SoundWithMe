@@ -1,10 +1,11 @@
+import { GENRE_SLUGS } from "@soundwithme/constants";
 import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
 import type { AuthMethod, AuthenticatedUser, PublicUser } from "@soundwithme/types";
 import { UserDocument } from "../../database/mongodb/models/user.schema";
 
-interface CreateUserInput {
+export interface CreateUserInput {
   username: string;
   displayName: string;
   email?: string;
@@ -45,6 +46,21 @@ export class UsersService {
     return this.userModel.findOne({ googleId }).exec();
   }
 
+  /**
+   * Gives an email account to the Google user who proved they own the
+   * address. Any password on it was never tied to that proof, so it goes.
+   * Only matches while no Google account is linked yet.
+   */
+  async claimForGoogle(userId: string, googleId: string): Promise<UserDocument | null> {
+    return this.userModel
+      .findOneAndUpdate(
+        { _id: userId, googleId: null },
+        { $set: { googleId, authMethods: ["google"] }, $unset: { passwordHash: 1 } },
+        { new: true },
+      )
+      .exec();
+  }
+
   async findByUsername(username: string): Promise<UserDocument | null> {
     return this.userModel.findOne({ username }).exec();
   }
@@ -52,6 +68,44 @@ export class UsersService {
   async isUsernameTaken(username: string): Promise<boolean> {
     const existing = await this.userModel.exists({ username });
     return existing !== null;
+  }
+  async updateProfile(
+    userId: string,
+    updates: { displayName?: string; bio?: string | null; avatarUrl?: string | null },
+  ): Promise<UserDocument | null> {
+    return this.userModel
+      .findByIdAndUpdate(userId, { $set: updates }, { new: true })
+      .exec();
+  }
+
+  async setMusicPreferences(
+    userId: string,
+    preferences: { genres: string[]; artists: string[] },
+  ): Promise<UserDocument | null> {
+    // Drop slugs this build doesn't know (e.g. an old client after a catalog change).
+    const genres = preferences.genres.filter((slug) => (GENRE_SLUGS as readonly string[]).includes(slug));
+    return this.userModel
+      .findByIdAndUpdate(
+        userId,
+        { $set: { musicPreferences: { genres, artists: preferences.artists, updatedAt: new Date() } } },
+        { new: true },
+      )
+      .exec();
+  }
+
+  async findManyByIds(ids: string[]): Promise<UserDocument[]> {
+    if (ids.length === 0) return [];
+    return this.userModel.find({ _id: { $in: ids } }).exec();
+  }
+
+  /** Username or display name starting with `query` (case-insensitive), registered accounts first. */
+  async search(query: string, limit: number): Promise<UserDocument[]> {
+    const prefix = new RegExp(`^${escapeRegExp(query)}`, "i");
+    return this.userModel
+      .find({ $or: [{ username: prefix }, { displayName: prefix }] })
+      .sort({ isGuest: 1, displayName: 1 })
+      .limit(limit)
+      .exec();
   }
 
   /** Enforces the PRIVACY RULE projection — the only shape ever sent for another user's profile. */
@@ -77,7 +131,18 @@ export class UsersService {
       authMethods: user.authMethods,
       isGuest: user.isGuest,
       email: user.email ?? null,
+      musicPreferences: user.musicPreferences
+        ? {
+            genres: user.musicPreferences.genres,
+            artists: user.musicPreferences.artists,
+            updatedAt: user.musicPreferences.updatedAt.toISOString(),
+          }
+        : null,
       createdAt: user.createdAt.toISOString(),
     };
   }
+}
+
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }

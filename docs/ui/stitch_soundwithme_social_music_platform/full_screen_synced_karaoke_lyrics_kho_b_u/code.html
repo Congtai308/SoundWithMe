@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+
+<html class="h-full bg-[#07080c] text-white" lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>SoundWithMe — Full-Screen Synced Karaoke Lyrics &amp; Visualizer</title>
+<!-- Tailwind CSS v3 with forms & container queries -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Configuration for Audio App Theme -->
+<script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            obsidian: {
+              950: '#06070a',
+              900: '#0b0c10',
+              800: '#14161f',
+              700: '#1d212f',
+            },
+            aurora: {
+              cyan: '#22d3ee',
+              teal: '#2dd4bf',
+              purple: '#c084fc',
+              violet: '#818cf8',
+              pink: '#f472b6',
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif'],
+          },
+          animation: {
+            'spin-slow': 'spin 22s linear infinite',
+            'pulse-soft': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            'float-slow': 'floating 4s ease-in-out infinite',
+            'glow-wave': 'glowWave 3s ease-in-out infinite alternate',
+          },
+          keyframes: {
+            floating: {
+              '0%, 100%': { transform: 'translateY(0px)' },
+              '50%': { transform: 'translateY(-8px)' },
+            },
+            glowWave: {
+              '0%': { opacity: '0.4', transform: 'scale(0.98)' },
+              '100%': { opacity: '0.85', transform: 'scale(1.02)' },
+            }
+          }
+        }
+      }
+    }
+  </script>
+<!-- Typography and Custom Text Glow -->
+<style data-purpose="typography">
+    .lyrics-active-glow {
+      text-shadow: 0 0 25px rgba(34, 211, 238, 0.65), 0 0 50px rgba(192, 132, 252, 0.45);
+    }
+    .lyrics-subtle-glow {
+      text-shadow: 0 0 16px rgba(255, 255, 255, 0.2);
+    }
+    .vinyl-grooves {
+      background: radial-gradient(circle, #0b0c10 25%, #181a24 26%, #0b0c10 32%, #1a1e2d 38%, #0d0f15 44%, #202436 50%, #0d0f15 56%, #1c2132 64%, #0b0c10 70%);
+      box-shadow: 0 0 50px -10px rgba(129, 140, 248, 0.35), inset 0 0 20px rgba(0, 0, 0, 0.8);
+    }
+  </style>
+<!-- Glassmorphism Effects & Visual Tweaks -->
+<style data-purpose="glass-and-visualizer">
+    .glass-nav {
+      background: rgba(11, 12, 16, 0.55);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .glass-dock {
+      background: rgba(13, 15, 23, 0.68);
+      backdrop-filter: blur(28px);
+      -webkit-backdrop-filter: blur(28px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.7), 0 0 35px -5px rgba(34, 211, 238, 0.15);
+    }
+    .karaoke-syllable-sung {
+      color: #ffffff;
+      background: linear-gradient(135deg, #ffffff 15%, #a5f3fc 60%, #c084fc 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      filter: drop-shadow(0 0 14px rgba(34, 211, 238, 0.75));
+    }
+    .karaoke-syllable-pending {
+      color: rgba(255, 255, 255, 0.32);
+    }
+    /* Hide scrollbars for ultra-clean look */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+</head>
+<body class="h-full m-0 p-0 overflow-hidden font-sans select-none relative bg-[#07080c]">
+<!-- BEGIN: ImmersiveAtmosphereBackground -->
+<!-- Ambient backdrop with aurora mist, bokeh, and deep space textures -->
+<div class="fixed inset-0 pointer-events-none z-0 overflow-hidden" data-purpose="background-layers">
+<!-- Cinematic ultra-res background wallpaper from datastore -->
+<img alt="Atmospheric midnight audio aurora wallpaper" class="w-full h-full object-cover object-center opacity-65 scale-105 transform filter saturate-125 contrast-110 brightness-90" src="https://lh3.googleusercontent.com/aida/AEtjO1UgTXVzyGThXwCRWfW6UtJZsBOLImVYYDStfPzlq_7MPtvDG_GJKZ7eqUSMLMDTcX2I7SnYMsHJwQJqwHh2KnP1lONRowj0tHs2Oaaj-kVmiCh3Lu7gOP4VluyzLgXLZCSI5VBBKEiBOcePOdDE-luEltJBkZzAe9-BsYxorxFby3u0PVFogS8Ztnsn0pePJoQiUyrijnjlSffO1vtRy_o5VQ4QFNxAsnCq_bfQ1bI9b5a4UBKgNU6GlEft"/>
+<!-- Obsidian depth vignette gradients -->
+<div class="absolute inset-0 bg-gradient-to-t from-[#07080c] via-transparent to-[#07080c]/80"></div>
+<div class="absolute inset-0 bg-gradient-to-r from-[#07080c]/90 via-[#07080c]/30 to-[#07080c]/90"></div>
+<div class="absolute inset-0 bg-[radial-gradient(circle_at_70%_50%,rgba(192,132,252,0.15),transparent_60%)]"></div>
+<div class="absolute inset-0 bg-[radial-gradient(circle_at_25%_60%,rgba(34,211,238,0.12),transparent_50%)]"></div>
+<!-- Floating bioluminescent stardust particles simulation -->
+<div class="absolute top-1/4 left-1/5 w-1.5 h-1.5 rounded-full bg-cyan-300 opacity-60 blur-[1px] animate-float-slow"></div>
+<div class="absolute top-1/3 right-1/4 w-2 h-2 rounded-full bg-purple-300 opacity-50 blur-[1.5px] animate-pulse"></div>
+<div class="absolute bottom-1/3 left-1/3 w-1 h-1 rounded-full bg-pink-300 opacity-70 blur-[0.5px]"></div>
+<div class="absolute top-2/3 right-1/3 w-1.5 h-1.5 rounded-full bg-teal-200 opacity-60 blur-[1px] animate-float-slow" style="animation-delay: 2s;"></div>
+</div>
+<!-- END: ImmersiveAtmosphereBackground -->
+<!-- Outer Viewport Container -->
+<div class="relative z-10 flex flex-col h-full w-full justify-between p-4 md:p-6 lg:p-7 box-border">
+<!-- BEGIN: TopHeaderControls -->
+<header class="w-full flex items-center justify-between gap-4 glass-nav px-5 py-3 rounded-2xl border border-white/10 shadow-2xl transition-all duration-300" data-purpose="top-navigation-bar">
+<!-- Left Controls: Return to Room & Active Room Status -->
+<div class="flex items-center gap-3.5">
+<button class="flex items-center gap-2.5 px-3.5 py-1.5 rounded-xl bg-white/5 hover:bg-white/15 text-slate-300 hover:text-white border border-white/5 hover:border-white/20 text-xs md:text-sm font-medium transition-all group shadow-sm active:scale-95" title="Trở về phòng cộng đồng" type="button">
+<svg class="w-4 h-4 transition-transform group-hover:-translate-x-1 text-cyan-400" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+<path d="M10 19l-7-7m0 0l7-7m-7 7h18" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+<span class="hidden sm:inline text-slate-300">Trở về:</span>
+<span class="font-semibold text-white tracking-wide">Em bé iu ✨</span>
+</button>
+<div class="h-4 w-[1px] bg-white/15 hidden md:block"></div>
+<!-- Sync Pill Status -->
+<div class="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-full bg-cyan-950/40 border border-cyan-500/30 text-cyan-300 text-xs font-mono">
+<span class="relative flex h-2 w-2">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
+<span class="relative inline-flex rounded-full h-2 w-2 bg-cyan-500"></span>
+</span>
+<span class="font-sans font-medium text-slate-200">11 bạn đang nghe</span>
+<span class="text-cyan-400/60 font-mono">• Trễ 0.8ms (lossless sync)</span>
+</div>
+</div>
+<!-- Center: Track Mini Pill -->
+<div class="hidden md:flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-xs">
+<span class="w-2 h-2 rounded-full bg-purple-400 animate-pulse"></span>
+<span class="text-slate-400">Đang phát:</span>
+<span class="text-white font-semibold tracking-wide">Kho Báu</span>
+<span class="text-slate-400 font-light">— (S)TRONG Trọng Hiếu</span>
+</div>
+<!-- Right Controls: Mode Toggle, Sing Mode, Font & Close -->
+<div class="flex items-center gap-2.5 sm:gap-3">
+<!-- Bilingual / Mode Toggle -->
+<div class="flex items-center bg-black/40 p-0.5 rounded-xl border border-white/10 text-xs">
+<button class="px-2.5 py-1 rounded-lg bg-cyan-500/20 text-cyan-300 border border-cyan-400/40 font-medium text-[11px] sm:text-xs">
+            Karaoke
+          </button>
+<button class="px-2.5 py-1 rounded-lg text-slate-400 hover:text-white transition text-[11px] sm:text-xs">
+            Song ngữ
+          </button>
+</div>
+<!-- Apple-like Sing / Vocal Remover Slider -->
+<div class="hidden xl:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-purple-950/30 border border-purple-500/30 text-xs" title="Điều chỉnh giọng ca sĩ (Apple Sing Mode)">
+<svg class="w-3.5 h-3.5 text-purple-400" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+<path d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+<span class="text-purple-200 font-medium text-[11px]">Vocal:</span>
+<input class="w-16 h-1 bg-purple-950 rounded-lg appearance-none cursor-pointer accent-purple-400" max="100" min="0" type="range" value="85"/>
+<span class="text-[10px] font-mono text-purple-300">85%</span>
+</div>
+<!-- Font Size Adjuster -->
+<div class="hidden sm:flex items-center bg-white/5 rounded-xl border border-white/10 px-1 py-0.5 text-xs text-slate-300">
+<button class="px-2 py-1 hover:text-cyan-400 font-bold text-xs" title="Giảm cỡ chữ">A-</button>
+<div class="w-[1px] h-3 bg-white/10"></div>
+<button class="px-2 py-1 hover:text-cyan-400 font-bold text-sm" title="Tăng cỡ chữ">A+</button>
+</div>
+<!-- Close / Exit Fullscreen button -->
+<button class="p-2 rounded-xl bg-white/5 hover:bg-rose-500/20 text-slate-400 hover:text-rose-300 border border-white/10 hover:border-rose-500/40 transition-all shadow-sm active:scale-95" title="Thu nhỏ về trình phát chuẩn" type="button">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+<path d="M6 18L18 6M6 6l12 12" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</button>
+</div>
+</header>
+<!-- END: TopHeaderControls -->
+<!-- BEGIN: MainLyricsCanvas -->
+<main class="flex-1 w-full grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-12 items-center my-4 min-h-0 overflow-hidden" data-purpose="lyrics-and-vinyl-stage">
+<!-- LEFT SECTION: Cinematic Spinning Vinyl Record & Track Metadata (4 cols on lg, ~38%) -->
+<section class="hidden lg:flex lg:col-span-5 flex-col items-center justify-center relative h-full max-h-[640px] px-4" data-purpose="vinyl-audio-visualizer-stage">
+<!-- Glowing Audio Visualizer Rings surrounding the Vinyl -->
+<div class="relative flex items-center justify-center">
+<!-- Outermost Pulsing Wave 1 -->
+<div class="absolute -inset-10 rounded-full border border-cyan-500/20 animate-glow-wave blur-[1px]"></div>
+<!-- Outermost Pulsing Wave 2 -->
+<div class="absolute -inset-20 rounded-full border border-purple-500/15 animate-pulse-soft blur-sm"></div>
+<!-- Radial Ambient Glow -->
+<div class="absolute w-80 h-80 rounded-full bg-gradient-to-tr from-cyan-500/20 via-purple-600/20 to-pink-500/15 blur-3xl -z-10"></div>
+<!-- The Vinyl Body with realistic grooves -->
+<div class="relative w-72 h-72 xl:w-84 xl:h-84 2xl:w-96 2xl:h-96 rounded-full vinyl-grooves p-2.5 flex items-center justify-center animate-spin-slow shadow-2xl border border-white/10" style="width: 330px; height: 330px;">
+<!-- Vinyl Sheen Highlight Overlay -->
+<div class="absolute inset-0 rounded-full bg-gradient-to-tr from-white/10 via-transparent to-transparent pointer-events-none opacity-60"></div>
+<!-- Center Album Artwork Disc -->
+<div class="relative w-36 h-36 rounded-full overflow-hidden border-4 border-[#12141c] shadow-inner flex items-center justify-center">
+<img alt="Single Album Art - Kho Báu" class="w-full h-full object-cover transform scale-110" src="https://lh3.googleusercontent.com/aida/AEtjO1WLZq0TWBvutu1terO7cVnFTQTmlhxnwMS0ccYjVsh74bnPBp_Ga6xxdJp2xbWa6NGdja5aR0rk-8hB2-bN5H3ZVPeEJ8tbt82q_7z8viDXiANklaSlg4BQopnZ2WJqBJmJI3J2Y9K75WlBIHb4PZu5DMBzUGSHndg6m-PZLIh7UfhlFzAEnAvZKPFmtN21p9JQRq8B7dBd8gPAl6zUOdbJANJgBuZ1NCqWNT-bOLqu9c4d459IqFaAJ1xC"/>
+<!-- Center Spindle Hole -->
+<div class="absolute w-7 h-7 rounded-full bg-[#0b0c10] border-2 border-white/40 shadow-inner flex items-center justify-center">
+<div class="w-2 h-2 rounded-full bg-cyan-400"></div>
+</div>
+</div>
+</div>
+<!-- Stylized Floating Tone Arm / Visualizer Node (Decorative) -->
+<div class="absolute -top-4 -right-2 hidden xl:block pointer-events-none opacity-80">
+<div class="w-24 h-1 bg-gradient-to-r from-slate-400 to-cyan-400 rotate-45 transform origin-top-right rounded-full shadow-lg"></div>
+</div>
+</div>
+<!-- Track Typography & Info -->
+<div class="mt-8 text-center max-w-sm flex flex-col items-center">
+<div class="flex items-center gap-2 mb-1.5">
+<span class="px-2 py-0.5 rounded-full bg-cyan-500/15 border border-cyan-400/30 text-[10px] font-semibold tracking-wider text-cyan-300 uppercase">Dolby Atmos</span>
+<span class="px-2 py-0.5 rounded-full bg-purple-500/15 border border-purple-400/30 text-[10px] font-semibold tracking-wider text-purple-300 uppercase">Hi-Res Lossless</span>
+</div>
+<h1 class="text-3xl xl:text-4xl font-black tracking-tight text-white lyrics-subtle-glow mb-1">
+            Kho Báu
+          </h1>
+<p class="text-base xl:text-lg font-medium text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-purple-300 mb-1">
+            Trọng Hiếu ft. Mai Âm Nhạc
+          </p>
+<p class="text-xs text-slate-400">
+            Album: <span class="text-slate-300 font-medium">Kho Báu (Single 2024)</span> • 44.1kHz / 24-bit
+          </p>
+</div>
+<!-- Social Presence Bar: Friends Listening Live with Reaction Bubbles -->
+<div class="mt-6 flex items-center gap-3 px-4 py-2 rounded-full bg-black/40 border border-white/10 backdrop-blur-md" data-purpose="social-listeners-bubble">
+<div class="flex -space-x-2 overflow-hidden items-center">
+<!-- Friend 1 -->
+<div class="relative w-7 h-7 rounded-full ring-2 ring-cyan-400 overflow-hidden bg-slate-800">
+<span class="text-[10px] font-bold flex items-center justify-center h-full text-cyan-200">MI</span>
+</div>
+<!-- Friend 2 -->
+<div class="relative w-7 h-7 rounded-full ring-2 ring-purple-400 overflow-hidden bg-purple-900">
+<span class="text-[10px] font-bold flex items-center justify-center h-full text-purple-200">KH</span>
+</div>
+<!-- Friend 3 -->
+<div class="relative w-7 h-7 rounded-full ring-2 ring-pink-400 overflow-hidden bg-pink-900">
+<span class="text-[10px] font-bold flex items-center justify-center h-full text-pink-200">VY</span>
+</div>
+<!-- More count -->
+<div class="w-7 h-7 rounded-full ring-2 ring-slate-600 bg-slate-800 flex items-center justify-center text-[10px] font-semibold text-slate-300">
+              +8
+            </div>
+</div>
+<span class="text-xs text-slate-300 flex items-center gap-1.5">
+            cùng đắm chìm
+            <span class="inline-block animate-bounce text-sm">💜</span>
+<span class="inline-block animate-pulse text-sm">🔥</span>
+</span>
+</div>
+</section>
+<!-- RIGHT SECTION: Full-Screen Kinetic Synced Karaoke Lyrics (7 cols on lg, ~62%) -->
+<section class="col-span-1 lg:col-span-7 flex flex-col justify-center h-full max-h-[680px] overflow-y-auto no-scrollbar px-2 sm:px-6 md:px-8 relative" data-purpose="kinetic-karaoke-stream">
+<!-- Subtle gradient mask for top/bottom lyrics fade -->
+<div class="pointer-events-none absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-[#07080c] via-[#07080c]/60 to-transparent z-10"></div>
+<div class="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-[#07080c] via-[#07080c]/60 to-transparent z-10"></div>
+<div class="space-y-6 sm:space-y-8 py-10 transition-all duration-500">
+<!-- Line 1: Past Lyric Line (Faded, Muted, Out of Focus) -->
+<div class="opacity-25 blur-[1px] hover:opacity-40 transition-all duration-300 cursor-pointer text-left">
+<p class="text-lg sm:text-xl lg:text-2xl font-medium text-slate-400 tracking-normal">
+              Từng ngày qua đi, bao nhiêu yêu thương anh giữ chặt trong tim...
+            </p>
+<p class="text-xs sm:text-sm font-light text-slate-500 mt-1 italic">
+              Every day that passes by, all this love I hold inside my heart...
+            </p>
+</div>
+<!-- Line 2: Past Lyric Line (Soft Focus) -->
+<div class="opacity-45 blur-[0.4px] hover:opacity-60 transition-all duration-300 cursor-pointer text-left">
+<p class="text-xl sm:text-2xl lg:text-3xl font-semibold text-slate-300 tracking-normal">
+              Lạc vào đại dương mênh mông bỗng thấy được bờ bến ấm...
+            </p>
+<p class="text-xs sm:text-sm font-light text-slate-400 mt-1 italic">
+              Drifting across endless oceans, suddenly found that warm shore...
+            </p>
+</div>
+<!-- Line 3: CURRENT ACTIVE KARAOKE LINE (Dynamic Glowing Syllable Precision) -->
+<div class="relative py-4 my-2 group cursor-pointer text-left scale-[1.01] transition-transform duration-300" data-purpose="active-lyric-line">
+<!-- Karaoke Highlight Aura Backlight -->
+<div class="absolute -left-6 -right-4 -inset-y-2 bg-gradient-to-r from-cyan-500/15 via-purple-500/15 to-transparent rounded-3xl blur-xl -z-10"></div>
+<!-- Syllable timing badge & sing-along indicator -->
+<div class="flex items-center gap-2 mb-2">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-cyan-400 text-obsidian-950 font-bold text-[11px] uppercase tracking-wider shadow-lg shadow-cyan-400/30">
+<svg class="w-3 h-3 animate-spin" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+<path d="M12 4v2m0 12v2m8-8h-2M6 12H4m15.364-5.364l-1.414 1.414M6.05 17.95l-1.414 1.414M17.95 17.95l-1.414-1.414M7.464 7.464L6.05 6.05" stroke-linecap="round" stroke-linejoin="round" stroke-width="3"></path>
+</svg>
+                Hát ngay
+              </span>
+<span class="font-mono text-xs text-cyan-300 tracking-wider">03:42.15 • Đoạn điệp khúc</span>
+</div>
+<!-- Kinetic Lyrics with Syllable-by-Syllable Color Transition -->
+<!-- Sung Syllables (Cyan/Purple Vibrant Gradient & Glow) -->
+<h2 class="text-2xl sm:text-3xl md:text-4xl xl:text-[42px] font-black leading-tight sm:leading-snug tracking-tight text-white lyrics-active-glow">
+<span class="karaoke-syllable-sung transition-all duration-150">Vì </span>
+<span class="karaoke-syllable-sung transition-all duration-150">em </span>
+<span class="karaoke-syllable-sung transition-all duration-150">chính </span>
+<span class="karaoke-syllable-sung transition-all duration-150">là </span>
+<span class="karaoke-syllable-sung transition-all duration-150">kho </span>
+<span class="karaoke-syllable-sung transition-all duration-150">báu </span>
+<span class="karaoke-syllable-sung transition-all duration-150">mà </span>
+<span class="karaoke-syllable-sung transition-all duration-150">anh </span>
+<span class="karaoke-syllable-sung transition-all duration-150">đã </span>
+<span class="karaoke-syllable-sung transition-all duration-150">tìm </span>
+<span class="karaoke-syllable-sung transition-all duration-150">thấy </span>
+<!-- Currently Singing Syllable (Pulsing Glow Highlight) -->
+<span class="relative inline-block text-cyan-300 underline decoration-cyan-400 decoration-4 underline-offset-8">
+                giữa
+              </span>
+<!-- Pending Syllables for this line -->
+<span class="karaoke-syllable-pending"> cuộc </span>
+<span class="karaoke-syllable-pending">đời </span>
+<span class="karaoke-syllable-pending">này!</span>
+</h2>
+<!-- Subline Bilingual Translation -->
+<p class="text-sm sm:text-base md:text-lg font-medium text-cyan-200/80 mt-3.5 tracking-wide flex items-center gap-2">
+<span class="w-1.5 h-1.5 rounded-full bg-cyan-400"></span>
+              "Because you are the treasure that I found in this very life"
+            </p>
+</div>
+<!-- Line 4: Next Line (Smooth Graduated Opacity 65%) -->
+<div class="opacity-60 hover:opacity-85 transition-all duration-300 cursor-pointer text-left">
+<p class="text-xl sm:text-2xl lg:text-3xl font-semibold text-slate-200 tracking-tight leading-snug">
+              Dù mai sóng gió, bàn tay này vẫn mãi không buông rời...
+            </p>
+<p class="text-xs sm:text-sm font-light text-slate-400 mt-1 italic">
+              Come whatever storm tomorrow, this hand will never let you go...
+            </p>
+</div>
+<!-- Line 5: Upcoming Line (Opacity 35%) -->
+<div class="opacity-35 hover:opacity-60 transition-all duration-300 cursor-pointer text-left">
+<p class="text-lg sm:text-xl lg:text-2xl font-medium text-slate-300 tracking-normal">
+              Cùng anh đi qua muôn trùng bão giông để thấy bình yên...
+            </p>
+<p class="text-xs sm:text-sm font-light text-slate-500 mt-1 italic">
+              Walk with me through a thousand storms to reach serenity...
+            </p>
+</div>
+<!-- Line 6: Upcoming Line (Opacity 20% - Distant) -->
+<div class="opacity-20 hover:opacity-40 transition-all duration-300 cursor-pointer text-left">
+<p class="text-base sm:text-lg lg:text-xl font-medium text-slate-400 tracking-normal">
+              Nhìn vào đôi mắt em, anh thấy cả ngân hà rực rỡ...
+            </p>
+<p class="text-xs font-light text-slate-600 mt-0.5 italic">
+              Looking into your eyes, I gaze upon a dazzling galaxy...
+            </p>
+</div>
+</div>
+</section>
+</main>
+<!-- END: MainLyricsCanvas -->
+<!-- BEGIN: BottomPersistentGlassDock -->
+<footer class="w-full flex justify-center pb-1 pt-2" data-purpose="floating-audio-dock">
+<div class="w-full max-w-5xl glass-dock rounded-2xl md:rounded-3xl p-3 sm:p-4 px-4 sm:px-6 flex flex-col md:flex-row items-center justify-between gap-3 sm:gap-4">
+<!-- Left Dock Unit: Current Playback Status & Mic Toggle -->
+<div class="flex items-center gap-3 w-full md:w-auto justify-between md:justify-start">
+<div class="flex items-center gap-3">
+<div class="relative w-11 h-11 rounded-xl overflow-hidden shadow-md border border-white/15 flex-shrink-0">
+<img alt="Mini cover" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida/AEtjO1WLZq0TWBvutu1terO7cVnFTQTmlhxnwMS0ccYjVsh74bnPBp_Ga6xxdJp2xbWa6NGdja5aR0rk-8hB2-bN5H3ZVPeEJ8tbt82q_7z8viDXiANklaSlg4BQopnZ2WJqBJmJI3J2Y9K75WlBIHb4PZu5DMBzUGSHndg6m-PZLIh7UfhlFzAEnAvZKPFmtN21p9JQRq8B7dBd8gPAl6zUOdbJANJgBuZ1NCqWNT-bOLqu9c4d459IqFaAJ1xC"/>
+</div>
+<div>
+<div class="text-xs sm:text-sm font-bold text-white flex items-center gap-1.5">
+                Kho Báu
+                <span class="px-1.5 py-0.2 rounded bg-purple-500/25 text-purple-300 text-[10px] font-mono border border-purple-400/20">LIVE</span>
+</div>
+<div class="text-[11px] text-slate-400 truncate max-w-[130px] sm:max-w-[170px]">
+                Trọng Hiếu ft. Mai Âm Nhạc
+              </div>
+</div>
+</div>
+<!-- Karaoke Mic Live Button -->
+<button class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-gradient-to-r from-emerald-500/20 to-teal-500/20 border border-emerald-400/40 text-emerald-300 hover:text-white transition shadow-sm active:scale-95" title="Micro Karaoke đang hoạt động" type="button">
+<svg class="w-3.5 h-3.5 text-emerald-400 animate-pulse" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+<path d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+<span class="text-[11px] font-semibold hidden sm:inline">Mic ON</span>
+</button>
+</div>
+<!-- Center Dock Unit: Player Timeline & Controls -->
+<div class="flex flex-col items-center w-full md:max-w-md xl:max-w-lg gap-1.5">
+<!-- Control Buttons: Shuffle, Prev, Play, Next, Repeat -->
+<div class="flex items-center gap-5 sm:gap-6">
+<button class="text-slate-400 hover:text-white transition" title="Ngẫu nhiên">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+<path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</button>
+<button class="text-slate-300 hover:text-white transition active:scale-90" title="Bài trước">
+<svg class="w-5 h-5 fill-current" viewbox="0 0 24 24">
+<path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"></path>
+</svg>
+</button>
+<!-- Main Play/Pause Button with Neon Halo -->
+<button class="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-gradient-to-tr from-cyan-400 via-teal-300 to-white text-obsidian-950 flex items-center justify-center shadow-lg shadow-cyan-400/40 hover:scale-105 active:scale-95 transition-all" title="Tạm dừng">
+<svg class="w-5 h-5 fill-current" viewbox="0 0 24 24">
+<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"></path>
+</svg>
+</button>
+<button class="text-slate-300 hover:text-white transition active:scale-90" title="Bài tiếp">
+<svg class="w-5 h-5 fill-current" viewbox="0 0 24 24">
+<path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"></path>
+</svg>
+</button>
+<button class="text-cyan-400 transition" title="Lặp lại bài">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+<path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</button>
+</div>
+<!-- Interactive Track Scrubber Bar -->
+<div class="w-full flex items-center gap-3 text-[11px] font-mono text-slate-400">
+<span>03:42</span>
+<div class="relative flex-1 h-1.5 bg-white/10 rounded-full cursor-pointer group">
+<!-- Buffered Track -->
+<div class="absolute left-0 top-0 h-full bg-white/20 rounded-full w-[94%]"></div>
+<!-- Played Progress with Aurora Gradient -->
+<div class="absolute left-0 top-0 h-full bg-gradient-to-r from-cyan-400 to-purple-400 rounded-full w-[89%] shadow-sm group-hover:brightness-125"></div>
+<!-- Scrubber Thumb -->
+<div class="absolute top-1/2 left-[89%] -translate-x-1/2 -translate-y-1/2 w-3.5 h-3.5 bg-white rounded-full shadow-md scale-0 group-hover:scale-100 transition-transform"></div>
+</div>
+<span>04:13</span>
+</div>
+</div>
+<!-- Right Dock Unit: Quick Reaction Bar & Volume -->
+<div class="hidden md:flex items-center gap-4">
+<!-- Social Live Reaction Emojis -->
+<div class="flex items-center gap-1 bg-white/5 rounded-xl p-1 border border-white/10" data-purpose="quick-emojis">
+<button class="w-7 h-7 rounded-lg hover:bg-white/15 flex items-center justify-center text-sm hover:scale-125 transition-transform" title="Thả tim">❤️</button>
+<button class="w-7 h-7 rounded-lg hover:bg-white/15 flex items-center justify-center text-sm hover:scale-125 transition-transform" title="Cháy quá">🔥</button>
+<button class="w-7 h-7 rounded-lg hover:bg-white/15 flex items-center justify-center text-sm hover:scale-125 transition-transform" title="Cảm động">😭</button>
+<button class="w-7 h-7 rounded-lg hover:bg-white/15 flex items-center justify-center text-sm hover:scale-125 transition-transform" title="Vỗ tay">👏</button>
+<button class="w-7 h-7 rounded-lg hover:bg-white/15 flex items-center justify-center text-sm hover:scale-125 transition-transform" title="Nốt nhạc phiêu">🎵</button>
+</div>
+<div class="h-4 w-[1px] bg-white/15"></div>
+<!-- Volume Controls -->
+<div class="flex items-center gap-2">
+<button class="text-slate-400 hover:text-white transition">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+<path d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</button>
+<div class="w-16 h-1 bg-white/15 rounded-full relative cursor-pointer group">
+<div class="w-3/4 h-full bg-cyan-400 rounded-full group-hover:bg-cyan-300"></div>
+</div>
+</div>
+</div>
+</div>
+</footer>
+<!-- END: BottomPersistentGlassDock -->
+</div>
+</body></html>
