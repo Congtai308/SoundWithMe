@@ -14,8 +14,24 @@ const MISS_TTL_SECONDS = 60 * 60 * 24;
 const USER_AGENT = "SoundWithMe (https://github.com/Congtai308/SoundWithMe)";
 /** Shared offsets fade out if nobody re-syncs the song for this long. */
 const OFFSET_TTL_SECONDS = 60 * 60 * 24 * 90;
-/** One vote per listener; past this many a song's offset is settled and new votes are ignored. */
+/** One vote per listener, the latest this many count: a new vote pushes out the oldest. */
 const MAX_OFFSET_VOTES = 500;
+/**
+ * Records a vote and keeps only the newest MAX votes, in one step.
+ * KEYS[1] = hash userId → offset, KEYS[2] = sorted set userId → time voted.
+ * ARGV = userId, offsetMs, now, max, ttl seconds.
+ */
+const RECORD_VOTE_SCRIPT = `
+redis.call("HSET", KEYS[1], ARGV[1], ARGV[2])
+redis.call("ZADD", KEYS[2], ARGV[3], ARGV[1])
+while redis.call("ZCARD", KEYS[2]) > tonumber(ARGV[4]) do
+  local oldest = redis.call("ZPOPMIN", KEYS[2])
+  redis.call("HDEL", KEYS[1], oldest[1])
+end
+redis.call("EXPIRE", KEYS[1], ARGV[5])
+redis.call("EXPIRE", KEYS[2], ARGV[5])
+return 1
+`;
 
 /**
  * LRCLIB is writable by anyone, so its records are untrusted: oversized ones
@@ -81,16 +97,14 @@ export class LyricsService {
     return { offsetMs: Math.round(median / 100) * 100, votes: votes.length };
   }
 
-  /** A listener's own sync for a song (their latest one counts). */
+  /** A listener's own sync for a song (their latest one counts; callers check who may vote). */
   async recordOffset(track: TrackWithArtist, userId: string, offsetMs: number): Promise<SharedLyricsOffset | null> {
     const lyrics = await this.getLyrics(track);
     if (!lyrics || lyrics.lines.length === 0) return null;
-    const redis = this.redisService.getClient();
     const key = this.offsetKey(track, lyrics);
-    const known = (await redis.hexists(key, userId)) === 1;
-    if (known || (await redis.hlen(key)) < MAX_OFFSET_VOTES) {
-      await redis.multi().hset(key, userId, String(offsetMs)).expire(key, OFFSET_TTL_SECONDS).exec();
-    }
+    await this.redisService
+      .getClient()
+      .eval(RECORD_VOTE_SCRIPT, 2, key, `${key}:voted-at`, userId, String(offsetMs), String(Date.now()), String(MAX_OFFSET_VOTES), String(OFFSET_TTL_SECONDS));
     return this.sharedOffset(track, lyrics);
   }
 

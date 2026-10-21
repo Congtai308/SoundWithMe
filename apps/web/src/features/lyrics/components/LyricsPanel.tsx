@@ -128,7 +128,8 @@ export function LyricsPanel({ track, compact = false }: { track: TrackWithArtist
   // send it once they've settled. Guesses and the shared value aren't votes.
   const [toShare, setToShare] = useState<number | null>(null);
   useEffect(() => {
-    if (toShare === null || !trackId || !user) return;
+    // Only verified accounts vote (guest accounts are free to make); guests keep their own timing.
+    if (toShare === null || !trackId || !user || user.isGuest || !user.emailVerified) return;
     const timer = window.setTimeout(() => {
       void lyricsApi.recordOffset(trackId, toShare).catch(() => undefined);
       setToShare(null);

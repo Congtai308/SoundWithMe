@@ -41,7 +41,9 @@ describe("Shared lyrics offset", () => {
     const first = await call<{ sharedOffset: SharedLyricsOffset | null }>("/tracks/track_1/lyrics");
     expect(first.data.sharedOffset).toBeNull();
 
-    const listeners = await Promise.all(["A", "B", "C"].map((n) => h.createGuest(n)));
+    const listeners = await Promise.all(
+      ["a", "b", "c"].map((n) => h.registerUser({ email: `${n}${Date.now()}@example.com`, password: "a-long-password-1", displayName: n })),
+    );
     await call("/tracks/track_1/lyrics/offset", listeners[0]!.cookie, "POST", { offsetMs: -1_000 });
     await call("/tracks/track_1/lyrics/offset", listeners[1]!.cookie, "POST", { offsetMs: -1_200 });
     // One odd vote doesn't drag everyone along.
@@ -56,10 +58,31 @@ describe("Shared lyrics offset", () => {
     expect(after.data.sharedOffset).toEqual({ offsetMs: -1_100, votes: 3 });
   });
 
-  it("only takes votes from signed-in listeners, within sane bounds", async () => {
+  it("only takes votes from verified accounts, within sane bounds", async () => {
     expect((await call("/tracks/track_1/lyrics/offset", "", "POST", { offsetMs: 500 })).status).toBe(401);
+    // Guest accounts are free to make: they keep their own timing but don't vote.
     const guest = await h.createGuest("D");
-    const wild = await call("/tracks/track_1/lyrics/offset", guest.cookie, "POST", { offsetMs: 3_600_000 });
+    expect((await call("/tracks/track_1/lyrics/offset", guest.cookie, "POST", { offsetMs: 500 })).error?.code).toBe(
+      ERROR_CODES.FORBIDDEN,
+    );
+    const member = await h.registerUser({ email: `e${Date.now()}@example.com`, password: "a-long-password-1", displayName: "E" });
+    const wild = await call("/tracks/track_1/lyrics/offset", member.cookie, "POST", { offsetMs: 3_600_000 });
     expect(wild.error?.code).toBe(ERROR_CODES.VALIDATION_ERROR);
+  });
+
+  it("keeps the newest votes when full, instead of locking the first ones in", async () => {
+    const key = (await h.redis().keys("lyrics:offsets:track_1:*")).find((k) => !k.endsWith(":voted-at"))!;
+    // Fill the song to the cap with old votes of +9 s.
+    const old = Array.from({ length: 500 }, (_, i) => `old-${i}`);
+    await h.redis().del(key, `${key}:voted-at`);
+    await h.redis().hset(key, Object.fromEntries(old.map((id) => [id, "9000"])));
+    await h.redis().zadd(`${key}:voted-at`, ...old.flatMap((id, i) => [i, id]));
+    const member = await h.registerUser({ email: `f${Date.now()}@example.com`, password: "a-long-password-1", displayName: "F" });
+    const res = await call<{ sharedOffset: SharedLyricsOffset }>("/tracks/track_1/lyrics/offset", member.cookie, "POST", {
+      offsetMs: -500,
+    });
+    expect(res.data.sharedOffset.votes).toBe(500); // still capped
+    expect(await h.redis().hget(key, "old-0")).toBeNull(); // the oldest made room
+    expect(await h.redis().hget(key, "old-1")).toBe("9000"); // the rest stay
   });
 });
