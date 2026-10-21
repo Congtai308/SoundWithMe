@@ -11,6 +11,14 @@ async function bootstrap() {
   });
 
   app.setGlobalPrefix("api/v1");
+  // Don't tell visitors what the server runs on, and answer only as JSON
+  // (reached directly, without the web app's headers in front).
+  app.getHttpAdapter().getInstance().disable("x-powered-by");
+  app.use((_req: unknown, res: { setHeader(name: string, value: string): void }, next: () => void) => {
+    res.setHeader("X-Content-Type-Options", "nosniff");
+    res.setHeader("X-Frame-Options", "DENY");
+    next();
+  });
 
   // Wired now so multi-instance scaling later is a config change, not a
   // code change (Architecture Review §5 / §16).

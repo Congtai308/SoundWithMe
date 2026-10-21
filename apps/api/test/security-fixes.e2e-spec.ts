@@ -286,3 +286,20 @@ describe("Sockets after signing out (F11)", () => {
     expect((await call("/auth/me", phone.cookies)).status).toBe(401);
   });
 });
+
+describe("Error responses", () => {
+  it("never echo framework internals: unknown routes, unreadable JSON", async () => {
+    const unknown = await fetch(`${h.baseUrl}/api/v1/nope`);
+    expect(await unknown.json()).toEqual({ success: false, error: { code: ERROR_CODES.NOT_FOUND, message: "Not found." } });
+
+    const malformed = await fetch(`${h.baseUrl}/api/v1/auth/login`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: "{bad json",
+    });
+    expect(malformed.status).toBe(400);
+    const body = (await malformed.json()) as { error: { code: string; message: string } };
+    expect(body.error.code).toBe(ERROR_CODES.VALIDATION_ERROR);
+    expect(body.error.message).not.toMatch(/JSON|position|property/);
+  });
+});
