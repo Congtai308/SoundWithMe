@@ -1,4 +1,9 @@
-import { Controller, Get, NotFoundException, Param, UseGuards } from "@nestjs/common";
+import { Body, Controller, Get, NotFoundException, Param, Post, UseGuards } from "@nestjs/common";
+import type { AuthenticatedUser } from "@soundwithme/types";
+import { lyricsOffsetSchema, type LyricsOffsetInput } from "@soundwithme/validation";
+import { CurrentUser } from "../../common/decorators/current-user.decorator";
+import { ZodValidationPipe } from "../../common/pipes/zod-validation.pipe";
+import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { Throttle } from "@nestjs/throttler";
 import { ERROR_CODES } from "@soundwithme/constants";
 import { OptionalJwtAuthGuard } from "../auth/guards/optional-jwt-auth.guard";
@@ -25,11 +30,29 @@ export class TracksController {
     return { success: true, data: { track: await this.findTrack(id) } };
   }
 
-  /** `lyrics: null` when no lyrics are known for the track. */
+  /**
+   * `lyrics: null` when no lyrics are known for the track. `sharedOffset`:
+   * the timing listeners settled on for this video, applied by default.
+   */
   @Get(":id/lyrics")
   async getLyrics(@Param("id") id: string) {
-    const lyrics = await this.lyricsService.getLyrics(await this.findTrack(id));
-    return { success: true, data: { lyrics } };
+    const track = await this.findTrack(id);
+    const lyrics = await this.lyricsService.getLyrics(track);
+    const sharedOffset = lyrics && lyrics.lines.length > 0 ? await this.lyricsService.sharedOffset(track, lyrics) : null;
+    return { success: true, data: { lyrics, sharedOffset } };
+  }
+
+  /** A signed-in listener re-synced the lyrics: their shift counts toward everyone's default. */
+  @Post(":id/lyrics/offset")
+  @UseGuards(JwtAuthGuard)
+  @Throttle({ default: { limit: 20, ttl: 60_000 } })
+  async recordLyricsOffset(
+    @Param("id") id: string,
+    @CurrentUser() user: AuthenticatedUser,
+    @Body(new ZodValidationPipe(lyricsOffsetSchema)) body: LyricsOffsetInput,
+  ) {
+    const sharedOffset = await this.lyricsService.recordOffset(await this.findTrack(id), user.id, body.offsetMs);
+    return { success: true, data: { sharedOffset } };
   }
 
   private async findTrack(id: string) {

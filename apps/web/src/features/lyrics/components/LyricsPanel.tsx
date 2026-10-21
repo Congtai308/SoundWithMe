@@ -3,10 +3,20 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { LyricLine, TrackWithArtist } from "@soundwithme/types";
 import { Icon } from "@/components/ui/Icon";
-import { useLyrics } from "../hooks/use-lyrics";
+import { useLyrics, useSharedLyricsOffset } from "../hooks/use-lyrics";
+import { lyricsApi } from "../services/lyrics-api";
+import { useCurrentUser } from "@/features/auth/hooks/use-auth";
 import { useSmoothPosition } from "../hooks/use-smooth-position";
 
 const OFFSET_STEP_MS = 500;
+/** People tap a line a moment after they hear it start: count that in when syncing by tap. */
+const TAP_REACTION_MS = 200;
+/** How long "Synced · Undo" stays up after a change. */
+const SYNC_NOTICE_MS = 5_000;
+/** A listener's own sync is shared once they've stopped adjusting for this long. */
+const SHARE_DELAY_MS = 2_000;
+/** A video at least this much longer than the lyrics' recording probably has an intro the album cut doesn't. */
+const INTRO_GUESS_MIN_MS = 3_000;
 /** Start scrolling to the next line this early, so it reaches the middle as it lights up. */
 const SCROLL_LEAD_MS = 350;
 /** Shortest scroll animation (after a seek lands just before a line). */
@@ -46,19 +56,21 @@ function activeLineIndex(lines: LyricLine[], positionMs: number): number {
   return found;
 }
 
-function readOffset(trackId: string): number {
+/** This listener's own timing for the track, or null if they never changed it. */
+function readOffset(trackId: string): number | null {
   try {
-    const stored = Number(window.localStorage.getItem(OFFSET_STORAGE_PREFIX + trackId));
-    return Number.isFinite(stored) ? stored : 0;
+    const raw = window.localStorage.getItem(OFFSET_STORAGE_PREFIX + trackId);
+    const stored = raw === null ? NaN : Number(raw);
+    return Number.isFinite(stored) ? stored : null;
   } catch {
-    return 0;
+    return null;
   }
 }
 
 function storeOffset(trackId: string, offsetMs: number): void {
   try {
-    if (offsetMs === 0) window.localStorage.removeItem(OFFSET_STORAGE_PREFIX + trackId);
-    else window.localStorage.setItem(OFFSET_STORAGE_PREFIX + trackId, String(offsetMs));
+    // 0 too: "back to the published timing" is a choice, not "follow everyone else".
+    window.localStorage.setItem(OFFSET_STORAGE_PREFIX + trackId, String(offsetMs));
   } catch {
     // The correction just won't survive a reload.
   }
@@ -82,17 +94,96 @@ export function LyricsPanel({ track, compact = false }: { track: TrackWithArtist
     manualScrollUntil.current = performance.now() + MANUAL_SCROLL_HOLD_MS;
   };
   const activeRef = useRef<HTMLButtonElement>(null);
+  /** Read by the scroll animation, which runs outside React. */
+  const syncingRef = useRef(false);
 
   const trackId = track?.id;
-  useEffect(() => setOffsetMs(trackId ? readOffset(trackId) : 0), [trackId]);
+  const shared = useSharedLyricsOffset(trackId, isOpen);
+  const { data: user } = useCurrentUser();
+  /** Whether this listener set the timing themselves (else it follows everyone's). */
+  const [ownOffset, setOwnOffset] = useState(false);
+  useEffect(() => {
+    const own = trackId ? readOffset(trackId) : null;
+    setOwnOffset(own !== null);
+    setOffsetMs(own ?? 0);
+  }, [trackId]);
+  // Nobody set it here: start from the timing other listeners settled on.
+  useEffect(() => {
+    if (!ownOffset && shared) setOffsetMs(shared.offsetMs);
+  }, [ownOffset, shared]);
 
   const lines = lyrics.data?.lines ?? NO_LINES;
 
-  const changeOffset = (next: number) => {
-    const rounded = Math.round(next / 100) * 100;
-    setOffsetMs(rounded);
-    if (trackId) storeOffset(trackId, rounded);
+  const changeOffset = useCallback(
+    (next: number) => {
+      const rounded = Math.round(next / 100) * 100;
+      setOffsetMs(rounded);
+      setOwnOffset(true);
+      if (trackId) storeOffset(trackId, rounded);
+    },
+    [trackId],
+  );
+
+  // A listener's hand-made sync (tap or nudge) helps everyone after them:
+  // send it once they've settled. Guesses and the shared value aren't votes.
+  const [toShare, setToShare] = useState<number | null>(null);
+  useEffect(() => {
+    if (toShare === null || !trackId || !user) return;
+    const timer = window.setTimeout(() => {
+      void lyricsApi.recordOffset(trackId, toShare).catch(() => undefined);
+      setToShare(null);
+    }, SHARE_DELAY_MS);
+    return () => window.clearTimeout(timer);
+  }, [toShare, trackId, user]);
+
+  /**
+   * Sync mode: the lyrics stop following the song (so the right line can be
+   * found while they're off), and the next line tapped becomes the one being
+   * sung. Each change shows "Synced · Undo" for a moment.
+   */
+  const [syncing, setSyncing] = useState(false);
+  const [notice, setNotice] = useState<{ previous: number; text: string; vote: boolean } | null>(null);
+  /** `vote`: the listener chose this timing by hand, so it's shared. */
+  const applyOffset = useCallback(
+    (next: number, text: string, vote: boolean) => {
+      setNotice({ previous: offsetMs, text, vote });
+      changeOffset(next);
+      if (vote) setToShare(Math.round(next / 100) * 100);
+    },
+    [offsetMs, changeOffset],
+  );
+  const syncToLine = (line: LyricLine) => {
+    // Line `line` should have started a reaction time ago: shift the timing so it did.
+    applyOffset(line.timeMs - (getPosition() - TAP_REACTION_MS), "Đã khớp", true);
+    setSyncing(false);
   };
+  useEffect(() => {
+    if (!notice) return;
+    const timer = window.setTimeout(() => setNotice(null), SYNC_NOTICE_MS);
+    return () => window.clearTimeout(timer);
+  }, [notice]);
+  useEffect(() => setSyncing(false), [trackId]);
+  useEffect(() => {
+    syncingRef.current = syncing;
+    // Back to following the song from where it really is.
+    if (!syncing) manualScrollUntil.current = 0;
+  }, [syncing]);
+
+  // [ and ] nudge the timing, Esc leaves sync mode; never while typing (chat).
+  useEffect(() => {
+    if (!isOpen || lines.length === 0) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+      if ((e.target as HTMLElement | null)?.closest("input, textarea, [contenteditable='true']")) return;
+      if (e.key === "]") applyOffset(offsetMs + OFFSET_STEP_MS, "Sớm hơn", true);
+      else if (e.key === "[") applyOffset(offsetMs - OFFSET_STEP_MS, "Muộn hơn", true);
+      else if (e.key === "Escape" && syncing) setSyncing(false);
+      else return;
+      e.preventDefault();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [isOpen, lines.length, offsetMs, syncing, applyOffset]);
 
   const scrolledToRef = useRef(-2);
   /**
@@ -105,7 +196,7 @@ export function LyricsPanel({ track, compact = false }: { track: TrackWithArtist
   /** Scrolls line `index` (or the top, before the first line) to the middle over `duration` ms. */
   const centerLine = useCallback((index: number, duration: number) => {
     const container = scrollRef.current;
-    if (!container || performance.now() < manualScrollUntil.current) return;
+    if (!container || performance.now() < manualScrollUntil.current || syncingRef.current) return;
     const line = index >= 0 ? container.querySelector<HTMLElement>(`[data-index="${index}"]`) : null;
     const max = container.scrollHeight - container.clientHeight;
     const to = Math.max(0, Math.min(max, line ? line.offsetTop - container.clientHeight / 2 + line.clientHeight / 2 : 0));
@@ -180,6 +271,30 @@ export function LyricsPanel({ track, compact = false }: { track: TrackWithArtist
   }, [isOpen, lines.length, centerLine]);
 
   const offsetLabel = `${offsetMs > 0 ? "+" : ""}${(offsetMs / 1000).toFixed(1)}s`;
+
+  /**
+   * One button to line the lyrics up, most reliable first: the timing other
+   * listeners settled on; else a guess from how much longer the video is than
+   * the recording the lyrics belong to (usually an intro); else, or when
+   * those are already applied, tap the line being sung.
+   */
+  const autoSync = () => {
+    if (syncing) {
+      setSyncing(false);
+      return;
+    }
+    if (shared && offsetMs !== shared.offsetMs) {
+      applyOffset(shared.offsetMs, `Khớp theo ${shared.votes} người nghe`, false);
+      return;
+    }
+    const extraMs = (track?.durationMs ?? 0) - (lyrics.data?.durationMs ?? 0);
+    const guess = -Math.round(extraMs / 100) * 100;
+    if (!shared && extraMs >= INTRO_GUESS_MIN_MS && offsetMs !== guess) {
+      applyOffset(guess, "Đã đoán theo đoạn intro", false);
+      return;
+    }
+    setSyncing(true);
+  };
   const videoMs = track?.durationMs ?? 0;
   const lastLineMs = lines[lines.length - 1]?.timeMs ?? 0;
   // LRCLIB's own duration field is sometimes wrong, so also check where the words actually end.
@@ -199,7 +314,7 @@ export function LyricsPanel({ track, compact = false }: { track: TrackWithArtist
     >
       <header className="flex items-center gap-sm border-b border-white/[0.08] bg-white/[0.025] px-md py-sm">
         <Icon name="lyrics" className="text-[20px] text-[#c4b5fd]" />
-        <h3 className="font-technical text-label-mono-sm uppercase tracking-wider text-[#c4b5fd]">Lyrics</h3>
+        <h3 className={`font-technical text-label-mono-sm uppercase tracking-wider text-[#c4b5fd] ${compact ? "sr-only" : ""}`}>Lyrics</h3>
         {compact && versionMismatch && (
           <span title={VERSION_MISMATCH_HINT} className="flex shrink-0 text-[#fbbf24]/80">
             <Icon name="touch_app" className="text-[16px]" />
@@ -213,34 +328,83 @@ export function LyricsPanel({ track, compact = false }: { track: TrackWithArtist
         )}
         <div className="ml-auto flex shrink-0 items-center gap-xs">
           {isOpen && lines.length > 0 && (
-            <div
-              title="Off-beat? Click the line being sung to re-sync, or nudge by half a second."
-              className="font-technical flex items-center overflow-hidden rounded-md border border-white/[0.12] text-label-mono-sm text-on-surface-variant">
+            <>
+              {notice ? (
+                <span
+                  role="status"
+                  title={`${notice.text} (${offsetLabel})`}
+                  className="flex items-center gap-1 rounded-full bg-success/10 py-1 pl-xs pr-0.5 text-body-sm text-success"
+                >
+                  <Icon name="check" className="text-[16px]" />
+                  <span className="sr-only">{notice.text}</span>
+                  <span className="font-technical text-label-mono-sm tabular-nums">{offsetLabel}</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      changeOffset(notice.previous);
+                      // The vote being undone (sent or still waiting) is replaced by the old timing.
+                      if (notice.vote) setToShare(notice.previous);
+                      setNotice(null);
+                    }}
+                    aria-label="Hoàn tác"
+                    title="Hoàn tác"
+                    className="flex h-6 w-6 items-center justify-center rounded-full text-on-surface hover:bg-white/[0.08]"
+                  >
+                    <Icon name="undo" className="text-[16px]" />
+                  </button>
+                </span>
+              ) : (
+                <div className="flex items-center overflow-hidden rounded-full border border-white/[0.12] text-body-sm text-on-surface-variant">
+                  <button
+                    type="button"
+                    onClick={() => applyOffset(offsetMs - OFFSET_STEP_MS, "Muộn hơn", true)}
+                    title="Lời hiện trước giọng hát: cho lời muộn hơn 0,5 giây  (phím [ )"
+                    aria-label="Cho lời muộn hơn nửa giây"
+                    className="flex items-center px-xs py-1 hover:bg-white/[0.06] hover:text-on-surface"
+                  >
+                    <Icon name="fast_rewind" className="text-[16px]" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => applyOffset(0, "Về mặc định", true)}
+                    disabled={offsetMs === 0}
+                    title={
+                      offsetMs === 0
+                        ? "Lời đang theo thời gian gốc"
+                        : !ownOffset && shared
+                          ? `Đang khớp theo ${shared.votes} người nghe. Bấm để về thời gian gốc`
+                          : "Bấm để về thời gian gốc"
+                    }
+                    className="font-technical border-x border-white/[0.12] px-xs py-1 text-label-mono-sm tabular-nums enabled:hover:bg-white/[0.06] enabled:hover:text-on-surface"
+                  >
+                    {offsetLabel}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => applyOffset(offsetMs + OFFSET_STEP_MS, "Sớm hơn", true)}
+                    title="Lời hiện sau giọng hát: cho lời sớm hơn 0,5 giây  (phím ] )"
+                    aria-label="Cho lời sớm hơn nửa giây"
+                    className="flex items-center px-xs py-1 hover:bg-white/[0.06] hover:text-on-surface"
+                  >
+                    <Icon name="fast_forward" className="text-[16px]" />
+                  </button>
+                </div>
+              )}
               <button
                 type="button"
-                onClick={() => changeOffset(0)}
-                title="Reset lyric timing"
-                className="px-xs py-1 tabular-nums hover:bg-white/[0.06] hover:text-on-surface"
+                onClick={autoSync}
+                aria-pressed={syncing}
+                title="Lời bị lệch? Bấm để tự khớp. Vẫn lệch thì bấm tiếp rồi chọn câu đang hát"
+                className={`flex items-center gap-1 rounded-full px-sm py-1 text-body-sm font-semibold transition-colors ${
+                  syncing
+                    ? "bg-primary-container text-on-primary-container"
+                    : "bg-primary-container/20 text-primary hover:bg-primary-container/35"
+                }`}
               >
-                {offsetLabel}
+                <Icon name={syncing ? "close" : "sync"} className="text-[16px]" />
+                {syncing ? "Huỷ" : "Khớp nhạc"}
               </button>
-              <button
-                type="button"
-                onClick={() => changeOffset(offsetMs - OFFSET_STEP_MS)}
-                title="Lyrics are early — delay them"
-                className="border-l border-white/[0.12] px-xs py-1 hover:bg-white/[0.06] hover:text-on-surface"
-              >
-                -0.5s
-              </button>
-              <button
-                type="button"
-                onClick={() => changeOffset(offsetMs + OFFSET_STEP_MS)}
-                title="Lyrics are late — bring them forward"
-                className="border-l border-white/[0.12] px-xs py-1 hover:bg-white/[0.06] hover:text-on-surface"
-              >
-                +0.5s
-              </button>
-            </div>
+            </>
           )}
           <button
             type="button"
@@ -254,7 +418,15 @@ export function LyricsPanel({ track, compact = false }: { track: TrackWithArtist
         </div>
       </header>
 
-      {isOpen && versionMismatch && !compact && (
+      {isOpen && syncing && (
+        <p role="status" className="flex shrink-0 items-center gap-xs border-b border-primary/20 bg-primary-container/15 px-md py-xs text-body-sm text-on-surface">
+          <span className="h-2 w-2 shrink-0 rounded-full bg-primary motion-safe:animate-ping" />
+          Bấm vào câu đang được hát, lời sẽ khớp theo câu đó.
+          <span className="ml-auto shrink-0 text-outline">Esc để huỷ</span>
+        </p>
+      )}
+
+      {isOpen && versionMismatch && !compact && !syncing && (
         <p className="flex shrink-0 items-center gap-1.5 px-md pt-xs text-body-sm text-[#fbbf24]/80">
           <Icon name="touch_app" className="text-[16px]" />
           {VERSION_MISMATCH_HINT}
@@ -291,11 +463,12 @@ export function LyricsPanel({ track, compact = false }: { track: TrackWithArtist
                     data-index={i}
                     ref={isActive ? activeRef : undefined}
                     aria-current={isActive ? "true" : undefined}
-                    // Line i should be starting right now: shift the timing so it does.
-                    onClick={() => changeOffset(line.timeMs - getPosition())}
+                    onClick={() => syncToLine(line)}
                     title="Click when this line is being sung"
                     style={{ opacity: isActive ? 1 : (LINE_OPACITY[Math.min(distance, LINE_OPACITY.length - 1)] ?? 0) + (isNext ? 0.2 : 0) }}
                     className={`block max-w-full rounded-md px-xs transition-[color,opacity,filter] duration-300 hover:bg-white/[0.04] hover:!opacity-100 ${
+                      syncing ? "!opacity-90 !blur-none outline-dashed outline-1 outline-white/10 hover:bg-primary-container/25 hover:outline-primary/60" : ""
+                    } ${
                       isActive
                         ? `my-xs bg-clip-text ${compact ? "text-[clamp(1.25rem,1.8vw,1.625rem)]" : "text-[clamp(1.5rem,2.4vw,2.125rem)]"} font-extrabold leading-tight text-transparent drop-shadow-[0_0_22px_rgba(139,92,246,0.55)] [background-image:linear-gradient(90deg,#67e8f9,#c4b5fd_var(--wipe,0%),rgba(255,255,255,0.6)_var(--wipe,0%))]`
                         : isNext

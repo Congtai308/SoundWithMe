@@ -72,6 +72,12 @@ export interface LyricLine {
 }
 
 /** GET /tracks/:id/lyrics — matched from LRCLIB and cached server-side. */
+/** How far listeners shifted a song's lyrics to match its video (their median), and how many did. */
+export interface SharedLyricsOffset {
+  offsetMs: number;
+  votes: number;
+}
+
 export interface Lyrics {
   trackName: string;
   artistName: string;
