@@ -19,10 +19,12 @@ const LYRICS: Lyrics = {
   plain: null,
 };
 
-async function call<T>(path: string, cookie = "", method = "GET", body?: unknown) {
+let visitor = 0;
+async function call<T>(path: string, cookie = "", method = "GET", body?: unknown, ip?: string) {
   const res = await fetch(`${h.baseUrl}/api/v1${path}`, {
     method,
-    headers: { "content-type": "application/json", cookie },
+    // Each call from its own address unless a test says otherwise (votes are limited per address).
+    headers: { "content-type": "application/json", cookie, "x-forwarded-for": ip ?? `198.19.${Math.floor(visitor / 250)}.${(visitor++ % 250) + 1}` },
     body: body === undefined ? undefined : JSON.stringify(body),
   });
   const json = (await res.json()) as { data: T; error?: { code: string } };
@@ -68,6 +70,18 @@ describe("Shared lyrics offset", () => {
     const member = await h.registerUser({ email: `e${Date.now()}@example.com`, password: "a-long-password-1", displayName: "E" });
     const wild = await call("/tracks/track_1/lyrics/offset", member.cookie, "POST", { offsetMs: 3_600_000 });
     expect(wild.error?.code).toBe(ERROR_CODES.VALIDATION_ERROR);
+  });
+
+  it("counts at most two voters per address for a song", async () => {
+    const voters = await Promise.all(
+      ["g", "h", "i"].map((n) => h.registerUser({ email: `${n}${Date.now()}@example.com`, password: "a-long-password-1", displayName: n })),
+    );
+    const results = [];
+    for (const v of voters) {
+      results.push(await call<{ sharedOffset: SharedLyricsOffset | null }>("/tracks/track_1/lyrics/offset", v.cookie, "POST", { offsetMs: 7_000 }, "203.0.113.77"));
+    }
+    const votes = results.map((r) => r.data.sharedOffset?.votes ?? 0);
+    expect(votes[2]).toBe(votes[1]); // the third account from that address isn't counted
   });
 
   it("keeps the newest votes when full, instead of locking the first ones in", async () => {
