@@ -207,7 +207,12 @@ describe("Password reset", () => {
     for (let n = 0; n < 25; n++) await call("/auth/password/forgot", "", "POST", { email }, `198.51.100.${100 + n}`);
     await settle();
     expect(resets()).toBe(10);
-    await h.redis().del(`auth:mail-budget:reset:${email}:first-ask-slot`); // the slot's minutes pass
+    // The owner asks while the slot is taken: no mail yet...
+    await call("/auth/password/forgot", "", "POST", { email }, "203.0.113.99");
+    await settle();
+    expect(resets()).toBe(10);
+    // ...and that miss doesn't use up their first ask: once the slot's minutes pass, they get through.
+    await h.redis().del(`auth:mail-budget:reset:${email}:first-ask-slot`);
     await call("/auth/password/forgot", "", "POST", { email }, "203.0.113.99");
     await settle();
     expect(resets()).toBe(11);

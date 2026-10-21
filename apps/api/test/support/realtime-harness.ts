@@ -110,6 +110,9 @@ export class RealtimeHarness {
 
   async stop(): Promise<void> {
     this.disconnectAll();
+    // The server's disconnect handlers (mics, the sing line, presence) still
+    // talk to Redis: let them finish before Redis and the app close.
+    await new Promise((resolve) => setTimeout(resolve, 300));
     const redis = this.app.get<Redis>(REDIS_CLIENT);
     if (this.roomIds.length > 0) {
       await redis.del(...this.roomIds.map((id) => `room:${id}:playback`));

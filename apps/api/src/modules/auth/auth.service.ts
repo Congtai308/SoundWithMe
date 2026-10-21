@@ -421,7 +421,10 @@ export class AuthService {
     // a pool others could drain in advance, so the owner waits a few minutes
     // at most while the email still can't be flooded.
     const slot = await redis.set(`${addressKey}:first-ask-slot`, "1", "EX", FIRST_ASK_SLOT_SECONDS, "NX");
-    return slot === "OK";
+    if (slot === "OK") return true;
+    // Missed the slot: this ask doesn't count, so trying again later is still a first ask.
+    await redis.decr(requesterKey);
+    return false;
   }
 
   private async withinMailBudget(bucket: string, perHour: number): Promise<boolean> {
