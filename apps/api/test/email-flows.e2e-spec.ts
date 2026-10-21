@@ -89,6 +89,18 @@ describe("Sign-up by mailed link", () => {
     expect(right.error?.code).toBe(ERROR_CODES.INVALID_LINK);
   });
 
+  it("counts passwords sent in parallel too", async () => {
+    const email = newEmail();
+    await call("/auth/register", "", "POST", { email, password: "first-password-1", displayName: "Burst" });
+    const token = RealtimeHarness.linkToken(await h.mailTo(email, "Finish creating"));
+    const guesses = await Promise.all(
+      Array.from({ length: 8 }, (_, n) => call("/auth/register/complete", "", "POST", { token, password: `wrong-${n}` })),
+    );
+    expect(guesses.filter((g) => g.error?.code === ERROR_CODES.INVALID_CREDENTIALS).length).toBeLessThanOrEqual(5);
+    const right = await call("/auth/register/complete", "", "POST", { token, password: "first-password-1" });
+    expect(right.error?.code).toBe(ERROR_CODES.INVALID_LINK);
+  });
+
   it("never puts user-chosen text in mail to an address nobody has proven", async () => {
     const email = newEmail();
     await call("/auth/register", "", "POST", { displayName: "Visit evil.example now", email, password: "first-password-1" });
@@ -182,9 +194,17 @@ describe("Password reset", () => {
     for (let n = 0; n < 4; n++) await call("/auth/password/forgot", "", "POST", { email }, "203.0.113.50");
     await settle();
     expect(resets()).toBe(3);
-    // Others can still ask, up to 10 for the address.
-    for (let n = 0; n < 10; n++) await call("/auth/password/forgot", "", "POST", { email }, `203.0.113.${60 + n}`);
+    // The address takes 10 an hour from everyone together...
+    for (let n = 0; n < 7; n++) await call("/auth/password/forgot", "", "POST", { email }, `203.0.113.${60 + n}`);
     await settle();
     expect(resets()).toBe(10);
+    // ...but someone asking again past that cap is refused,
+    await call("/auth/password/forgot", "", "POST", { email }, "203.0.113.60");
+    await settle();
+    expect(resets()).toBe(10);
+    // while a first ask (the owner, say) still gets through: others can't lock them out.
+    await call("/auth/password/forgot", "", "POST", { email }, "203.0.113.99");
+    await settle();
+    expect(resets()).toBe(11);
   });
 });

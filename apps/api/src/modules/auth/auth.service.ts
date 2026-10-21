@@ -100,14 +100,20 @@ export class AuthService {
   async completeSignup(input: CompleteSignupInput): Promise<{ user: AuthenticatedUser; tokens: AuthTokens }> {
     const redis = this.redisService.getClient();
     const key = `auth:pending-signup:${hashToken(input.token)}`;
-    const raw = await redis.get(key);
-    const pending = raw ? parsePendingSignup(raw) : null;
+    const triesKey = `${key}:tries`;
+    // The try is counted with the read, before bcrypt runs, so passwords sent
+    // in parallel can't all slip past the limit.
+    const results = await redis.multi().incr(triesKey).expire(triesKey, SIGNUP_TTL_SECONDS).get(key).exec();
+    const tries = Number(results?.[0]?.[1] ?? 0);
+    const raw = results?.[2]?.[1];
+    const pending = typeof raw === "string" ? parsePendingSignup(raw) : null;
     if (!pending) throw this.invalidLink();
+    if (tries > SIGNUP_PASSWORD_TRIES) {
+      await redis.del(key, triesKey);
+      throw this.invalidLink();
+    }
 
     if (!(await bcrypt.compare(input.password, pending.passwordHash))) {
-      const triesKey = `${key}:tries`;
-      const tries = await redis.incr(triesKey);
-      if (tries === 1) await redis.expire(triesKey, SIGNUP_TTL_SECONDS);
       if (tries >= SIGNUP_PASSWORD_TRIES) await redis.del(key, triesKey);
       throw new UnauthorizedException({
         success: false,
@@ -116,6 +122,7 @@ export class AuthService {
     }
     // Only one request gets to use the link.
     if ((await redis.del(key)) === 0) throw this.invalidLink();
+    await redis.del(triesKey);
 
     const now = new Date();
     // Username is a stable public @handle, but the register form doesn't ask
@@ -135,9 +142,13 @@ export class AuthService {
   }
 
   private async startSignup(input: RegisterInput, requester: string): Promise<void> {
-    const withinBudget =
-      (await this.withinMailBudget(`signup:${input.email}:${requester}`, SIGNUP_MAILS_PER_REQUESTER_PER_HOUR)) &&
-      (await this.withinMailBudget(`signup:${input.email}`, SIGNUP_MAILS_PER_ADDRESS_PER_HOUR));
+    const withinBudget = await this.withinRequesterAndAddressBudget(
+      "signup",
+      input.email,
+      requester,
+      SIGNUP_MAILS_PER_REQUESTER_PER_HOUR,
+      SIGNUP_MAILS_PER_ADDRESS_PER_HOUR,
+    );
     if (!withinBudget) return;
 
     const webAppUrl = this.configService.get<string>("app.webAppUrl");
@@ -314,9 +325,13 @@ export class AuthService {
   private async sendResetEmail(email: string, requester: string): Promise<void> {
     const userDoc = await this.usersService.findByEmail(email);
     if (!userDoc?.email) return;
-    const withinBudget =
-      (await this.withinMailBudget(`reset:${userDoc.email}:${requester}`, RESET_MAILS_PER_REQUESTER_PER_HOUR)) &&
-      (await this.withinMailBudget(`reset:${userDoc.email}`, RESET_MAILS_PER_ADDRESS_PER_HOUR));
+    const withinBudget = await this.withinRequesterAndAddressBudget(
+      "reset",
+      userDoc.email,
+      requester,
+      RESET_MAILS_PER_REQUESTER_PER_HOUR,
+      RESET_MAILS_PER_ADDRESS_PER_HOUR,
+    );
     if (!withinBudget) return;
     const url = await this.createEmailLink("reset", userDoc.id, userDoc.email);
     await this.mailService.send({
@@ -369,6 +384,35 @@ export class AuthService {
       text: "Confirm this is your email address, so you can get back into your SoundWithMe account if you forget your password. The link works for 24 hours.\n\nIf you didn't sign up for SoundWithMe, ignore this email.",
       action: { label: "Confirm my email", url },
     });
+  }
+
+  /**
+   * Mail asked for by a requester (an address, see rateLimitAddress) to an
+   * email. Each requester gets `perRequester` an hour. The cap per email
+   * stops a flood from many requesters, but never a requester's first ask:
+   * otherwise others could use the email's cap up and lock its owner out.
+   */
+  private async withinRequesterAndAddressBudget(
+    kind: string,
+    email: string,
+    requester: string,
+    perRequester: number,
+    perAddress: number,
+  ): Promise<boolean> {
+    const redis = this.redisService.getClient();
+    const requesterKey = `auth:mail-budget:${kind}:${email}:${requester}`;
+    const addressKey = `auth:mail-budget:${kind}:${email}`;
+    const results = await redis
+      .multi()
+      .incr(requesterKey)
+      .expire(requesterKey, 60 * 60, "NX")
+      .incr(addressKey)
+      .expire(addressKey, 60 * 60, "NX")
+      .exec();
+    const byRequester = Number(results?.[0]?.[1] ?? 0);
+    const byAddress = Number(results?.[2]?.[1] ?? 0);
+    if (byRequester > perRequester) return false;
+    return byRequester === 1 || byAddress <= perAddress;
   }
 
   private async withinMailBudget(bucket: string, perHour: number): Promise<boolean> {
