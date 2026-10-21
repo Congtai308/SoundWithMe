@@ -61,6 +61,8 @@ const SIGNUP_MAILS_PER_REQUESTER_PER_HOUR = 3;
 const SIGNUP_MAILS_PER_ADDRESS_PER_HOUR = 10;
 const RESET_MAILS_PER_REQUESTER_PER_HOUR = 3;
 const RESET_MAILS_PER_ADDRESS_PER_HOUR = 10;
+/** First asks from new requesters still let through per email per hour once its cap is reached. */
+const FIRST_ASKS_PAST_CAP_PER_HOUR = 20;
 
 interface GoogleProfile {
   googleId: string;
@@ -388,9 +390,10 @@ export class AuthService {
 
   /**
    * Mail asked for by a requester (an address, see rateLimitAddress) to an
-   * email. Each requester gets `perRequester` an hour. The cap per email
-   * stops a flood from many requesters, but never a requester's first ask:
-   * otherwise others could use the email's cap up and lock its owner out.
+   * email. Each requester gets `perRequester` an hour, and the email
+   * `perAddress` from everyone. Past that, first asks still get a small
+   * reserve, so others using the cap up don't lock the owner out, while the
+   * email gets at most perAddress + FIRST_ASKS_PAST_CAP_PER_HOUR an hour.
    */
   private async withinRequesterAndAddressBudget(
     kind: string,
@@ -412,7 +415,13 @@ export class AuthService {
     const byRequester = Number(results?.[0]?.[1] ?? 0);
     const byAddress = Number(results?.[2]?.[1] ?? 0);
     if (byRequester > perRequester) return false;
-    return byRequester === 1 || byAddress <= perAddress;
+    if (byAddress <= perAddress) return true;
+    if (byRequester !== 1) return false;
+    // Past the cap only first asks get through, and only a few: the owner
+    // still gets their link, but the email can't be flooded from many addresses.
+    const firstAsksKey = `${addressKey}:first-asks`;
+    const firstAsks = await redis.multi().incr(firstAsksKey).expire(firstAsksKey, 60 * 60, "NX").exec();
+    return Number(firstAsks?.[0]?.[1] ?? 0) <= FIRST_ASKS_PAST_CAP_PER_HOUR;
   }
 
   private async withinMailBudget(bucket: string, perHour: number): Promise<boolean> {
