@@ -25,6 +25,9 @@ const MODE_HINT: Record<TrackActionMode, string> = {
 
 // useSearchParams() requires a Suspense boundary in the App Router, or
 // `next build` fails static generation for this route.
+/** Thumbnails in the first rows (2 columns on phones) load first: they're what people see. */
+const PRIORITY_THUMBNAILS = 4;
+
 export default function MusicPage() {
   return (
     <Suspense fallback={null}>
@@ -191,8 +194,15 @@ function MusicContent() {
                   isFetching ? "opacity-60" : ""
                 }`}
               >
-                {tracks.map((track) => (
-                  <VideoCard key={track.id} track={track} mode={mode} onPick={pick} onPlayNow={playNow} />
+                {tracks.map((track, index) => (
+                  <VideoCard
+                    key={track.id}
+                    track={track}
+                    mode={mode}
+                    onPick={pick}
+                    onPlayNow={playNow}
+                    priority={index < PRIORITY_THUMBNAILS}
+                  />
                 ))}
               </div>
             )}

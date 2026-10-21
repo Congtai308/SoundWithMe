@@ -1,5 +1,6 @@
 import type { TrackWithArtist } from "@soundwithme/types";
 import { Icon } from "@/components/ui/Icon";
+import { artworkAt } from "@/features/music/artwork";
 
 function formatDuration(ms: number): string {
   const totalSeconds = Math.round(ms / 1000);
@@ -27,7 +28,7 @@ export function TrackRow({ track, index }: { track: TrackWithArtist; index?: num
       )}
       {track.artworkUrl ? (
         // eslint-disable-next-line @next/next/no-img-element -- artwork comes from provider CDNs
-        <img src={track.artworkUrl} alt="" className="h-12 w-12 shrink-0 rounded-sm object-cover shadow-md" />
+        <img src={artworkAt(track.artworkUrl, 48)} alt="" loading="lazy" decoding="async" className="h-12 w-12 shrink-0 rounded-sm object-cover shadow-md" />
       ) : (
         <div
           className="flex h-12 w-12 shrink-0 items-center justify-center rounded-sm shadow-md"

@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { useRoomEffects } from "../stores/room-effects";
 import { SakuraFall } from "./SakuraFall";
+import { backdropArtwork } from "@/features/music/artwork";
 
 /**
  * Soft colour glows drifting behind everything — the room's dreamy haze.
@@ -53,7 +54,7 @@ export function RoomAmbience({ artworkUrl }: { artworkUrl: string | null }) {
         {artworkUrl ? (
           // eslint-disable-next-line @next/next/no-img-element -- artwork comes from provider CDNs
           <img
-            src={artworkUrl}
+            src={backdropArtwork(artworkUrl) ?? ""}
             alt=""
             className="absolute inset-0 h-full w-full scale-125 object-cover opacity-40 blur-[90px] saturate-150"
           />

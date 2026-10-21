@@ -5,6 +5,7 @@ import { formatClock } from "@/features/rooms/components/TrackArt";
 import { LikeButton } from "@/features/library/components/LikeButton";
 import { ShareTrackButton } from "@/features/messages/components/ShareTrackButton";
 import { AddToPlaylistButton } from "@/features/library/components/AddToPlaylistButton";
+import { artworkAt } from "@/features/music/artwork";
 
 const PRIMARY_LABEL: Record<TrackActionMode, string> = {
   control: "Play in your room",
@@ -19,10 +20,12 @@ interface VideoCardProps {
   onPick: (trackId: string) => void;
   /** Extra "play now" button for people who control the room. */
   onPlayNow?: (trackId: string) => void;
+  /** First row of results: the thumbnail loads right away and before the rest. */
+  priority?: boolean;
 }
 
 /** YouTube-style result tile: 16:9 thumbnail, duration, two-line title, channel. */
-export function VideoCard({ track, mode, onPick, onPlayNow }: VideoCardProps) {
+export function VideoCard({ track, mode, onPick, onPlayNow, priority = false }: VideoCardProps) {
   const locked = mode === "locked";
 
   return (
@@ -38,9 +41,11 @@ export function VideoCard({ track, mode, onPick, onPlayNow }: VideoCardProps) {
         {track.artworkUrl ? (
           // eslint-disable-next-line @next/next/no-img-element -- artwork comes from provider CDNs
           <img
-            src={track.artworkUrl}
+            src={artworkAt(track.artworkUrl, 160)}
             alt=""
-            loading="lazy"
+            loading={priority ? "eager" : "lazy"}
+            fetchPriority={priority ? "high" : "auto"}
+            decoding="async"
             className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
           />
         ) : (

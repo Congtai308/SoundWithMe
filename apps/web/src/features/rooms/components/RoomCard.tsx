@@ -4,6 +4,7 @@ import Link from "next/link";
 import type { Room } from "@soundwithme/types";
 import { Icon } from "@/components/ui/Icon";
 import { useTrack } from "@/features/music/hooks/use-track";
+import { artworkAt } from "@/features/music/artwork";
 
 const ROOM_TYPE_LABEL: Record<Room["type"], string> = {
   public: "Công khai",
@@ -39,8 +40,10 @@ export function RoomCard({ room, featured = false }: { room: Room; featured?: bo
         {coverUrl ? (
           // eslint-disable-next-line @next/next/no-img-element -- artwork comes from provider CDNs
           <img
-            src={coverUrl}
+            src={artworkAt(coverUrl, 160)}
             alt=""
+            loading="lazy"
+            decoding="async"
             className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
           />
         ) : (

@@ -1,4 +1,5 @@
 import { Icon } from "@/components/ui/Icon";
+import { artworkAt } from "@/features/music/artwork";
 
 function gradientFor(seed: string): string {
   let hash = 0;
@@ -23,8 +24,10 @@ export function TrackArt({
     return (
       // eslint-disable-next-line @next/next/no-img-element -- artwork comes from provider CDNs
       <img
-        src={artworkUrl}
+        src={artworkAt(artworkUrl, size)}
         alt=""
+        loading="lazy"
+        decoding="async"
         className={`shrink-0 rounded-sm object-cover ${className}`}
         style={{ width: size, height: size }}
       />

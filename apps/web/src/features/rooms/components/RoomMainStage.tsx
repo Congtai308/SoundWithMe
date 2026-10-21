@@ -12,6 +12,7 @@ import { AddToPlaylistButton } from "@/features/library/components/AddToPlaylist
 import { useRoomLiveStore } from "../stores/room-live-store";
 import { ReactionLayer } from "./ReactionLayer";
 import { formatClock } from "./TrackArt";
+import { backdropArtwork } from "@/features/music/artwork";
 
 const RESTART_THRESHOLD_MS = 3_000;
 
@@ -87,7 +88,7 @@ export function RoomMainStage({
         {track?.artworkUrl && (
           // eslint-disable-next-line @next/next/no-img-element -- artwork comes from provider CDNs
           <img
-            src={track.artworkUrl}
+            src={backdropArtwork(track.artworkUrl) ?? ""}
             alt=""
             aria-hidden="true"
             className="absolute inset-0 h-full w-full scale-125 object-cover opacity-50 blur-2xl"

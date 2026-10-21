@@ -17,6 +17,8 @@ const PETAL_COUNT = 18;
 const PETAL_PATH =
   "M10 23 C3.5 18 0.5 12.5 1.6 7.2 C2.4 3.2 5.4 0.8 8.1 2.6 L10 4.6 L11.9 2.6 C14.6 0.8 17.6 3.2 18.4 7.2 C19.5 12.5 16.5 18 10 23 Z";
 const SPRITE_SCALE = 3; // sprite px per petal-box unit: crisp up to ~60 px petals on hi-dpi
+/** ~30 fps, with slack so a 60 Hz display (16.7 ms frames) draws every other frame. */
+const FRAME_INTERVAL_MS = 30;
 
 interface Petal {
   left: number; // % of width
@@ -101,7 +103,12 @@ export function SakuraFall() {
 
     const start = performance.now();
     let frame = 0;
+    let lastDrawn = 0;
     const draw = (now: number) => {
+      frame = requestAnimationFrame(draw);
+      // Petals drift slowly: 30 fps looks the same as 60 and costs half the main thread.
+      if (now - lastDrawn < FRAME_INTERVAL_MS) return;
+      lastDrawn = now;
       const seconds = (now - start) / 1000;
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -123,7 +130,6 @@ export function SakuraFall() {
         ctx.setTransform(dpr * cos * flipX, dpr * sin * flipX, -dpr * sin * flipY, dpr * cos * flipY, dpr * x, dpr * y);
         ctx.drawImage(sprite, -w / 2, -h / 2, w, h);
       }
-      frame = requestAnimationFrame(draw);
     };
     frame = requestAnimationFrame(draw);
 

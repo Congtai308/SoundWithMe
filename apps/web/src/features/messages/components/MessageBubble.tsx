@@ -4,6 +4,7 @@ import Link from "next/link";
 import type { DirectMessage, SharedTrack } from "@soundwithme/types";
 import { Icon } from "@/components/ui/Icon";
 import { useTrackActions } from "@/features/rooms/hooks/use-track-actions";
+import { artworkAt } from "@/features/music/artwork";
 
 function formatTime(iso: string): string {
   return new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
@@ -62,7 +63,7 @@ function TrackCard({ track }: { track: SharedTrack }) {
     <div className="flex w-72 max-w-full items-center gap-sm rounded-lg border border-white/[0.08] bg-surface-container-high p-sm">
       {track.artworkUrl ? (
         // eslint-disable-next-line @next/next/no-img-element -- artwork comes from provider CDNs
-        <img src={track.artworkUrl} alt="" className="h-12 w-12 shrink-0 rounded-sm object-cover" />
+        <img src={artworkAt(track.artworkUrl, 48)} alt="" loading="lazy" decoding="async" className="h-12 w-12 shrink-0 rounded-sm object-cover" />
       ) : (
         <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-sm bg-primary-container/25 text-primary">
           <Icon name="music_note" className="text-[20px]" />

@@ -6,7 +6,7 @@
     "build": "next build",
     "dev": "next dev",
     "start": "node server.mjs",
-    "lint": "next lint",
+    "lint": "next lint && node scripts/check-icons.mjs",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

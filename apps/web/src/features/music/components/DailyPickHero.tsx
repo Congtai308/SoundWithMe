@@ -11,6 +11,7 @@ import { usePlayerStore } from "@/features/player/stores/player-store";
 import { useRoomSession } from "@/features/rooms/components/RoomSessionProvider";
 import { useTrackActions } from "@/features/rooms/hooks/use-track-actions";
 import { formatClock } from "@/features/rooms/components/TrackArt";
+import { artworkAt } from "@/features/music/artwork";
 
 const STATE_PLAYING = 1;
 const STATE_ENDED = 0;
@@ -248,7 +249,7 @@ export function DailyPickHero({
             <span className="absolute inset-[34%] overflow-hidden rounded-full border-4 border-black/60 bg-primary-container/40">
               {track?.artworkUrl && (
                 // eslint-disable-next-line @next/next/no-img-element -- artwork comes from provider CDNs
-                <img src={track.artworkUrl} alt="" className="h-full w-full object-cover" />
+                <img src={artworkAt(track.artworkUrl, 100)} alt="" decoding="async" className="h-full w-full object-cover" />
               )}
             </span>
           </div>

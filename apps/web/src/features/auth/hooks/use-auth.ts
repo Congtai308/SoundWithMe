@@ -2,7 +2,20 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { authApi } from "../services/auth-api";
 import { ApiClientError } from "@/services/api-client";
 
-const CURRENT_USER_QUERY_KEY = ["auth", "me"];
+export const CURRENT_USER_QUERY_KEY = ["auth", "me"];
+
+/** The signed-in user, or null for a visitor (a 401 is the expected answer then, not an error). */
+export async function fetchCurrentUser() {
+  try {
+    const { user } = await authApi.me();
+    return user;
+  } catch (err) {
+    if (err instanceof ApiClientError && err.code === "UNAUTHENTICATED") {
+      return null;
+    }
+    throw err;
+  }
+}
 
 /**
  * The currently-authenticated user, or null if not logged in. Treats a 401
@@ -12,17 +25,7 @@ const CURRENT_USER_QUERY_KEY = ["auth", "me"];
 export function useCurrentUser() {
   return useQuery({
     queryKey: CURRENT_USER_QUERY_KEY,
-    queryFn: async () => {
-      try {
-        const { user } = await authApi.me();
-        return user;
-      } catch (err) {
-        if (err instanceof ApiClientError && err.code === "UNAUTHENTICATED") {
-          return null;
-        }
-        throw err;
-      }
-    },
+    queryFn: fetchCurrentUser,
     retry: false,
   });
 }
