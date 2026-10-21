@@ -44,7 +44,7 @@ export function TopNav() {
 
         {/* Only while the desktop sidebar is hidden: the way back, next to the logo it took with it. */}
         <div className="hidden shrink-0 items-center gap-xs undock:flex">
-          <SidebarToggle action="show" onClick={toggleSidebar} className="flex" />
+          <SidebarToggle action="show" onClick={toggleSidebar} tooltipSide="bottom" />
           <Link href="/" aria-label="SoundWithMe home" className="rounded-md">
             <BrandLogo showWordmark={false} />
           </Link>

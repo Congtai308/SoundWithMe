@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCurrentUser } from "@/features/auth/hooks/use-auth";
@@ -47,7 +47,7 @@ export function Sidebar() {
               <BrandLogo />
             </span>
           </Link>
-          <SidebarToggle action="hide" onClick={toggle} className="hidden md:flex" />
+          <SidebarToggle action="hide" onClick={toggle} tooltipSide="bottom-end" className="hidden md:block" />
         </div>
 
         <Link
@@ -125,6 +125,7 @@ export function Sidebar() {
       </div>
 
       <UserCard />
+      <SidebarHint collapsed={collapsed} />
     </aside>
   );
 }
@@ -145,26 +146,128 @@ function useSidebarShortcut(toggle: () => void) {
   }, [toggle]);
 }
 
-/** The panel-style show/hide button, used in the sidebar and (while hidden) in TopNav. */
+/**
+ * The round show/hide button, used in the sidebar and (while hidden) in
+ * TopNav. Its tooltip opens beside it (`tooltipSide`), instantly, with the
+ * keyboard shortcut.
+ */
 export function SidebarToggle({
   action,
   onClick,
   className = "",
+  tooltipSide = "bottom",
 }: {
   action: "show" | "hide";
   onClick: () => void;
   className?: string;
+  /** "bottom-end" keeps it inside the sidebar, which clips anything past its edge. */
+  tooltipSide?: "bottom" | "bottom-end";
 }) {
-  const label = action === "hide" ? "Hide sidebar" : "Show sidebar";
+  const label = action === "hide" ? "Ẩn thanh bên" : "Hiện thanh bên";
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-label={label}
-      title={`${label} (Ctrl+B)`}
-      className={`h-9 w-9 shrink-0 items-center justify-center rounded-lg text-on-surface-variant transition-colors hover:bg-white/[0.08] hover:text-on-surface focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary ${className}`}
+    <span className={`group/toggle relative shrink-0 ${className}`}>
+      <button
+        type="button"
+        onClick={onClick}
+        aria-label={`${label} (Ctrl+B)`}
+        className="flex h-9 w-9 items-center justify-center rounded-full border border-white/[0.1] bg-white/[0.04] text-on-surface-variant shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] transition-all duration-200 hover:border-primary/50 hover:bg-primary-container/25 hover:text-primary hover:shadow-[0_0_18px_rgba(160,120,255,0.35)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary active:scale-90"
+      >
+        <Icon
+          name={action === "hide" ? "keyboard_double_arrow_left" : "keyboard_double_arrow_right"}
+          className={`text-[20px] transition-transform duration-200 ${
+            action === "hide" ? "group-hover/toggle:-translate-x-0.5" : "group-hover/toggle:translate-x-0.5"
+          }`}
+        />
+      </button>
+      <span
+        role="tooltip"
+        className={`pointer-events-none absolute z-50 flex items-center gap-xs whitespace-nowrap rounded-md border border-white/[0.12] bg-surface-container-highest px-sm py-1 text-body-sm text-on-surface opacity-0 shadow-lg transition-opacity duration-150 group-hover/toggle:opacity-100 group-focus-within/toggle:opacity-100 [html[data-sidebar-hint]_&]:hidden ${
+          tooltipSide === "bottom-end" ? "right-0 top-full mt-sm" : "left-0 top-full mt-sm"
+        }`}
+      >
+        {label}
+        <kbd className="font-technical rounded border border-white/[0.15] bg-white/[0.06] px-1 text-label-mono-sm text-on-surface-variant">
+          Ctrl B
+        </kbd>
+      </span>
+    </span>
+  );
+}
+
+const HINT_STORAGE_KEY = "swm.sidebar.hint-seen";
+
+/**
+ * First visits on desktop: a bubble beside the hide button saying it hides
+ * the sidebar. Gone for good once dismissed or once the sidebar is hidden.
+ */
+function SidebarHint({ collapsed }: { collapsed: boolean }) {
+  const [show, setShow] = useState(false);
+
+  useEffect(() => {
+    let seen = true;
+    try {
+      seen = window.localStorage.getItem(HINT_STORAGE_KEY) === "1";
+    } catch {
+      // No storage: don't nag every visit.
+    }
+    if (seen) return;
+    const timer = window.setTimeout(() => setShow(true), 1_200);
+    return () => window.clearTimeout(timer);
+  }, []);
+
+  const dismiss = useCallback(() => {
+    setShow(false);
+    try {
+      window.localStorage.setItem(HINT_STORAGE_KEY, "1");
+    } catch {
+      // It just shows again next time.
+    }
+  }, []);
+
+  // Hiding the sidebar is the lesson learned.
+  useEffect(() => {
+    if (collapsed && show) dismiss();
+  }, [collapsed, show, dismiss]);
+
+  // While the bubble is up, the button's own hover tooltip would sit on top of it.
+  useEffect(() => {
+    const root = document.documentElement;
+    if (show && !collapsed) root.dataset.sidebarHint = "";
+    else delete root.dataset.sidebarHint;
+    return () => {
+      delete root.dataset.sidebarHint;
+    };
+  }, [show, collapsed]);
+
+  if (!show || collapsed) return null;
+  return (
+    <div
+      role="dialog"
+      aria-label="Mẹo"
+      className="absolute left-full top-[30px] z-50 ml-3 hidden w-72 motion-safe:animate-[hint-in_300ms_ease-out] md:block"
     >
-      <Icon name={action === "hide" ? "left_panel_close" : "left_panel_open"} className="text-[22px]" />
-    </button>
+      {/* Arrow pointing back at the button. */}
+      <span className="absolute -left-[7px] top-[14px] h-3.5 w-3.5 rotate-45 border-b border-l border-primary/40 bg-surface-container-highest" />
+      <div className="relative rounded-lg border border-primary/40 bg-surface-container-highest p-sm shadow-[0_12px_32px_rgba(0,0,0,0.55),0_0_24px_rgba(160,120,255,0.18)]">
+        <p className="flex items-center gap-xs text-headline-sm text-on-surface">
+          <Icon name="touch_app" className="text-[20px] text-primary motion-safe:animate-[hint-nudge_1.2s_ease-in-out_infinite]" />
+          Ấn vào đây để ẩn thanh bên
+        </p>
+        <p className="mt-1 text-body-sm text-on-surface-variant">
+          Nhạc và phòng nghe sẽ rộng hơn. Hiện lại bằng nút{" "}
+          <Icon name="keyboard_double_arrow_right" className="align-middle text-[16px]" /> ở góc trên, hoặc phím{" "}
+          <kbd className="font-technical rounded border border-white/[0.15] bg-white/[0.06] px-1 text-label-mono-sm">Ctrl B</kbd>.
+        </p>
+        <div className="mt-sm flex justify-end">
+          <button
+            type="button"
+            onClick={dismiss}
+            className="rounded-full bg-primary-container px-md py-1 text-body-sm font-semibold text-on-primary-container transition-transform active:scale-95"
+          >
+            Đã hiểu
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }

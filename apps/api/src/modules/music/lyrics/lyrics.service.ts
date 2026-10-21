@@ -1,7 +1,8 @@
 import { Injectable, Logger, ServiceUnavailableException } from "@nestjs/common";
-import type { Lyrics, TrackWithArtist } from "@soundwithme/types";
+import type { Lyrics, SharedLyricsOffset, TrackWithArtist } from "@soundwithme/types";
 import { ERROR_CODES } from "@soundwithme/constants";
 import { z } from "zod";
+import { createHash } from "crypto";
 import { RedisService } from "../../../database/redis/redis.service";
 import { findBestLyrics, parseLrc, type LrclibRecord } from "./lrc";
 
@@ -11,6 +12,26 @@ const HIT_TTL_SECONDS = 60 * 60 * 24 * 30;
 /** "No lyrics" is retried sooner — LRCLIB is community-run and grows daily. */
 const MISS_TTL_SECONDS = 60 * 60 * 24;
 const USER_AGENT = "SoundWithMe (https://github.com/Congtai308/SoundWithMe)";
+/** Shared offsets fade out if nobody re-syncs the song for this long. */
+const OFFSET_TTL_SECONDS = 60 * 60 * 24 * 90;
+/** One vote per listener, the latest this many count: a new vote pushes out the oldest. */
+const MAX_OFFSET_VOTES = 500;
+/**
+ * Records a vote and keeps only the newest MAX votes, in one step.
+ * KEYS[1] = hash userId → offset, KEYS[2] = sorted set userId → time voted.
+ * ARGV = userId, offsetMs, now, max, ttl seconds.
+ */
+const RECORD_VOTE_SCRIPT = `
+redis.call("HSET", KEYS[1], ARGV[1], ARGV[2])
+redis.call("ZADD", KEYS[2], ARGV[3], ARGV[1])
+while redis.call("ZCARD", KEYS[2]) > tonumber(ARGV[4]) do
+  local oldest = redis.call("ZPOPMIN", KEYS[2])
+  redis.call("HDEL", KEYS[1], oldest[1])
+end
+redis.call("EXPIRE", KEYS[1], ARGV[5])
+redis.call("EXPIRE", KEYS[2], ARGV[5])
+return 1
+`;
 
 /**
  * LRCLIB is writable by anyone, so its records are untrusted: oversized ones
@@ -58,6 +79,41 @@ export class LyricsService {
       .finally(() => this.inFlight.delete(track.id));
     this.inFlight.set(track.id, lookup);
     return lookup;
+  }
+
+  /**
+   * The timing shift listeners settled on for this song's lyrics: the median
+   * of their latest choices, so one odd vote can't move it. Tied to these
+   * exact lyrics: if the lyrics found for the song change, so does the key.
+   */
+  async sharedOffset(track: TrackWithArtist, lyrics: Lyrics): Promise<SharedLyricsOffset | null> {
+    const votes = (await this.redisService.getClient().hvals(this.offsetKey(track, lyrics)))
+      .map(Number)
+      .filter(Number.isFinite)
+      .sort((a, b) => a - b);
+    if (votes.length === 0) return null;
+    const middle = Math.floor(votes.length / 2);
+    const median = votes.length % 2 ? votes[middle]! : (votes[middle - 1]! + votes[middle]!) / 2;
+    return { offsetMs: Math.round(median / 100) * 100, votes: votes.length };
+  }
+
+  /** A listener's own sync for a song (their latest one counts; callers check who may vote). */
+  async recordOffset(track: TrackWithArtist, userId: string, offsetMs: number): Promise<SharedLyricsOffset | null> {
+    const lyrics = await this.getLyrics(track);
+    if (!lyrics || lyrics.lines.length === 0) return null;
+    const key = this.offsetKey(track, lyrics);
+    await this.redisService
+      .getClient()
+      .eval(RECORD_VOTE_SCRIPT, 2, key, `${key}:voted-at`, userId, String(offsetMs), String(Date.now()), String(MAX_OFFSET_VOTES), String(OFFSET_TTL_SECONDS));
+    return this.sharedOffset(track, lyrics);
+  }
+
+  private offsetKey(track: TrackWithArtist, lyrics: Lyrics): string {
+    const fingerprint = createHash("sha1")
+      .update(lyrics.lines.map((line) => `${line.timeMs} ${line.text}`).join("\n"))
+      .digest("hex")
+      .slice(0, 12);
+    return `lyrics:offsets:${track.id}:${fingerprint}`;
   }
 
   private async lookup(track: TrackWithArtist): Promise<Lyrics | null> {

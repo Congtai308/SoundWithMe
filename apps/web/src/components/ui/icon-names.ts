@@ -5,13 +5,14 @@
  * this list (scripts/check-icons.mjs). Alphabetical: Google Fonts wants it so.
  */
 export const ICON_NAMES = [
-  "2d", "add", "add_circle", "add_reaction", "admin_panel_settings", "album", "arrow_back", "arrow_forward",
-  "auto_awesome", "autorenew", "badge", "block", "bolt", "casino", "chat", "chat_bubble", "check",
-  "check_circle", "chevron_right", "close", "close_fullscreen", "coffee", "content_copy", "delete",
+  "2d", "add", "add_circle", "add_reaction", "admin_panel_settings", "ads_click", "album", "arrow_back",
+  "arrow_forward", "auto_awesome", "autorenew", "badge", "block", "bolt", "casino", "chat", "chat_bubble",
+  "check", "check_circle", "chevron_right", "close", "close_fullscreen", "coffee", "content_copy", "delete",
   "description", "directions_car", "diversity_3", "dns", "done", "done_all", "duo", "email", "energy",
-  "equalizer", "error", "expand_less", "expand_more", "explore", "favorite", "forum", "forward_to_inbox",
-  "genres", "graphic_eq", "grid_view", "group", "group_add", "groups", "headphones", "headset_off", "hide",
-  "history", "host", "hourglass_top", "how_to_reg", "how_to_vote", "http", "info", "key", "label",
+  "equalizer", "error", "expand_less", "expand_more", "explore", "fast_forward", "fast_rewind", "favorite",
+  "forum", "forward_to_inbox", "genres", "graphic_eq", "grid_view", "group", "group_add", "groups",
+  "headphones", "headset_off", "hide", "history", "host", "hourglass_top", "how_to_reg", "how_to_vote",
+  "http", "info", "key", "keyboard_double_arrow_left", "keyboard_double_arrow_right", "label",
   "left_panel_close", "left_panel_open", "library_music", "link", "link_off", "list", "lock", "lock_reset",
   "login", "logout", "looks_one", "lyrics", "mail", "mark_email_read", "mark_email_unread", "meeting_room",
   "menu", "mic", "mic_off", "music_note", "music_off", "notifications", "open_in_full", "password", "pause",
@@ -20,9 +21,9 @@ export const ICON_NAMES = [
   "queue_music", "radio", "record_voice_over", "refresh", "remove_circle", "resize", "room", "schedule_send",
   "script", "search", "search_off", "send", "sensors", "sensors_off", "settings", "share", "shield_person",
   "skip_next", "skip_previous", "smart_display", "speaker_notes_off", "speed", "stadium", "start", "step",
-  "stop_circle", "switch", "sync_problem", "tab", "thumb_down", "thumb_up", "timer", "title", "token",
-  "topic", "touch_app", "tune", "verified", "visibility", "visibility_off", "volume_down", "volume_off",
-  "volume_up", "wifi_off", "workspace_premium",
+  "stop_circle", "switch", "sync", "sync_problem", "tab", "thumb_down", "thumb_up", "timer", "title",
+  "token", "topic", "touch_app", "tune", "undo", "verified", "visibility", "visibility_off", "volume_down",
+  "volume_off", "volume_up", "wifi_off", "workspace_premium",
 ] as const;
 
 /** Only the axes the app uses: 24 px optical size, weight 400, grade 0, outline and filled. */

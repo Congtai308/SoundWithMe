@@ -25,3 +25,9 @@ export const artistImagesQuerySchema = z.object({
     .pipe(z.array(z.string()).min(1).max(MAX_ARTIST_IMAGE_NAMES)),
 });
 export type ArtistImagesQuery = z.infer<typeof artistImagesQuerySchema>;
+
+/** POST /tracks/:id/lyrics/offset — the timing shift a listener settled on (ms, + shows words sooner). */
+export const lyricsOffsetSchema = z.object({
+  offsetMs: z.number().int().min(-600_000).max(600_000),
+});
+export type LyricsOffsetInput = z.infer<typeof lyricsOffsetSchema>;
