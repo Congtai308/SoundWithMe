@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { SOCKET_EVENTS } from "@soundwithme/constants";
 import type { AppNotification, DirectMessage } from "@soundwithme/types";
@@ -9,6 +9,7 @@ import { useCurrentUser } from "@/features/auth/hooks/use-auth";
 import { showToast } from "@/components/ui/Toaster";
 import { FRIENDS_KEY } from "@/features/friends/hooks/use-friends";
 import { CONVERSATIONS_KEY, applyLiveMessage, applyLiveRead } from "@/features/messages/hooks/use-messages";
+import { forgetLocalPreferences } from "@/features/music/hooks/use-music-preferences";
 import { addLiveNotification } from "../hooks/use-notifications";
 import { NOTIFICATION_ICON } from "./NotificationBell";
 
@@ -76,6 +77,20 @@ export function UserRealtime() {
       socket.off("connect", onConnect);
     };
   }, [userId, queryClient]);
+
+  // Another account (or nobody) on this tab now: drop everything cached for
+  // the previous one (friends, library, bell, messages), so the next person
+  // never sees it. Only the current-user query stays; it is already fresh.
+  const previousUserId = useRef<string | null | undefined>(undefined);
+  useEffect(() => {
+    if (user === undefined) return; // still loading
+    const current = user?.id ?? null;
+    const previous = previousUserId.current;
+    previousUserId.current = current;
+    if (previous === undefined || previous === null || previous === current) return;
+    queryClient.removeQueries({ predicate: (query) => query.queryKey[0] !== "auth" });
+    forgetLocalPreferences();
+  }, [user, queryClient]);
 
   // Signing out: drop the socket (it authenticated as the old user).
   useEffect(() => {

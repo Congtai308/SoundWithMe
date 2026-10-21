@@ -35,6 +35,13 @@ export class UserDocument extends Document {
   @Prop({ type: Date, default: null })
   emailVerifiedAt?: Date | null;
 
+  // When the person who holds the password proved they own the mailbox: they
+  // opened the confirmation link while signed in, or set the password from a
+  // reset link. A verified email alone doesn't show that (anyone can register
+  // someone else's address and wait for its owner to click the link).
+  @Prop({ type: Date, default: null })
+  passwordOwnerVerifiedAt?: Date | null;
+
   @Prop({ type: String, default: null })
   avatarUrl?: string | null;
 

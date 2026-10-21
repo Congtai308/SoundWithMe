@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { setPendingPlay } from "../pending-play";
 import Link from "next/link";
 import type { Room } from "@soundwithme/types";
 import { Icon } from "@/components/ui/Icon";
@@ -79,7 +80,8 @@ export function RoomReadyPanel({ room, playTrackId = null }: { room: Room; playT
 
       <div className="flex w-full flex-col gap-sm sm:flex-row">
         <Link
-          href={playTrackId ? `/room/${room.id}?play=${encodeURIComponent(playTrackId)}` : `/room/${room.id}`}
+          href={`/room/${room.id}`}
+          onClick={() => playTrackId && setPendingPlay(room.id, playTrackId)}
           className="flex flex-1 items-center justify-center gap-xs rounded-full bg-primary-container px-md py-sm text-headline-sm text-on-primary-container shadow-[0_0_24px_rgba(160,120,255,0.35)] transition-all active:scale-[0.96]"
         >
           <Icon name="login" className="text-[20px]" />

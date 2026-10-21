@@ -51,6 +51,8 @@ interface Voice {
 
 interface Peer {
   remote: string;
+  /** Sing peers: the listener's user, so they can be cut off when they leave or are removed. */
+  remoteUserId: string | null;
   role: Role;
   pc: RTCPeerConnection;
   pending: RTCIceCandidateInit[];
@@ -227,13 +229,25 @@ export class VoiceMesh {
     this.applyMix();
   }
 
-  async handleSignal({ roomId, from, channel, signal }: RtcSignalEvent): Promise<void> {
+  /**
+   * The room's listeners changed (someone left, or the host removed them).
+   * The server can't close a browser-to-browser connection, so this tab cuts
+   * off the voice it sends to anyone no longer in the room.
+   */
+  syncListeners(userIds: Iterable<string>): void {
+    const present = new Set(userIds);
+    for (const peer of [...this.peers.values()]) {
+      if (peer.role === "sing" && peer.remoteUserId !== null && !present.has(peer.remoteUserId)) this.closePeer(peer);
+    }
+  }
+
+  async handleSignal({ roomId, from, fromUserId, channel, signal }: RtcSignalEvent): Promise<void> {
     if (roomId !== this.roomId || this.destroyed) return;
     // The sender's "listen" is our "sing", and the other way round.
     const role: Role = channel === "listen" ? "sing" : "listen";
     try {
       if (signal.type === "offer") {
-        if (role === "sing") await this.answerListener(from, signal.sdp);
+        if (role === "sing") await this.answerListener(from, fromUserId, signal.sdp);
         return;
       }
       const peer = this.peers.get(key(from, role));
@@ -357,7 +371,17 @@ export class VoiceMesh {
     const existing = this.peers.get(key(remote, role));
     if (existing) this.closePeer(existing);
     const pc = new RTCPeerConnection({ iceServers: iceServers() });
-    const peer: Peer = { remote, role, pc, pending: [], voice: null, delayMs: null, jitter: null, singerLatencyMs: null };
+    const peer: Peer = {
+      remote,
+      remoteUserId: null,
+      role,
+      pc,
+      pending: [],
+      voice: null,
+      delayMs: null,
+      jitter: null,
+      singerLatencyMs: null,
+    };
     this.peers.set(key(remote, role), peer);
 
     pc.onicecandidate = ({ candidate }) => {
@@ -414,10 +438,11 @@ export class VoiceMesh {
     }
   }
 
-  private async answerListener(remote: string, sdp: string): Promise<void> {
+  private async answerListener(remote: string, remoteUserId: string, sdp: string): Promise<void> {
     const track = this.outgoing()?.getAudioTracks()[0];
     if (!track) return; // not singing (any more)
     const peer = this.createPeer(remote, "sing");
+    peer.remoteUserId = remoteUserId;
     await peer.pc.setRemoteDescription({ type: "offer", sdp });
     const transceiver = peer.pc.getTransceivers()[0];
     if (!transceiver) return;

@@ -7,6 +7,15 @@ import { musicApi } from "../services/music-api";
 
 const STORAGE_KEY = "swm.music-preferences";
 
+/** Signing out: the next person on this browser must not inherit (or upload) these picks. */
+export function forgetLocalPreferences(): void {
+  try {
+    window.localStorage.removeItem(STORAGE_KEY);
+  } catch {
+    // Storage unavailable: nothing was kept.
+  }
+}
+
 export interface Preferences {
   genres: string[];
   artists: string[];

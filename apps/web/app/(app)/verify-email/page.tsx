@@ -1,28 +1,29 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useVerifyEmail } from "@/features/auth/hooks/use-auth";
+import { useCurrentUser, useVerifyEmail } from "@/features/auth/hooks/use-auth";
 import { ApiClientError } from "@/services/api-client";
 import { StatePanel, primaryPillClass } from "@/components/ui/StatePanel";
 
-/** Opened from the confirmation email: /verify-email?token=… */
+/**
+ * Opened from the confirmation email: /verify-email?token=… The link only
+ * counts after a click here, so mail scanners that open links (and run the
+ * page) don't confirm addresses for anyone.
+ */
 export default function VerifyEmailPage() {
   const verify = useVerifyEmail();
-  const [missingToken, setMissingToken] = useState(false);
-  const started = useRef(false);
+  const { data: user } = useCurrentUser();
+  const [token, setToken] = useState<string | null | undefined>(undefined);
 
   useEffect(() => {
-    // The link works once: never send it twice (React dev mode runs effects twice).
-    if (started.current) return;
-    started.current = true;
-    const token = new URLSearchParams(window.location.search).get("token");
-    if (token) verify.mutate(token);
-    else setMissingToken(true);
-  }, [verify]);
+    setToken(new URLSearchParams(window.location.search).get("token"));
+  }, []);
 
   let panel;
-  if (verify.isSuccess) {
+  if (token === undefined) {
+    panel = null;
+  } else if (verify.isSuccess) {
     panel = (
       <StatePanel
         icon="verified"
@@ -35,7 +36,7 @@ export default function VerifyEmailPage() {
         }
       />
     );
-  } else if (missingToken || verify.isError) {
+  } else if (!token || verify.isError) {
     panel = (
       <StatePanel
         icon="link_off"
@@ -49,7 +50,27 @@ export default function VerifyEmailPage() {
       />
     );
   } else {
-    panel = <StatePanel icon="hourglass_top" title="Confirming your email…" body="One moment." />;
+    panel = (
+      <StatePanel
+        icon="mark_email_read"
+        title="Confirm your email"
+        body={
+          user && !user.isGuest
+            ? `Confirm that ${user.email ?? "this address"} is yours.`
+            : "Sign in first if this is your account, then come back to this link. You can also confirm without signing in."
+        }
+        action={
+          <button
+            type="button"
+            disabled={verify.isPending}
+            onClick={() => verify.mutate(token)}
+            className={`${primaryPillClass} disabled:opacity-50`}
+          >
+            {verify.isPending ? "Confirming…" : "Confirm my email"}
+          </button>
+        }
+      />
+    );
   }
 
   return <div className="mx-auto w-full max-w-lg px-md py-xl">{panel}</div>;

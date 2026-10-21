@@ -81,10 +81,10 @@ describe("Email verification", () => {
     expect(res.error?.code).toBe(ERROR_CODES.INVALID_LINK);
   });
 
-  it("lets Google sign in to a verified account without touching its password", async () => {
-    const { email, user } = await register();
+  it("keeps the password when Google signs in to an account its password holder verified while signed in", async () => {
+    const { email, user, cookies } = await register();
     await until(() => mailCount(email) === 1);
-    await call("/auth/verify-email", "", "POST", { token: lastLinkTo(email) });
+    await call("/auth/verify-email", cookies, "POST", { token: lastLinkTo(email) });
 
     const signedIn = await h.get(AuthService).loginOrRegisterWithGoogle({
       googleId: `g-${stamp()}`,
@@ -96,6 +96,25 @@ describe("Email verification", () => {
     expect(signedIn.user.authMethods).toEqual(expect.arrayContaining(["password", "google"]));
     expect((await call("/auth/login", "", "POST", { email, password: "first-password-1" })).status).toBe(200);
   });
+});
+
+it("still takes over a pre-registered account whose link was opened by someone not signed in to it", async () => {
+  // The attacker registers the victim's address; the victim (or a link
+  // scanner) opens the confirmation mail without being signed in to it.
+  const { email, user } = await register();
+  await until(() => mailCount(email) === 1);
+  expect((await call("/auth/verify-email", "", "POST", { token: lastLinkTo(email) })).status).toBe(200);
+
+  const signedIn = await h.get(AuthService).loginOrRegisterWithGoogle({
+    googleId: `g-${stamp()}`,
+    email,
+    displayName: "Owner",
+    avatarUrl: null,
+  });
+  expect(signedIn.user.id).toBe(user.id);
+  expect(signedIn.user.authMethods).toEqual(["google"]);
+  // The attacker's password is gone.
+  expect((await call("/auth/login", "", "POST", { email, password: "first-password-1" })).status).toBe(401);
 });
 
 describe("Password reset", () => {

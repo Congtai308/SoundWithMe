@@ -41,6 +41,7 @@ import { AuthService } from "./auth.service";
 import { JwtAuthGuard } from "./guards/jwt-auth.guard";
 import { UserThrottlerGuard } from "../../common/guards/user-throttler.guard";
 import { GoogleAuthGuard } from "./guards/google-auth.guard";
+import { OptionalJwtAuthGuard } from "./guards/optional-jwt-auth.guard";
 import { clientIp } from "../../common/utils/client-ip";
 
 @Controller("auth")
@@ -179,13 +180,20 @@ export class AuthController {
     return { success: true, data: { status: "sent" } };
   }
 
-  /** Opened from the mailed link; works signed in or not. */
-  @UseGuards(UserThrottlerGuard)
+  /**
+   * Opened from the mailed link, signed in or not. Signed in as the account
+   * itself also proves the password holder owns the mailbox (Google sign-in
+   * with this address then keeps the password).
+   */
+  @UseGuards(OptionalJwtAuthGuard, UserThrottlerGuard)
   @Throttle({ default: { limit: 20, ttl: 60_000 } })
   @HttpCode(HttpStatus.OK)
   @Post("verify-email")
-  async verifyEmail(@Body(new ZodValidationPipe(verifyEmailSchema)) body: VerifyEmailInput) {
-    await this.authService.verifyEmail(body.token);
+  async verifyEmail(
+    @Body(new ZodValidationPipe(verifyEmailSchema)) body: VerifyEmailInput,
+    @CurrentUser() user: AuthenticatedUser | null,
+  ) {
+    await this.authService.verifyEmail(body.token, user?.id ?? null);
     return { success: true, data: { status: "verified" } };
   }
 

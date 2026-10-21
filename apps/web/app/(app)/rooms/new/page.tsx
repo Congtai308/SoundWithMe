@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { setPendingPlay } from "@/features/rooms/pending-play";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { Room } from "@soundwithme/types";
@@ -101,7 +102,7 @@ function AlreadyHosting({ room, playTrackId }: { room: Room; playTrackId: string
   const leave = useLeaveRoom(room.id);
   const exitSession = useRoomSessionStore((s) => s.exit);
   const activeRoomId = useRoomSessionStore((s) => s.activeRoomId);
-  const href = playTrackId ? `/room/${room.id}?play=${encodeURIComponent(playTrackId)}` : `/room/${room.id}`;
+  const href = `/room/${room.id}`;
 
   return (
     <div className="mx-auto flex max-w-xl flex-col items-center gap-md py-md text-center">
@@ -118,6 +119,7 @@ function AlreadyHosting({ room, playTrackId }: { room: Room; playTrackId: string
       <div className="flex w-full flex-col gap-sm sm:flex-row">
         <Link
           href={href}
+          onClick={() => playTrackId && setPendingPlay(room.id, playTrackId)}
           className="flex flex-1 items-center justify-center gap-xs rounded-full bg-primary-container px-md py-sm text-headline-sm text-on-primary-container shadow-[0_0_24px_rgba(160,120,255,0.35)]"
         >
           <Icon name="login" className="text-[20px]" />

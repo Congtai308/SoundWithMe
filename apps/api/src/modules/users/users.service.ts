@@ -56,15 +56,18 @@ export class UsersService {
     return this.userModel
       .findOneAndUpdate(
         { _id: userId, googleId: null },
-        { $set: { googleId, authMethods: ["google"], emailVerifiedAt: new Date() }, $unset: { passwordHash: 1 } },
+        {
+          $set: { googleId, authMethods: ["google"], emailVerifiedAt: new Date(), passwordOwnerVerifiedAt: null },
+          $unset: { passwordHash: 1 },
+        },
         { new: true },
       )
       .exec();
   }
 
   /**
-   * Links Google to an account whose email the owner already verified: the
-   * password stays, since whoever set it proved they own the address.
+   * Links Google to an account whose password holder proved they own the
+   * address (see passwordOwnerVerifiedAt): the password stays.
    */
   async linkGoogle(userId: string, googleId: string): Promise<UserDocument | null> {
     return this.userModel
@@ -76,12 +79,24 @@ export class UsersService {
       .exec();
   }
 
-  async markEmailVerified(userId: string, email: string): Promise<boolean> {
+  /**
+   * `bySignedInOwner`: the link was opened in a session of this account, so
+   * the password holder is the mailbox owner too.
+   */
+  async markEmailVerified(userId: string, email: string, bySignedInOwner: boolean): Promise<boolean> {
     // Only for the address the link was mailed to, in case it changed since.
+    const now = new Date();
     const result = await this.userModel
-      .updateOne({ _id: userId, email, emailVerifiedAt: null }, { $set: { emailVerifiedAt: new Date() } })
+      .updateOne({ _id: userId, email }, [
+        {
+          $set: {
+            emailVerifiedAt: { $ifNull: ["$emailVerifiedAt", now] },
+            ...(bySignedInOwner ? { passwordOwnerVerifiedAt: now } : {}),
+          },
+        },
+      ])
       .exec();
-    return result.modifiedCount > 0;
+    return result.matchedCount > 0;
   }
 
   /** A new password from a reset link. Opening that link proves the email too. */
@@ -89,7 +104,10 @@ export class UsersService {
     await this.userModel
       .updateOne(
         { _id: userId },
-        { $set: { passwordHash, emailVerifiedAt: new Date() }, $addToSet: { authMethods: "password" } },
+        {
+          $set: { passwordHash, emailVerifiedAt: new Date(), passwordOwnerVerifiedAt: new Date() },
+          $addToSet: { authMethods: "password" },
+        },
       )
       .exec();
   }

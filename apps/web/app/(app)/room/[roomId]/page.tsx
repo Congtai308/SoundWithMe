@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { takePendingPlay } from "@/features/rooms/pending-play";
 import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { ApiClientError } from "@/services/api-client";
@@ -25,8 +26,6 @@ import { Icon } from "@/components/ui/Icon";
 import { StatePanel, primaryPillClass, ghostPillClass } from "@/components/ui/StatePanel";
 
 const ERROR_TOAST_MS = 4_000;
-/** `/room/:id?play=<trackId>` — set by "Start a room with this song" on the Music page. */
-const PLAY_PARAM = "play";
 type MobilePanel = "chat" | "queue";
 
 /**
@@ -94,17 +93,16 @@ export default function RoomPage() {
     return () => window.clearTimeout(timer);
   }, [lastError, setError]);
 
-  // Play the song picked on the Music page once we're in, then drop the param.
+  // Play the song picked on the Music page once we're in (see pending-play.ts).
   const playHandledRef = useRef(false);
   useEffect(() => {
     if (playHandledRef.current || membership !== "member" || !canAdd) return;
-    const trackId = new URLSearchParams(window.location.search).get(PLAY_PARAM);
-    if (!trackId) return;
     playHandledRef.current = true;
+    const trackId = takePendingPlay(roomId);
+    if (!trackId) return;
     if (canControl) commands.changeTrack(trackId);
     else commands.queueAdd(trackId);
-    router.replace(`/room/${roomId}`);
-  }, [membership, canAdd, canControl, commands, roomId, router]);
+  }, [membership, canAdd, canControl, commands, roomId]);
 
   if (isUserLoading || roomQuery.isLoading) return <StudioSkeleton />;
 

@@ -158,6 +158,10 @@ export function useKaraoke(roomId: string | null, userId: string | undefined, is
       else socket.emit(SOCKET_EVENTS.MIC_REQUEST, { roomId });
     };
     const onSignal = (event: RtcSignalEvent) => void mesh?.handleSignal(event);
+    // Someone left or was removed: stop sending them our voice.
+    const onPresence = ({ roomId: presenceRoom, listeners }: { roomId: string; listeners: { id: string }[] }) => {
+      if (presenceRoom === roomId) mesh?.syncListeners(listeners.map((l) => l.id));
+    };
     const onChunk = (chunk: VoiceChunkEvent) => mesh?.handleChunk(chunk);
     const onDemand = ({ roomId: demandRoom, listeners, pcmOnly }: VoiceRelayDemandPayload) => {
       if (demandRoom === roomId) mesh?.setRelayDemand(listeners, pcmOnly);
@@ -191,6 +195,7 @@ export function useKaraoke(roomId: string | null, userId: string | undefined, is
     socket.on(SOCKET_EVENTS.MIC_STATE, onMicState);
     socket.on(SOCKET_EVENTS.MIC_TURN, onTurn);
     socket.on(SOCKET_EVENTS.RTC_SIGNAL, onSignal);
+    socket.on(SOCKET_EVENTS.ROOM_PRESENCE, onPresence);
     socket.on(SOCKET_EVENTS.VOICE_CHUNK, onChunk);
     socket.on(SOCKET_EVENTS.VOICE_RELAY_DEMAND, onDemand);
     socket.on(SOCKET_EVENTS.ERROR, onError);
@@ -203,6 +208,7 @@ export function useKaraoke(roomId: string | null, userId: string | undefined, is
       socket.off(SOCKET_EVENTS.MIC_STATE, onMicState);
       socket.off(SOCKET_EVENTS.MIC_TURN, onTurn);
       socket.off(SOCKET_EVENTS.RTC_SIGNAL, onSignal);
+      socket.off(SOCKET_EVENTS.ROOM_PRESENCE, onPresence);
       socket.off(SOCKET_EVENTS.VOICE_CHUNK, onChunk);
       socket.off(SOCKET_EVENTS.VOICE_RELAY_DEMAND, onDemand);
       socket.off(SOCKET_EVENTS.ERROR, onError);

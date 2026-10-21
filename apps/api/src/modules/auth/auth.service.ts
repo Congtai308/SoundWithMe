@@ -192,8 +192,8 @@ export class AuthService {
         // loses it and every session. Never moves an account between Google
         // accounts.
         if (existingByEmail.googleId) throw this.linkedToAnotherGoogleAccount();
-        if (existingByEmail.emailVerifiedAt) {
-          // The owner already proved the address (mailed link): just add Google.
+        if (existingByEmail.emailVerifiedAt && existingByEmail.passwordOwnerVerifiedAt) {
+          // Whoever holds the password proved they own this mailbox: just add Google.
           const linked = await this.usersService.linkGoogle(existingByEmail.id, profile.googleId);
           if (!linked) throw this.linkedToAnotherGoogleAccount();
           userDoc = linked;
@@ -228,13 +228,14 @@ export class AuthService {
     await this.sendVerificationEmail(userDoc);
   }
 
-  async verifyEmail(token: string): Promise<void> {
+  /** `signedInUserId`: who opened the link, when they were signed in. */
+  async verifyEmail(token: string, signedInUserId: string | null): Promise<void> {
     const claim = await this.takeEmailLink("verify", token);
     if (!claim) throw this.invalidLink();
-    if (await this.usersService.markEmailVerified(claim.userId, claim.email)) return;
-    // Already verified (an earlier link) is fine; a changed address is not.
-    const userDoc = await this.usersService.findById(claim.userId);
-    if (!userDoc?.emailVerifiedAt || userDoc.email !== claim.email) throw this.invalidLink();
+    // false only when the address changed since the link was mailed.
+    if (!(await this.usersService.markEmailVerified(claim.userId, claim.email, signedInUserId === claim.userId))) {
+      throw this.invalidLink();
+    }
   }
 
   /**
