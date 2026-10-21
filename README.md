@@ -11,7 +11,7 @@ NestJS API (MongoDB, Redis, Socket.IO).
 
 | Area | What works |
 | --- | --- |
-| Accounts | Email + password, Google sign-in, guest accounts; email verification and password reset by mail; refresh-token rotation, log out / log out everywhere |
+| Accounts | Email + password (sign-up confirmed by mail), Google sign-in, guest accounts; password reset by mail; refresh-token rotation, log out / log out everywhere |
 | Rooms | Public, private (invite link and/or passcode) and friends-only rooms; one live room per host; empty rooms close after 30 min |
 | Hosting | Up to 5 DJs, host transfer, mute in chat, kick (a permanent ban from that room) |
 | Playback | Server-authoritative synced YouTube player; queue ordered by votes; skip vote at half the listeners |
@@ -77,10 +77,11 @@ pnpm test        # API tests need MongoDB + Redis running
 - Passwords: 10 tries per email and address per 15 minutes. Room passcodes:
   10 wrong tries per room per hour.
 - Sockets close when their login session ends (logout, log out everywhere).
-- Google sign-in with a verified address takes over an existing password
-  account whose email was never confirmed (its password is removed); a
-  confirmed account just gains Google. Registering still reveals whether an
-  email is taken.
+- Sign-up is finished from a mailed link with the password chosen at sign-up,
+  and its answer is the same whether or not an email is taken.
+- Google sign-in with a verified address takes over an older password
+  account whose owner never proved the mailbox (its password is removed);
+  other accounts just gain Google.
 
 ## Project structure
 
