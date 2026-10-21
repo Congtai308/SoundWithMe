@@ -132,7 +132,7 @@ describe("Auth rate limits", () => {
 
   it("stops guessing from one address after 10 wrong passwords, without locking the owner out", async () => {
     const email = `target${Date.now().toString(36)}@example.com`;
-    await call("/auth/register", "", "POST", { displayName: "Target", email, password: "right-password-1" }, "192.0.2.1");
+    await h.registerUser({ displayName: "Target", email, password: "right-password-1" }, "192.0.2.1");
 
     for (let attempt = 0; attempt < 10; attempt++) {
       expect((await login(email, "192.0.2.10")).status).toBe(401);
@@ -153,7 +153,7 @@ describe("Auth rate limits", () => {
 
   it("a successful sign-in clears earlier wrong guesses", async () => {
     const email = `forgetful${Date.now().toString(36)}@example.com`;
-    await call("/auth/register", "", "POST", { displayName: "Forgetful", email, password: "right-password-1" }, "198.18.0.1");
+    await h.registerUser({ displayName: "Forgetful", email, password: "right-password-1" }, "198.18.0.1");
     for (let n = 0; n < 9; n++) await login(email, "198.18.0.2");
     expect((await login(email, "198.18.0.3", "right-password-1")).status).toBe(200);
     expect((await login(email, "198.18.0.4")).status).toBe(401); // counter restarted, not locked
@@ -163,19 +163,14 @@ describe("Auth rate limits", () => {
 describe("Sign-ups racing for one username", () => {
   it("gives both accounts a handle instead of failing one", async () => {
     const stamp = Date.now().toString(36);
+    const emails = ["gmail.com", "yahoo.com", "outlook.com"].map((domain) => `racer${stamp}@${domain}`);
     const results = await Promise.all(
-      ["gmail.com", "yahoo.com", "outlook.com"].map((domain, index) =>
-        call<{ user: { username: string } }>(
-          "/auth/register",
-          "",
-          "POST",
-          { displayName: "Racer", email: `racer${stamp}@${domain}`, password: "a-long-password-1" },
-          `198.51.100.${index + 1}`,
-        ),
+      emails.map((email, index) =>
+        h.registerUser({ displayName: "Racer", email, password: "a-long-password-1" }, `198.51.100.${index + 1}`),
       ),
     );
     expect(results.map((r) => r.status)).toEqual([201, 201, 201]);
-    const usernames = results.map((r) => r.data.user.username);
+    const usernames = results.map((r) => r.user.username);
     expect(new Set(usernames).size).toBe(3);
     expect(usernames).toContain(`racer${stamp}`);
   });

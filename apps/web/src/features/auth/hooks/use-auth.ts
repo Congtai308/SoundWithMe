@@ -32,12 +32,14 @@ function useInvalidateCurrentUser() {
   return () => queryClient.invalidateQueries({ queryKey: CURRENT_USER_QUERY_KEY });
 }
 
+/** Sign-up step 1: nobody is signed in yet, the mailed link finishes it. */
 export function useRegister() {
+  return useMutation({ mutationFn: authApi.register });
+}
+
+export function useCompleteSignup() {
   const invalidate = useInvalidateCurrentUser();
-  return useMutation({
-    mutationFn: authApi.register,
-    onSuccess: () => invalidate(),
-  });
+  return useMutation({ mutationFn: authApi.completeSignup, onSuccess: () => invalidate() });
 }
 
 export function useLogin() {

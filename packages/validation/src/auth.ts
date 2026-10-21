@@ -27,6 +27,13 @@ export type GuestLoginInput = z.infer<typeof guestLoginSchema>;
 /** The token from a mailed link (verify email, reset password). */
 const mailedTokenSchema = z.string().trim().min(20).max(200);
 
+/** Sign-up, step 2: the mailed link's token and the password chosen in step 1. */
+export const completeSignupSchema = z.object({
+  token: mailedTokenSchema,
+  password: z.string().min(1).max(128),
+});
+export type CompleteSignupInput = z.infer<typeof completeSignupSchema>;
+
 export const verifyEmailSchema = z.object({ token: mailedTokenSchema });
 export type VerifyEmailInput = z.infer<typeof verifyEmailSchema>;
 

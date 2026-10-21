@@ -12,6 +12,7 @@ export interface CreateUserInput {
   passwordHash?: string;
   googleId?: string;
   emailVerifiedAt?: Date | null;
+  passwordOwnerVerifiedAt?: Date | null;
   avatarUrl?: string | null;
   authMethods: AuthMethod[];
   isGuest: boolean;

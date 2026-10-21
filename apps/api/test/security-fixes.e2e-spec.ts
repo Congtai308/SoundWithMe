@@ -41,14 +41,8 @@ const login = (email: string, ip: string, password = "wrong-password") =>
 
 async function register(ip: string) {
   const email = `user${stamp()}@example.com`;
-  const res = await call<{ user: { id: string } }>(
-    "/auth/register",
-    "",
-    "POST",
-    { displayName: "Member", email, password: "right-password-1" },
-    ip,
-  );
-  return { email, userId: res.data.user.id };
+  const res = await h.registerUser({ displayName: "Member", email, password: "right-password-1" }, ip);
+  return { email, userId: res.user.id };
 }
 
 function disconnectedByServer(socket: ClientSocket, ms = 1_500): Promise<boolean> {
@@ -81,17 +75,16 @@ describe("Password sign-in limits (F3, F7)", () => {
   }, 30_000);
 });
 
-describe("Google sign-in claiming an email account (F1)", () => {
-  it("takes the account away from a password nobody verified, and never moves it between Google accounts", async () => {
+describe("Google sign-in and an existing password account (F1)", () => {
+  it("adds Google to an account made through the mailed sign-up link, and never moves it between Google accounts", async () => {
     const { email, userId } = await register("198.51.100.20");
     const auth = h.get(AuthService);
     const profile = { googleId: `g-${stamp()}`, email, displayName: "Owner", avatarUrl: null };
 
     const { user } = await auth.loginOrRegisterWithGoogle(profile);
     expect(user.id).toBe(userId);
-    // The pre-registered password no longer works.
-    expect((await login(email, "198.51.100.21", "right-password-1")).status).toBe(401);
-    // The same Google account still signs in; another one can't take it over.
+    // Whoever chose the password also opened the mailed link: it keeps working.
+    expect((await login(email, "198.51.100.21", "right-password-1")).status).toBe(200);
     expect((await auth.loginOrRegisterWithGoogle(profile)).user.id).toBe(userId);
     await expect(auth.loginOrRegisterWithGoogle({ ...profile, googleId: `g-${stamp()}` })).rejects.toBeInstanceOf(
       ConflictException,

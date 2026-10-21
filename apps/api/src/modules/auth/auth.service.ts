@@ -3,7 +3,13 @@ import { ConfigService } from "@nestjs/config";
 import { createHash, randomBytes } from "crypto";
 import * as bcrypt from "bcrypt";
 import type { AuthTokens, AuthenticatedUser } from "@soundwithme/types";
-import type { GuestLoginInput, LoginInput, RegisterInput, ResetPasswordInput } from "@soundwithme/validation";
+import type {
+  CompleteSignupInput,
+  GuestLoginInput,
+  LoginInput,
+  RegisterInput,
+  ResetPasswordInput,
+} from "@soundwithme/validation";
 import { ERROR_CODES } from "@soundwithme/constants";
 import { UsersService, type CreateUserInput } from "../users/users.service";
 import type { UserDocument } from "../../database/mongodb/models/user.schema";
@@ -39,6 +45,9 @@ const EMAIL_LINKS = {
   verify: { ttlSeconds: 24 * 60 * 60, path: "/verify-email" },
   reset: { ttlSeconds: 60 * 60, path: "/reset-password" },
 } as const;
+/** A sign-up link works this long; a wrong password this many times uses it up. */
+const SIGNUP_TTL_SECONDS = 24 * 60 * 60;
+const SIGNUP_PASSWORD_TRIES = 5;
 type EmailLinkKind = keyof typeof EMAIL_LINKS;
 /**
  * Account mails per hour. Verification and reset mails are counted apart,
@@ -48,6 +57,8 @@ type EmailLinkKind = keyof typeof EMAIL_LINKS;
  * every link already mailed keeps working regardless.
  */
 const VERIFY_MAILS_PER_HOUR = 3;
+const SIGNUP_MAILS_PER_REQUESTER_PER_HOUR = 3;
+const SIGNUP_MAILS_PER_ADDRESS_PER_HOUR = 10;
 const RESET_MAILS_PER_REQUESTER_PER_HOUR = 3;
 const RESET_MAILS_PER_ADDRESS_PER_HOUR = 10;
 
@@ -70,39 +81,92 @@ export class AuthService {
     private readonly configService: ConfigService,
   ) {}
 
-  async register(
-    input: RegisterInput,
-  ): Promise<{ user: AuthenticatedUser; tokens: AuthTokens }> {
-    const existingByEmail = await this.usersService.findByEmail(input.email);
+  /**
+   * Sign-up, step 1. The answer is the same whether or not the email has an
+   * account, and the work happens after the response, so neither the reply
+   * nor its timing says which addresses are taken. The mailbox gets either a
+   * link to finish signing up or a note that it already has an account.
+   */
+  register(input: RegisterInput, clientAddress: string): void {
+    void this.startSignup(input, rateLimitAddress(clientAddress)).catch((error: unknown) => this.logMailFailure(error));
+  }
 
-    if (existingByEmail) {
-      throw new ConflictException({
+  /**
+   * Sign-up, step 2, from the mailed link. Asking for the password again
+   * proves the person holding it also holds the mailbox: someone who signs
+   * up with another person's address can't finish, and the address's owner
+   * can't end up in an account whose password a stranger chose.
+   */
+  async completeSignup(input: CompleteSignupInput): Promise<{ user: AuthenticatedUser; tokens: AuthTokens }> {
+    const redis = this.redisService.getClient();
+    const key = `auth:pending-signup:${hashToken(input.token)}`;
+    const raw = await redis.get(key);
+    const pending = raw ? parsePendingSignup(raw) : null;
+    if (!pending) throw this.invalidLink();
+
+    if (!(await bcrypt.compare(input.password, pending.passwordHash))) {
+      const triesKey = `${key}:tries`;
+      const tries = await redis.incr(triesKey);
+      if (tries === 1) await redis.expire(triesKey, SIGNUP_TTL_SECONDS);
+      if (tries >= SIGNUP_PASSWORD_TRIES) await redis.del(key, triesKey);
+      throw new UnauthorizedException({
         success: false,
-        error: {
-          code: ERROR_CODES.USER_ALREADY_EXISTS,
-          message: "An account with this email already exists",
-        },
+        error: { code: ERROR_CODES.INVALID_CREDENTIALS, message: "That's not the password you chose when signing up" },
       });
     }
+    // Only one request gets to use the link.
+    if ((await redis.del(key)) === 0) throw this.invalidLink();
 
-    // Username is a stable public @handle, but the register form no longer
-    // asks for one directly (design decision: fewer fields, matches the
-    // "Display Name + Email + Password" reference) — auto-generate it from
-    // the email, same helper already used for Google sign-up.
-    const passwordHash = await bcrypt.hash(input.password, PASSWORD_HASH_ROUNDS);
-    const userDoc = await this.createWithUsername(usernamesFromEmail(input.email), {
-      displayName: input.displayName,
-      email: input.email,
-      passwordHash,
+    const now = new Date();
+    // Username is a stable public @handle, but the register form doesn't ask
+    // for one (fewer fields): it comes from the email, as for Google sign-up.
+    const userDoc = await this.createWithUsername(usernamesFromEmail(pending.email), {
+      displayName: pending.displayName,
+      email: pending.email,
+      passwordHash: pending.passwordHash,
       authMethods: ["password"],
       isGuest: false,
+      emailVerifiedAt: now,
+      passwordOwnerVerifiedAt: now,
     });
-
     const user = this.usersService.toAuthenticatedUser(userDoc);
     const tokens = await this.tokensService.issueTokenPair(user);
-    // Signing up must not fail because mail is down: the user can resend later.
-    void this.sendVerificationEmail(userDoc).catch((error: unknown) => this.logMailFailure(error));
     return { user, tokens };
+  }
+
+  private async startSignup(input: RegisterInput, requester: string): Promise<void> {
+    const withinBudget =
+      (await this.withinMailBudget(`signup:${input.email}:${requester}`, SIGNUP_MAILS_PER_REQUESTER_PER_HOUR)) &&
+      (await this.withinMailBudget(`signup:${input.email}`, SIGNUP_MAILS_PER_ADDRESS_PER_HOUR));
+    if (!withinBudget) return;
+
+    const webAppUrl = this.configService.get<string>("app.webAppUrl");
+    if (await this.usersService.findByEmail(input.email)) {
+      await this.mailService.send({
+        to: input.email,
+        subject: "You already have a SoundWithMe account",
+        text: "Someone (hopefully you) tried to sign up for SoundWithMe with this email, but it already has an account. Sign in instead; if you forgot your password, you can reset it from the sign-in page.\n\nIf it wasn't you, ignore this email: nothing changed.",
+        action: { label: "Sign in", url: `${webAppUrl}/login` },
+      });
+      return;
+    }
+
+    const token = randomBytes(32).toString("base64url");
+    const pending: PendingSignup = {
+      email: input.email,
+      displayName: input.displayName,
+      passwordHash: await bcrypt.hash(input.password, PASSWORD_HASH_ROUNDS),
+    };
+    await this.redisService
+      .getClient()
+      .set(`auth:pending-signup:${hashToken(token)}`, JSON.stringify(pending), "EX", SIGNUP_TTL_SECONDS);
+    await this.mailService.send({
+      to: input.email,
+      // No user-supplied text (like the display name): anyone can make us mail any address.
+      subject: "Finish creating your SoundWithMe account",
+      text: "Open the link and enter the password you chose to finish creating your SoundWithMe account. The link works for 24 hours.\n\nIf you didn't sign up for SoundWithMe, ignore this email: no account is created.",
+      action: { label: "Finish signing up", url: `${webAppUrl}/complete-signup?token=${encodeURIComponent(token)}` },
+    });
   }
 
   async login(
@@ -412,6 +476,19 @@ function duplicateKeyField(error: unknown): string | null {
   if (typeof error !== "object" || error === null || (error as { code?: unknown }).code !== 11000) return null;
   const keyPattern = (error as { keyPattern?: Record<string, unknown> }).keyPattern ?? {};
   return Object.keys(keyPattern)[0] ?? "unknown";
+}
+
+interface PendingSignup {
+  email: string;
+  displayName: string;
+  passwordHash: string;
+}
+
+function parsePendingSignup(raw: string): PendingSignup | null {
+  const parsed = JSON.parse(raw) as Partial<Record<keyof PendingSignup, unknown>>;
+  return typeof parsed.email === "string" && typeof parsed.displayName === "string" && typeof parsed.passwordHash === "string"
+    ? { email: parsed.email, displayName: parsed.displayName, passwordHash: parsed.passwordHash }
+    : null;
 }
 
 function hashToken(token: string): string {

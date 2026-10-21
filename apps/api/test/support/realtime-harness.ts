@@ -12,6 +12,7 @@ import type { Room } from "@soundwithme/types";
 import { AppModule } from "../../src/app.module";
 import { RedisIoAdapter } from "../../src/realtime/adapters/redis-io.adapter";
 import { REDIS_CLIENT } from "../../src/database/redis/redis.constants";
+import { MailService, type OutgoingMail } from "../../src/modules/mail/mail.service";
 
 /**
  * Boots the real AppModule with the Socket.IO Redis adapter on a random port
@@ -30,6 +31,8 @@ export class RealtimeHarness {
   private readonly roomIds: string[] = [];
   /** Signed-out calls (sign-ups) look like different visitors, as they would in real use; see clientIp(). */
   private visitor = 0;
+  /** Every mail the app "sent", newest last (nothing leaves the machine). */
+  readonly outbox: OutgoingMail[] = [];
 
   async start(): Promise<void> {
     const moduleRef = await Test.createTestingModule({ imports: [AppModule] }).compile();
@@ -42,6 +45,9 @@ export class RealtimeHarness {
     // The database is fresh each run: build unique indexes before any test races against them.
     const connection = this.app.get<Connection>(getConnectionToken());
     await Promise.all(Object.values(connection.models).map((model) => model.init()));
+    jest.spyOn(this.app.get(MailService), "send").mockImplementation(async (mail) => {
+      this.outbox.push(mail);
+    });
     await this.app.listen(0);
     const { port } = this.app.getHttpServer().address() as AddressInfo;
     this.baseUrl = `http://localhost:${port}`;
@@ -50,6 +56,47 @@ export class RealtimeHarness {
   /** One of the app's providers, for tests that drive a service directly. */
   get<T>(token: abstract new (...args: never[]) => T): T {
     return this.app.get(token);
+  }
+
+  /** Waits for a mail to `to` whose subject contains `subject`; returns the newest. */
+  async mailTo(to: string, subject: string): Promise<OutgoingMail> {
+    for (let n = 0; n < 100; n++) {
+      const mail = [...this.outbox].reverse().find((m) => m.to === to && m.subject.includes(subject));
+      if (mail) return mail;
+      await new Promise((resolve) => setTimeout(resolve, 20));
+    }
+    throw new Error(`No "${subject}" mail to ${to}`);
+  }
+
+  /** The token in a mail's button link. */
+  static linkToken(mail: OutgoingMail): string {
+    return new URL(mail.action!.url).searchParams.get("token")!;
+  }
+
+  /**
+   * Signs up with a password the way a person does: register, open the
+   * mailed link, enter the password again. Returns the session cookies.
+   */
+  async registerUser(input: { email: string; password: string; displayName: string }, ip?: string) {
+    const headers = { "content-type": "application/json", "x-forwarded-for": ip ?? this.nextVisitor() };
+    const started = await fetch(`${this.baseUrl}/api/v1/auth/register`, { method: "POST", headers, body: JSON.stringify(input) });
+    if (started.status !== 202) throw new Error(`register answered ${started.status}`);
+    const token = RealtimeHarness.linkToken(await this.mailTo(input.email, "Finish creating"));
+    const res = await fetch(`${this.baseUrl}/api/v1/auth/register/complete`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ token, password: input.password }),
+    });
+    const json = (await res.json()) as { data: { user: { id: string; username: string; emailVerified: boolean } } };
+    const cookie = res.headers
+      .getSetCookie()
+      .map((c) => c.split(";")[0])
+      .join("; ");
+    return { status: res.status, cookie, user: json.data.user };
+  }
+
+  private nextVisitor(): string {
+    return `10.9.${Math.floor(this.visitor / 250)}.${(this.visitor++ % 250) + 1}`;
   }
 
   /** The app's own Redis client, for tests that need to set up server-side state. */
@@ -76,7 +123,7 @@ export class RealtimeHarness {
       method: init.method ?? "GET",
       headers: {
         "content-type": "application/json",
-        ...(init.cookie ? { cookie: init.cookie } : { "x-forwarded-for": `10.9.${Math.floor(this.visitor / 250)}.${(this.visitor++ % 250) + 1}` }),
+        ...(init.cookie ? { cookie: init.cookie } : { "x-forwarded-for": this.nextVisitor() }),
       },
       body: init.body === undefined ? undefined : JSON.stringify(init.body),
     });

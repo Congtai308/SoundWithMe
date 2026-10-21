@@ -1,18 +1,13 @@
+import * as bcrypt from "bcrypt";
 import { ERROR_CODES } from "@soundwithme/constants";
 import { AuthService } from "../src/modules/auth/auth.service";
-import { MailService, type OutgoingMail } from "../src/modules/mail/mail.service";
+import { UsersService } from "../src/modules/users/users.service";
 import { RealtimeHarness } from "./support/realtime-harness";
 
-/** Email verification and password reset, with outgoing mail captured instead of sent. */
+/** Sign-up by mailed link, email verification and password reset; mail is captured, never sent. */
 const h = new RealtimeHarness();
-const outbox: OutgoingMail[] = [];
 
-beforeAll(async () => {
-  await h.start();
-  jest.spyOn(h.get(MailService), "send").mockImplementation(async (mail) => {
-    outbox.push(mail);
-  });
-});
+beforeAll(() => h.start());
 afterAll(() => h.stop());
 
 const stamp = () => `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
@@ -36,44 +31,86 @@ async function call<T>(path: string, cookie = "", method = "GET", body?: unknown
   return { status: res.status, data: json.data, error: json.error, cookies };
 }
 
-/** The token in the newest mail's button sent to `email`. */
-function lastLinkTo(email: string): string {
-  const mail = [...outbox].reverse().find((m) => m.to === email);
-  const url = mail?.action?.url;
-  if (!url) throw new Error(`no link mailed to ${email}`);
-  return new URL(url).searchParams.get("token")!;
-}
+const newEmail = () => `mail${stamp()}@example.com`;
+const mailsTo = (email: string) => h.outbox.filter((m) => m.to === email);
+const settle = () => new Promise((r) => setTimeout(r, 300));
 
-async function register() {
-  const email = `mail${stamp()}@example.com`;
-  const res = await call<{ user: { id: string; emailVerified: boolean } }>("/auth/register", "", "POST", {
-    displayName: "Mailer",
+/** An unverified password account as sign-up used to create them (before mailed sign-up links). */
+async function legacyAccount() {
+  const email = newEmail();
+  const userDoc = await h.get(UsersService).create({
+    username: `legacy${stamp()}`,
+    displayName: "Legacy",
     email,
-    password: "first-password-1",
+    passwordHash: await bcrypt.hash("first-password-1", 4),
+    authMethods: ["password"],
+    isGuest: false,
   });
-  return { email, cookies: res.cookies, user: res.data.user };
+  const login = await call("/auth/login", "", "POST", { email, password: "first-password-1" });
+  return { email, userId: userDoc.id as string, cookies: login.cookies };
 }
 
-const mailCount = (email: string) => outbox.filter((m) => m.to === email).length;
-const until = async (check: () => boolean) => {
-  for (let n = 0; n < 50 && !check(); n++) await new Promise((r) => setTimeout(r, 20));
-};
+describe("Sign-up by mailed link", () => {
+  it("answers the same whether or not the email is taken, and only the mailbox can finish", async () => {
+    const taken = newEmail();
+    await h.registerUser({ email: taken, password: "first-password-1", displayName: "First" });
 
-describe("Email verification", () => {
-  it("mails a link at sign-up that confirms the address once", async () => {
-    const { email, cookies, user } = await register();
-    expect(user.emailVerified).toBe(false);
-    await until(() => mailCount(email) === 1);
-    const token = lastLinkTo(email);
+    const fresh = newEmail();
+    const a = await call("/auth/register", "", "POST", { email: fresh, password: "first-password-1", displayName: "New" });
+    const b = await call("/auth/register", "", "POST", { email: taken, password: "other-password-2", displayName: "Again" });
+    expect([a.status, b.status]).toEqual([202, 202]);
+    expect(a.data).toEqual(b.data);
+    expect(a.cookies).toBe(""); // nobody is signed in by step 1
+    // The owner of the taken address hears about it; no second account.
+    await h.mailTo(taken, "already have");
+
+    const token = RealtimeHarness.linkToken(await h.mailTo(fresh, "Finish creating"));
+    // The link alone isn't enough: whoever opens it must know the password chosen in step 1.
+    const wrong = await call("/auth/register/complete", "", "POST", { token, password: "not-the-password" });
+    expect(wrong.error?.code).toBe(ERROR_CODES.INVALID_CREDENTIALS);
+    const done = await call<{ user: { emailVerified: boolean } }>("/auth/register/complete", "", "POST", {
+      token,
+      password: "first-password-1",
+    });
+    expect(done.status).toBe(201);
+    expect(done.data.user.emailVerified).toBe(true);
+    expect((await call("/auth/me", done.cookies)).status).toBe(200);
+    // One account per link.
+    const again = await call("/auth/register/complete", "", "POST", { token, password: "first-password-1" });
+    expect(again.error?.code).toBe(ERROR_CODES.INVALID_LINK);
+  });
+
+  it("uses up a link after 5 wrong passwords", async () => {
+    const email = newEmail();
+    await call("/auth/register", "", "POST", { email, password: "first-password-1", displayName: "Guess" });
+    const token = RealtimeHarness.linkToken(await h.mailTo(email, "Finish creating"));
+    for (let n = 0; n < 5; n++) await call("/auth/register/complete", "", "POST", { token, password: `wrong-${n}` });
+    const right = await call("/auth/register/complete", "", "POST", { token, password: "first-password-1" });
+    expect(right.error?.code).toBe(ERROR_CODES.INVALID_LINK);
+  });
+
+  it("never puts user-chosen text in mail to an address nobody has proven", async () => {
+    const email = newEmail();
+    await call("/auth/register", "", "POST", { displayName: "Visit evil.example now", email, password: "first-password-1" });
+    const mail = await h.mailTo(email, "Finish creating");
+    expect(`${mail.subject} ${mail.text}`).not.toContain("evil.example");
+  });
+});
+
+describe("Email verification (accounts from before sign-up links)", () => {
+  it("confirms the address once from the mailed link", async () => {
+    const { email, cookies } = await legacyAccount();
+    await call("/auth/verify-email/send", cookies, "POST");
+    const token = RealtimeHarness.linkToken(await h.mailTo(email, "Confirm your email"));
 
     expect((await call("/auth/verify-email", "", "POST", { token })).status).toBe(200);
     const me = await call<{ user: { emailVerified: boolean } }>("/auth/me", cookies);
     expect(me.data.user.emailVerified).toBe(true);
-    // Used links are gone (an already-verified account just gets INVALID_LINK for a stranger's replay).
     expect((await call("/auth/verify-email", "", "POST", { token })).error?.code).toBe(ERROR_CODES.INVALID_LINK);
     // Nothing left to resend.
     await call("/auth/verify-email/send", cookies, "POST");
-    expect(mailCount(email)).toBe(1);
+    await settle();
+    expect(mailsTo(email).filter((m) => m.subject.includes("Confirm"))).toHaveLength(1);
   });
 
   it("refuses made-up links", async () => {
@@ -82,89 +119,72 @@ describe("Email verification", () => {
   });
 
   it("keeps the password when Google signs in to an account its password holder verified while signed in", async () => {
-    const { email, user, cookies } = await register();
-    await until(() => mailCount(email) === 1);
-    await call("/auth/verify-email", cookies, "POST", { token: lastLinkTo(email) });
+    const { email, userId, cookies } = await legacyAccount();
+    await call("/auth/verify-email/send", cookies, "POST");
+    const token = RealtimeHarness.linkToken(await h.mailTo(email, "Confirm your email"));
+    await call("/auth/verify-email", cookies, "POST", { token });
 
     const signedIn = await h.get(AuthService).loginOrRegisterWithGoogle({
       googleId: `g-${stamp()}`,
       email,
-      displayName: "Mailer",
+      displayName: "Legacy",
       avatarUrl: null,
     });
-    expect(signedIn.user.id).toBe(user.id);
+    expect(signedIn.user.id).toBe(userId);
     expect(signedIn.user.authMethods).toEqual(expect.arrayContaining(["password", "google"]));
     expect((await call("/auth/login", "", "POST", { email, password: "first-password-1" })).status).toBe(200);
   });
-});
 
-it("still takes over a pre-registered account whose link was opened by someone not signed in to it", async () => {
-  // The attacker registers the victim's address; the victim (or a link
-  // scanner) opens the confirmation mail without being signed in to it.
-  const { email, user } = await register();
-  await until(() => mailCount(email) === 1);
-  expect((await call("/auth/verify-email", "", "POST", { token: lastLinkTo(email) })).status).toBe(200);
+  it("takes over a pre-registered account whose link was opened by someone not signed in to it", async () => {
+    const { email, userId, cookies } = await legacyAccount();
+    await call("/auth/verify-email/send", cookies, "POST");
+    const token = RealtimeHarness.linkToken(await h.mailTo(email, "Confirm your email"));
+    expect((await call("/auth/verify-email", "", "POST", { token })).status).toBe(200);
 
-  const signedIn = await h.get(AuthService).loginOrRegisterWithGoogle({
-    googleId: `g-${stamp()}`,
-    email,
-    displayName: "Owner",
-    avatarUrl: null,
+    const signedIn = await h.get(AuthService).loginOrRegisterWithGoogle({
+      googleId: `g-${stamp()}`,
+      email,
+      displayName: "Owner",
+      avatarUrl: null,
+    });
+    expect(signedIn.user.id).toBe(userId);
+    expect(signedIn.user.authMethods).toEqual(["google"]);
+    expect((await call("/auth/login", "", "POST", { email, password: "first-password-1" })).status).toBe(401);
   });
-  expect(signedIn.user.id).toBe(user.id);
-  expect(signedIn.user.authMethods).toEqual(["google"]);
-  // The attacker's password is gone.
-  expect((await call("/auth/login", "", "POST", { email, password: "first-password-1" })).status).toBe(401);
 });
 
 describe("Password reset", () => {
   it("sets a new password from the mailed link and signs out every session", async () => {
-    const { email, cookies } = await register();
+    const email = newEmail();
+    const { cookie } = await h.registerUser({ email, password: "first-password-1", displayName: "Mailer" });
     expect((await call("/auth/password/forgot", "", "POST", { email })).status).toBe(200);
-    await until(() => outbox.some((m) => m.to === email && m.subject.includes("Reset")));
-    const token = lastLinkTo(email);
+    const token = RealtimeHarness.linkToken(await h.mailTo(email, "Reset"));
 
-    const reset = await call("/auth/password/reset", "", "POST", { token, password: "second-password-2" });
-    expect(reset.status).toBe(200);
-    expect((await call("/auth/me", cookies)).status).toBe(401); // the old session ended
+    expect((await call("/auth/password/reset", "", "POST", { token, password: "second-password-2" })).status).toBe(200);
+    expect((await call("/auth/me", cookie)).status).toBe(401); // the old session ended
     expect((await call("/auth/login", "", "POST", { email, password: "first-password-1" })).status).toBe(401);
-    const fresh = await call<{ user: { emailVerified: boolean } }>("/auth/login", "", "POST", {
-      email,
-      password: "second-password-2",
-    });
-    expect(fresh.status).toBe(200);
-    expect(fresh.data.user.emailVerified).toBe(true); // opening the mailed link proved the address
-
+    expect((await call("/auth/login", "", "POST", { email, password: "second-password-2" })).status).toBe(200);
     // The link worked once.
     const again = await call("/auth/password/reset", "", "POST", { token, password: "third-password-3" });
     expect(again.error?.code).toBe(ERROR_CODES.INVALID_LINK);
   });
 
   it("answers the same for unknown emails, and mails one address only a few times an hour", async () => {
-    const unknown = `nobody${stamp()}@example.com`;
-    const res = await call("/auth/password/forgot", "", "POST", { email: unknown });
-    expect(res.status).toBe(200);
-    await new Promise((r) => setTimeout(r, 200));
-    expect(mailCount(unknown)).toBe(0);
+    const unknown = newEmail();
+    expect((await call("/auth/password/forgot", "", "POST", { email: unknown })).status).toBe(200);
+    await settle();
+    expect(mailsTo(unknown)).toHaveLength(0);
 
-    const { email } = await register();
-    await until(() => mailCount(email) === 1); // the sign-up confirmation, counted apart
-    const resets = () => outbox.filter((m) => m.to === email && m.subject.includes("Reset")).length;
+    const email = newEmail();
+    await h.registerUser({ email, password: "first-password-1", displayName: "Mailer" });
+    const resets = () => mailsTo(email).filter((m) => m.subject.includes("Reset")).length;
     // One requester: 3 an hour.
     for (let n = 0; n < 4; n++) await call("/auth/password/forgot", "", "POST", { email }, "203.0.113.50");
-    await new Promise((r) => setTimeout(r, 300));
+    await settle();
     expect(resets()).toBe(3);
     // Others can still ask, up to 10 for the address.
     for (let n = 0; n < 10; n++) await call("/auth/password/forgot", "", "POST", { email }, `203.0.113.${60 + n}`);
-    await until(() => resets() === 10);
-    await new Promise((r) => setTimeout(r, 300));
+    await settle();
     expect(resets()).toBe(10);
-  });
-
-  it("never puts the account's display name in mail to an unverified address", async () => {
-    const email = `phish${stamp()}@example.com`;
-    await call("/auth/register", "", "POST", { displayName: "Visit evil.example now", email, password: "first-password-1" });
-    await until(() => mailCount(email) === 1);
-    expect(outbox.find((m) => m.to === email)!.text).not.toContain("evil.example");
   });
 });

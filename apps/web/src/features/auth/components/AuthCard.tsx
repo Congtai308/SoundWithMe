@@ -286,19 +286,33 @@ function LoginForm({ onSwitchTab }: { onSwitchTab: (tab: AuthTab) => void }) {
 }
 
 function RegisterForm({ onSwitchTab }: { onSwitchTab: (tab: AuthTab) => void }) {
-  const router = useRouter();
   const registerAccount = useRegister();
   const {
     register,
     handleSubmit,
+    getValues,
     formState: { errors },
   } = useForm<RegisterInput>({ resolver: zodResolver(registerSchema) });
 
+  if (registerAccount.isSuccess) {
+    return (
+      <div role="status" className="flex flex-col items-center gap-sm pt-md text-center">
+        <Icon name="forward_to_inbox" className="text-[40px] text-primary" />
+        <p className="text-headline-sm text-on-surface">Check your email</p>
+        <p className="max-w-sm text-body-md text-on-surface-variant">
+          We sent a link to <span className="font-semibold text-on-surface">{getValues("email")}</span>. Open it and
+          enter your password to finish creating your account. Nothing there? Check spam.
+        </p>
+        <SwitchHint>
+          Wrong address? <LinkButton onClick={() => registerAccount.reset()}>Start over</LinkButton>
+        </SwitchHint>
+      </div>
+    );
+  }
+
   return (
     <form
-      onSubmit={handleSubmit((data) =>
-        registerAccount.mutate(data, { onSuccess: () => router.push(AFTER_AUTH_PATH) }),
-      )}
+      onSubmit={handleSubmit((data) => registerAccount.mutate(data))}
       noValidate
       className="flex flex-col gap-sm pt-sm"
     >
@@ -340,7 +354,7 @@ function RegisterForm({ onSwitchTab }: { onSwitchTab: (tab: AuthTab) => void }) 
       <SubmitButton
         pending={registerAccount.isPending}
         idle="Join the Sonic Circle — Get Started"
-        busy="Creating your account…"
+        busy="Sending your link…"
       />
       <SwitchHint>
         Already have an account? <LinkButton onClick={() => onSwitchTab("login")}>Sign in</LinkButton>

@@ -15,12 +15,14 @@ import { ConfigService } from "@nestjs/config";
 import { Throttle } from "@nestjs/throttler";
 import type { Request, Response } from "express";
 import {
+  completeSignupSchema,
   forgotPasswordSchema,
   guestLoginSchema,
   loginSchema,
   registerSchema,
   resetPasswordSchema,
   verifyEmailSchema,
+  type CompleteSignupInput,
   type ForgotPasswordInput,
   type GuestLoginInput,
   type LoginInput,
@@ -55,12 +57,23 @@ export class AuthController {
   // one wifi; password guessing is limited per email and address in AuthService.login.
   @UseGuards(UserThrottlerGuard)
   @Throttle({ default: { limit: 10, ttl: 60_000 } })
+  @HttpCode(HttpStatus.ACCEPTED)
   @Post("register")
-  async register(
-    @Body(new ZodValidationPipe(registerSchema)) body: RegisterInput,
+  register(@Body(new ZodValidationPipe(registerSchema)) body: RegisterInput, @Req() req: Request) {
+    // The same answer for every email: see AuthService.register.
+    this.authService.register(body, clientIp(req));
+    return { success: true, data: { status: "check-email" } };
+  }
+
+  @UseGuards(UserThrottlerGuard)
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
+  @HttpCode(HttpStatus.CREATED)
+  @Post("register/complete")
+  async completeSignup(
+    @Body(new ZodValidationPipe(completeSignupSchema)) body: CompleteSignupInput,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const { user, tokens } = await this.authService.register(body);
+    const { user, tokens } = await this.authService.completeSignup(body);
     this.setCookies(res, tokens);
     return { success: true, data: { user } };
   }
