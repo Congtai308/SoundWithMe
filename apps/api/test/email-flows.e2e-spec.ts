@@ -202,14 +202,14 @@ describe("Password reset", () => {
     await call("/auth/password/forgot", "", "POST", { email }, "203.0.113.60");
     await settle();
     expect(resets()).toBe(10);
-    // while a first ask (the owner, say) still gets through: others can't lock them out...
+    // while first asks still get through, one per few minutes: a flood from many
+    // addresses gets nowhere, yet can't use up the owner's way in ahead of time.
+    for (let n = 0; n < 25; n++) await call("/auth/password/forgot", "", "POST", { email }, `198.51.100.${100 + n}`);
+    await settle();
+    expect(resets()).toBe(10);
+    await h.redis().del(`auth:mail-budget:reset:${email}:first-ask-slot`); // the slot's minutes pass
     await call("/auth/password/forgot", "", "POST", { email }, "203.0.113.99");
     await settle();
     expect(resets()).toBe(11);
-    // ...though only 20 first asks an hour get past the cap (the 7th requester
-    // above and the owner used 2), so many addresses can't flood the mailbox.
-    for (let n = 0; n < 25; n++) await call("/auth/password/forgot", "", "POST", { email }, `198.51.100.${100 + n}`);
-    await settle();
-    expect(resets()).toBe(29);
   });
 });
