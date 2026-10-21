@@ -34,8 +34,9 @@ export class AllExceptionsFilter implements ExceptionFilter {
       const body = exception.getResponse();
 
       // If a service already threw a structured { code, message } error,
-      // pass it through as-is instead of double-wrapping it.
-      if (typeof body === "object" && body !== null && "error" in body) {
+      // pass it through as-is instead of double-wrapping it. Nest's own
+      // errors ({ message, error: "Not Found", statusCode }) are not that.
+      if (isStructuredError(body)) {
         response.status(status).json(body);
         return;
       }
@@ -44,7 +45,10 @@ export class AllExceptionsFilter implements ExceptionFilter {
         success: false,
         error: {
           code: this.codeForStatus(status),
-          message: typeof body === "string" ? body : exception.message,
+          // Only the framework throws unstructured errors (unknown routes, bad
+          // JSON, "ThrottlerException: …"), and their text names internals:
+          // send the generic text for the status instead.
+          message: genericMessage(status),
         },
       });
       return;
@@ -76,8 +80,34 @@ export class AllExceptionsFilter implements ExceptionFilter {
         return ERROR_CODES.RATE_LIMITED;
       case HttpStatus.BAD_REQUEST:
         return ERROR_CODES.VALIDATION_ERROR;
+      case HttpStatus.NOT_FOUND:
+        return ERROR_CODES.NOT_FOUND;
       default:
         return ERROR_CODES.INTERNAL_ERROR;
     }
+  }
+}
+
+/** A body our own code threw: `{ success: false, error: { code, message } }`. */
+function isStructuredError(body: unknown): boolean {
+  if (typeof body !== "object" || body === null || !("error" in body)) return false;
+  const error = (body as { error: unknown }).error;
+  return typeof error === "object" && error !== null && "code" in error;
+}
+
+function genericMessage(status: number): string {
+  switch (status) {
+    case HttpStatus.BAD_REQUEST:
+      return "The request couldn't be read.";
+    case HttpStatus.UNAUTHORIZED:
+      return "Sign in to continue.";
+    case HttpStatus.FORBIDDEN:
+      return "You can't do that.";
+    case HttpStatus.NOT_FOUND:
+      return "Not found.";
+    case HttpStatus.TOO_MANY_REQUESTS:
+      return "Too many requests. Slow down a little.";
+    default:
+      return "Something went wrong. Please try again.";
   }
 }
