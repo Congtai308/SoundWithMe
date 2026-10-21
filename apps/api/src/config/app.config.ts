@@ -29,6 +29,24 @@ export const appConfig = registerAs("app", () => ({
     secretKey: process.env.R2_SECRET_KEY,
     bucket: process.env.R2_BUCKET,
   },
+  // Optional: only YouTube *search* needs it; link resolution uses oEmbed.
+  // Several keys (comma-separated, plus YOUTUBE_API_KEY_BACKUP) are used in
+  // order: when one runs out of daily quota, the next takes over.
+  youtubeApiKeys: [process.env.YOUTUBE_API_KEY, process.env.YOUTUBE_API_KEY_BACKUP]
+    .flatMap((value) => (value ?? "").split(","))
+    .map((key) => key.trim())
+    .filter(Boolean),
+  // Outgoing mail (email verification, password reset). Gmail: host
+  // smtp.gmail.com, port 465, user = the Gmail address, pass = an App
+  // Password (Google Account → Security → App passwords). Without user/pass
+  // mails are only written to the API log, which is enough for local dev.
+  mail: {
+    host: process.env.SMTP_HOST ?? "smtp.gmail.com",
+    port: Number(process.env.SMTP_PORT ?? 465),
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS,
+    from: process.env.MAIL_FROM ?? process.env.SMTP_USER ?? "SoundWithMe <no-reply@localhost>",
+  },
   sentryDsn: process.env.SENTRY_DSN,
   postHogKey: process.env.POSTHOG_KEY,
 }));

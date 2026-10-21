@@ -20,6 +20,11 @@ export class RefreshTokenDocument extends Document {
   @Prop({ required: true })
   expiresAt!: Date;
 
+  // One login: every token rotated from the same sign-in shares it, so open
+  // sockets can tell whether their session still exists.
+  @Prop({ type: String, index: true, default: null })
+  sessionId?: string | null;
+
   @Prop({ type: Date, default: null })
   revokedAt?: Date | null;
   // Set when this token is exchanged during rotation, pointing at its

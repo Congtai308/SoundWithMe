@@ -8,6 +8,7 @@ import {
   RefreshTokenSchema,
 } from "../../database/mongodb/models/refresh-token.schema";
 import { UsersModule } from "../users/users.module";
+import { RedisModule } from "../../database/redis/redis.module";
 import { AuthController } from "./auth.controller";
 import { AuthService } from "./auth.service";
 import { TokensService } from "./tokens.service";
@@ -17,6 +18,7 @@ import { GoogleStrategy } from "./strategies/google.strategy";
 @Module({
   imports: [
     UsersModule,
+    RedisModule,
     PassportModule,
     MongooseModule.forFeature([
       { name: RefreshTokenDocument.name, schema: RefreshTokenSchema },
@@ -33,6 +35,6 @@ import { GoogleStrategy } from "./strategies/google.strategy";
   ],
   controllers: [AuthController],
   providers: [AuthService, TokensService, JwtStrategy, GoogleStrategy],
-  exports: [AuthService],
+  exports: [AuthService, TokensService],
 })
 export class AuthModule {}

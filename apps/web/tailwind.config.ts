@@ -1,5 +1,8 @@
 import type { Config } from "tailwindcss";
-import { colors, spacing, radius, breakpoints } from "@soundwithme/ui";
+import plugin from "tailwindcss/plugin";
+import { colors, palette, spacing, radius, breakpoints, typography } from "@soundwithme/ui";
+
+const toKebab = (value: string): string => value.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`);
 
 const config: Config = {
   content: ["./app/**/*.{ts,tsx}", "./src/**/*.{ts,tsx}"],
@@ -11,10 +14,17 @@ const config: Config = {
     },
     extend: {
       colors: {
+        // Stitch / Material-3 roles: bg-surface-container-low, text-on-surface, ...
+        ...Object.fromEntries(
+          Object.entries(palette)
+            .filter(([key]) => key !== "surface")
+            .map(([key, value]) => [toKebab(key), value]),
+        ),
         background: colors.background,
         surface: colors.surface,
         "surface-elevated": colors.surfaceElevated,
         border: colors.border,
+        "border-highlight": colors.borderHighlight,
         "text-primary": colors.textPrimary,
         "text-secondary": colors.textSecondary,
         "text-muted": colors.textMuted,
@@ -23,6 +33,10 @@ const config: Config = {
         "accent-warm": colors.accentWarm,
         danger: colors.danger,
         success: colors.success,
+      },
+      fontFamily: {
+        sans: ["var(--font-sans)", "system-ui", "sans-serif"],
+        mono: ["var(--font-mono)", "ui-monospace", "monospace"],
       },
       spacing: Object.fromEntries(
         Object.entries(spacing).map(([key, value]) => [key, `${value}px`]),
@@ -33,9 +47,26 @@ const config: Config = {
           typeof value === "number" ? `${value}px` : value,
         ]),
       ),
+      fontSize: Object.fromEntries(
+        Object.entries(typography.scale).map(([key, value]) => {
+          const style: { size: number; lineHeight: number; weight: number; letterSpacing?: string } =
+            value;
+          const options: { lineHeight: string; fontWeight: string; letterSpacing?: string } = {
+            lineHeight: `${style.lineHeight}px`,
+            fontWeight: String(style.weight),
+          };
+          if (style.letterSpacing) options.letterSpacing = style.letterSpacing;
+          return [key, [`${style.size}px`, options]] as const;
+        }),
+      ),
     },
   },
-  plugins: [],
+  plugins: [
+    // `undock:` = desktop with the nav sidebar hidden by the user (see sidebar-store).
+    plugin(({ addVariant }) => {
+      addVariant("undock", `@media (min-width: ${breakpoints.desktop}px) { html[data-sidebar="collapsed"] & }`);
+    }),
+  ],
 };
 
 export default config;

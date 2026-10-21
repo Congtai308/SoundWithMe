@@ -3,6 +3,8 @@ export interface AccessTokenPayload {
   sub: string; // userId
   username: string;
   isGuest: boolean;
+  /** The login session (refresh-token chain) this token belongs to. */
+  sid?: string;
 }
 
 export interface AuthTokens {

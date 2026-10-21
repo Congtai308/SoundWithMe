@@ -2,3 +2,8 @@ export * from "./room";
 export * from "./chat";
 export * from "./playback";
 export * from "./auth";
+export * from "./users";
+export * from "./music";
+export * from "./karaoke";
+export * from "./social";
+export * from "./messages";

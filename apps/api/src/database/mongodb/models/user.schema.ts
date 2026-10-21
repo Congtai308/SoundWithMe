@@ -2,6 +2,12 @@ import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { Document } from "mongoose";
 import type { AuthMethod } from "@soundwithme/types";
 
+export interface ListeningTally {
+  key: string;
+  count: number;
+  lastAt: Date;
+}
+
 @Schema({ timestamps: { createdAt: "createdAt", updatedAt: "updatedAt" } })
 export class UserDocument extends Document {
   @Prop({ required: true, unique: true, index: true, trim: true })
@@ -24,6 +30,18 @@ export class UserDocument extends Document {
   @Prop({ unique: true, sparse: true, index: true })
   googleId?: string;
 
+  // When the owner proved the address is theirs (a mailed link, or Google
+  // saying it's verified). Null for unverified and guest accounts.
+  @Prop({ type: Date, default: null })
+  emailVerifiedAt?: Date | null;
+
+  // When the person who holds the password proved they own the mailbox: they
+  // opened the confirmation link while signed in, or set the password from a
+  // reset link. A verified email alone doesn't show that (anyone can register
+  // someone else's address and wait for its owner to click the link).
+  @Prop({ type: Date, default: null })
+  passwordOwnerVerifiedAt?: Date | null;
+
   @Prop({ type: String, default: null })
   avatarUrl?: string | null;
 
@@ -35,6 +53,26 @@ export class UserDocument extends Document {
 
   @Prop({ default: false, index: true })
   isGuest!: boolean;
+
+  // Onboarding answers; null until the user finishes or skips onboarding.
+  @Prop({
+    type: { genres: [String], artists: [String], updatedAt: Date },
+    default: null,
+    _id: false,
+  })
+  musicPreferences?: { genres: string[]; artists: string[]; updatedAt: Date } | null;
+
+  // Learned from what the user actually listens to (see ListeningService).
+  // Arrays, not Maps: artist names may contain "." which Mongo map keys can't.
+  @Prop({
+    type: {
+      genres: [{ key: String, count: Number, lastAt: Date, _id: false }],
+      artists: [{ key: String, count: Number, lastAt: Date, _id: false }],
+    },
+    default: () => ({ genres: [], artists: [] }),
+    _id: false,
+  })
+  listeningStats?: { genres: ListeningTally[]; artists: ListeningTally[] };
 
   createdAt!: Date;
   updatedAt!: Date;

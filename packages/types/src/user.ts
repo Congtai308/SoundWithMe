@@ -28,6 +28,25 @@ export type PublicUser = Pick<
   "id" | "username" | "displayName" | "avatarUrl" | "bio" | "isGuest"
 >;
 
+/** What a listener told us they like during onboarding. Private to the owner. */
+export interface MusicPreferences {
+  /** Genre slugs from the web app's genre catalog. */
+  genres: string[];
+  /** Free-form artist names (catalog picks or typed by the user). */
+  artists: string[];
+  updatedAt: string; // ISO date
+}
+
+/** What the listener plays most, learned from listening history. Private to the owner. */
+export interface ListeningProfile {
+  genres: { slug: string; count: number }[];
+  artists: { name: string; count: number }[];
+}
+
 export type AuthenticatedUser = User & {
   email: string | null; // null for guest accounts
+  /** The owner proved the email is theirs (mailed link or Google). Always false for guests. */
+  emailVerified: boolean;
+  /** null until the user finishes (or skips) music onboarding. */
+  musicPreferences: MusicPreferences | null;
 };

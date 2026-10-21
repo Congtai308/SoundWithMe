@@ -1,0 +1,598 @@
+<!DOCTYPE html><html class="dark" lang="en"><head><meta charset="utf-8"><meta content="width=device-width, initial-scale=1.0" name="viewport"><title>SoundWithMe</title><link href="https://fonts.googleapis.com" rel="preconnect"><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;display=swap" rel="stylesheet"><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{"colors":{"secondary-container":"#03b5d3","on-secondary":"#003640","surface-dim":"#121318","on-secondary-fixed":"#001f26","on-tertiary-fixed":"#40000d","error-container":"#93000a","on-background":"#e3e1e9","surface-tint":"#d0bcff","tertiary-fixed":"#ffdadb","inverse-on-surface":"#2f3036","outline":"#958ea0","primary-container":"#a078ff","inverse-primary":"#6d3bd7","tertiary-container":"#ff516a","primary":"#d0bcff","primary-fixed":"#e9ddff","surface":"#121318","surface-bright":"#38393f","surface-variant":"#34343a","secondary-fixed":"#acedff","surface-container-highest":"#34343a","surface-container-high":"#292a2f","outline-variant":"#494454","on-primary-fixed":"#23005c","on-tertiary-fixed-variant":"#92002a","on-surface":"#e3e1e9","surface-container-lowest":"#0d0e13","surface-container-low":"#1a1b21","on-error":"#690005","on-tertiary-container":"#5b0017","primary-fixed-dim":"#d0bcff","secondary":"#4cd7f6","background":"#121318","on-secondary-container":"#00424e","on-primary":"#3c0091","surface-container":"#1e1f25","on-primary-container":"#340080","tertiary-fixed-dim":"#ffb2b7","on-tertiary":"#67001b","secondary-fixed-dim":"#4cd7f6","inverse-surface":"#e3e1e9","tertiary":"#ffb2b7","on-secondary-fixed-variant":"#004e5c","on-primary-fixed-variant":"#5516be","on-error-container":"#ffdad6","on-surface-variant":"#cbc3d7","error":"#ffb4ab"},"borderRadius":{"DEFAULT":"0.25rem","lg":"0.5rem","xl":"0.75rem","full":"9999px"},"spacing":{"space-lg":"1.5rem","space-sm":"0.75rem","space-3xl":"4rem","space-2xs":"0.25rem","margin-tablet":"2rem","gutter-mobile":"1rem","space-2xl":"3rem","space-xs":"0.5rem","space-xl":"2rem","margin-desktop":"2.5rem","margin-mobile":"1rem","gutter-desktop":"1.5rem","space-md":"1rem"},"fontFamily":{"display-hero":["Plus Jakarta Sans"],"headline-md":["Plus Jakarta Sans"],"body-md":["Plus Jakarta Sans"],"label-mono-sm":["Space Grotesk"],"headline-sm":["Plus Jakarta Sans"],"body-lg":["Plus Jakarta Sans"],"body-sm":["Plus Jakarta Sans"],"headline-lg":["Plus Jakarta Sans"],"headline-xl-mobile":["Plus Jakarta Sans"],"display-hero-mobile":["Plus Jakarta Sans"],"headline-xl":["Plus Jakarta Sans"],"label-mono-md":["Space Grotesk"]},"fontSize":{"display-hero":["48px",{"lineHeight":"56px","letterSpacing":"-0.03em","fontWeight":"700"}],"headline-md":["20px",{"lineHeight":"28px","letterSpacing":"-0.01em","fontWeight":"600"}],"body-md":["14px",{"lineHeight":"20px","letterSpacing":"0em","fontWeight":"400"}],"label-mono-sm":["11px",{"lineHeight":"14px","letterSpacing":"0.06em","fontWeight":"600"}],"headline-sm":["16px",{"lineHeight":"24px","letterSpacing":"0em","fontWeight":"600"}],"body-lg":["16px",{"lineHeight":"24px","letterSpacing":"-0.005em","fontWeight":"400"}],"body-sm":["12px",{"lineHeight":"16px","letterSpacing":"0.01em","fontWeight":"400"}],"headline-lg":["24px",{"lineHeight":"32px","letterSpacing":"-0.015em","fontWeight":"600"}],"headline-xl-mobile":["26px",{"lineHeight":"34px","letterSpacing":"-0.02em","fontWeight":"700"}],"display-hero-mobile":["36px",{"lineHeight":"44px","letterSpacing":"-0.02em","fontWeight":"700"}],"headline-xl":["32px",{"lineHeight":"40px","letterSpacing":"-0.025em","fontWeight":"700"}],"label-mono-md":["13px",{"lineHeight":"18px","letterSpacing":"0.03em","fontWeight":"500"}]}}}};</script></head><body class="bg-surface font-body-md text-body-md text-on-surface antialiased selection:bg-primary selection:text-on-primary min-h-screen"><aside class="fixed left-0 top-0 bottom-24 w-72 bg-surface-container-lowest/90 backdrop-blur-2xl z-40 flex flex-col justify-between shadow-[0_1px_8px_rgba(0,0,0,0.5)]"><div class="flex flex-col flex-1 overflow-y-auto px-space-md pt-space-lg"><div class="flex items-center gap-space-sm px-space-sm mb-space-xl"><img alt="SoundWithMe Brand Logo" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1WkpUcNBt62lkl7MZ8ghokQTJ9UeVbnlAn7gE3TCuJnhepD3OwbcicBuRpYx9h8deGdcpmcY-BP0OfR9j2hv7VCeL5J4hbRY7viHNffIxJ93lwzgpPZ9p6CSp6WDET_UDnO6H6jqj9d6HK-qI3evmRa7hOg_iZ06axC7-R4hnITBtNrqNovgJMSjAIpFKOwLNHs170hwJPCG3jab8SqslZd6PuEsCBGy_lkvegG0OISTouDrilecp6ayivI"><span class="font-headline-md text-headline-md text-on-surface tracking-tight">SoundWithMe</span></div><div class="mb-space-md"><button class="w-full flex items-center justify-center gap-space-sm py-space-sm px-space-md rounded-full bg-primary-container text-on-primary-container font-headline-sm text-headline-sm transition-transform active:scale-95 shadow-[0_0_24px_rgba(160,120,255,0.35)]" type="button"><span class="material-symbols-outlined text-[20px]">graphic_eq</span><span>Create Room</span></button></div><div class="mb-space-2xs px-space-sm"><span class="font-label-mono-sm text-label-mono-sm uppercase text-outline tracking-wider">Navigation</span></div><nav class="flex flex-col gap-1 mb-space-lg" data-active-classes="bg-surface-container-high text-primary font-headline-sm"><a class="flex items-center justify-between px-space-sm py-space-xs rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="home" href="#"><div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-[20px]">grid_view</span><span class="font-body-md text-body-md">Home</span></div></a><a class="flex items-center justify-between px-space-sm py-space-xs rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="discover" href="#"><div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-[20px]">explore</span><span class="font-body-md text-body-md">Discover</span></div></a><a class="flex items-center justify-between px-space-sm py-space-xs rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="live-rooms" href="#"><div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-[20px]">sensors</span><span class="font-body-md text-body-md">Live Rooms</span></div><span class="px-space-xs py-0.5 rounded-full bg-tertiary-container text-on-tertiary-container font-label-mono-sm text-label-mono-sm uppercase animate-pulse">Live</span></a><a class="flex items-center justify-between px-space-sm py-space-xs rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="friends-and-presence" href="#"><div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-[20px]">group</span><span class="font-body-md text-body-md">Friends &amp; Presence</span></div><span class="px-space-xs py-0.5 rounded-full bg-surface-container-high text-secondary font-label-mono-sm text-label-mono-sm">4 active</span></a><a class="flex items-center justify-between px-space-sm py-space-xs rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="messages" href="#"><div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-[20px]">chat_bubble</span><span class="font-body-md text-body-md">Messages</span></div></a><a class="flex items-center justify-between px-space-sm py-space-xs rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="library" href="#"><div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-[20px]">library_music</span><span class="font-body-md text-body-md">Library</span></div></a></nav><div class="mb-space-2xs px-space-sm flex items-center justify-between"><span class="font-label-mono-sm text-label-mono-sm uppercase text-outline tracking-wider">My Playlists</span><button class="text-outline hover:text-on-surface" type="button"><span class="material-symbols-outlined text-[18px]">add</span></button></div><div class="flex flex-col gap-1 mb-space-lg"><a class="flex items-center gap-space-sm px-space-sm py-space-xs rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="playlist-late-night-lo-fi" href="#"><span class="material-symbols-outlined text-[18px] text-outline">queue_music</span><span class="font-body-md text-body-md truncate">Late Night Lo-Fi</span></a><a class="flex items-center gap-space-sm px-space-sm py-space-xs rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="playlist-midnight-drives" href="#"><span class="material-symbols-outlined text-[18px] text-outline">queue_music</span><span class="font-body-md text-body-md truncate">Midnight Drives</span></a><a class="flex items-center gap-space-sm px-space-sm py-space-xs rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="playlist-collaborative-our-vibe" href="#"><span class="material-symbols-outlined text-[18px] text-secondary">hub</span><span class="font-body-md text-body-md truncate">Collaborative: Our Vibe</span></a></div></div><div class="p-space-md bg-surface-container-lowest/95 backdrop-blur-md"><div class="flex items-center justify-between p-space-xs rounded-xl bg-surface-container-low"><div class="flex items-center gap-space-xs min-w-0"><div class="relative flex-shrink-0"><img alt="Alex Vance profile picture" class="w-9 h-9 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD9fGFZgU1DMFjPezkGI8U9KpRQS5x7W4Qo8cB2QpKCt8jEDkmM2S-nqQGq5URZTglMUW3LtrfrtFZ3HXQWBRzaqknArftbz0WizFcM6aHdrnKsI1vnI6VpjAQ3Eo6pFcIgvQ5io6GrdUjTbW2OJqjfKCNnXpWk75XfDGbIlKsP7cBzXRNrBqDjIGFZFg7q665ourrceJQAVGko8IWQ5OlEMYV4lP-VEg2xdSJ4ScYt11_5uPyvXhtEGA"><span class="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-secondary ring-2 ring-surface-container-low"></span></div><div class="min-w-0"><div class="font-headline-sm text-headline-sm text-on-surface truncate">Alex Vance</div><div class="font-body-sm text-body-sm text-on-surface-variant truncate flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-secondary"></span><span>Starboy</span></div></div></div><button aria-label="Account Settings" class="text-outline hover:text-on-surface p-1 rounded-lg hover:bg-surface-container-high transition-colors" type="button"><span class="material-symbols-outlined text-[20px]">settings</span></button></div></div></aside><div class="pl-72"><header class="fixed top-0 left-72 right-0 h-16 bg-surface-dim/80 backdrop-blur-xl z-30 shadow-[0_1px_8px_rgba(0,0,0,0.3)]"><div class="h-16 w-full px-space-lg flex items-center justify-between gap-space-md"><div class="flex-1 max-w-xl relative"><span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-[20px]">search</span><input class="w-full bg-surface-container-low text-on-surface placeholder:text-outline pl-10 pr-space-md py-space-xs rounded-full font-body-sm text-body-sm focus:outline-none focus:ring-1 focus:ring-primary shadow-inner" placeholder="Search songs, artists, rooms, people... (Cmd+K)" type="text"></div><div class="hidden xl:flex items-center gap-space-xs"><button class="px-space-sm py-1 rounded-full bg-surface-container text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high text-body-sm font-body-sm transition-colors" type="button">🌙 Late Night</button><button class="px-space-sm py-1 rounded-full bg-surface-container text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high text-body-sm font-body-sm transition-colors" type="button">🔥 Hype</button><button class="px-space-sm py-1 rounded-full bg-surface-container text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high text-body-sm font-body-sm transition-colors" type="button">🧠 Focus</button><button class="px-space-sm py-1 rounded-full bg-surface-container text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high text-body-sm font-body-sm transition-colors" type="button">❤️ Romantic</button></div><div class="flex items-center gap-space-md flex-shrink-0"><div class="hidden md:flex items-center gap-space-xs px-space-sm py-1 rounded-full bg-surface-container-low font-label-mono-sm text-label-mono-sm text-secondary"><span class="w-2 h-2 rounded-full bg-secondary animate-ping"></span><span>14,280 listening now</span></div><div class="relative"><button aria-label="Notifications" class="w-9 h-9 rounded-full bg-surface-container-low hover:bg-surface-container text-on-surface flex items-center justify-center transition-colors" type="button"><span class="material-symbols-outlined text-[20px]">notifications</span></button><span class="absolute top-1 right-1 w-2 h-2 rounded-full bg-tertiary-container"></span></div><img alt="Profile" class="w-8 h-8 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD9fGFZgU1DMFjPezkGI8U9KpRQS5x7W4Qo8cB2QpKCt8jEDkmM2S-nqQGq5URZTglMUW3LtrfrtFZ3HXQWBRzaqknArftbz0WizFcM6aHdrnKsI1vnI6VpjAQ3Eo6pFcIgvQ5io6GrdUjTbW2OJqjfKCNnXpWk75XfDGbIlKsP7cBzXRNrBqDjIGFZFg7q665ourrceJQAVGko8IWQ5OlEMYV4lP-VEg2xdSJ4ScYt11_5uPyvXhtEGA"></div></div></header><main class="w-full pt-16 pb-28 bg-surface min-h-screen"><div class="flex flex-col w-full">
+<!-- Dynamic Spectral Background Aura (Local containment, no global bleed) -->
+<div class="relative w-full px-space-md lg:px-margin-desktop py-space-lg overflow-hidden">
+<div class="pointer-events-none absolute -top-40 right-10 w-[500px] h-[500px] bg-primary-container/10 rounded-full blur-[120px] mix-blend-screen"></div>
+<div class="pointer-events-none absolute top-48 left-1/4 w-[400px] h-[400px] bg-secondary-container/10 rounded-full blur-[140px] mix-blend-screen"></div>
+<!-- Hub Header & Live Metrics -->
+<div class="relative z-10 flex flex-col md:flex-row md:items-end justify-between gap-space-md pb-space-lg">
+<div class="flex flex-col gap-space-2xs">
+<div class="flex items-center gap-space-xs">
+<span class="inline-flex items-center gap-1.5 px-space-xs py-0.5 rounded-full bg-secondary/10 text-secondary font-label-mono-sm text-label-mono-sm uppercase tracking-wider">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse"></span>
+            Real-time Mesh v2.4
+          </span>
+<span class="font-label-mono-sm text-label-mono-sm text-outline">· Drift &lt; 12ms</span>
+</div>
+<h1 class="font-headline-xl text-headline-xl text-on-surface tracking-tight">Friends &amp; Real-time Presence</h1>
+<p class="font-body-md text-body-md text-on-surface-variant flex items-center gap-space-xs">
+<span>24 Mutual Friends</span>
+<span class="text-outline">/</span>
+<span class="text-secondary font-headline-sm text-headline-sm">7 Listening Right Now</span>
+<span class="text-outline">/</span>
+<span class="text-tertiary">1 Duo Sync Live</span>
+</p>
+</div>
+<!-- Action Bar: Fast broadcast and Search -->
+<div class="flex items-center gap-space-sm">
+<button class="group flex items-center gap-space-xs px-space-md py-space-sm rounded-full bg-primary-container text-on-primary-container font-headline-sm text-headline-sm shadow-[0_0_24px_rgba(160,120,255,0.35)] hover:scale-105 active:scale-95 transition-all" id="openModalBtn" type="button">
+<span class="material-symbols-outlined text-[20px] group-hover:rotate-12 transition-transform">graphic_eq</span>
+<span>Start Session</span>
+</button>
+<button class="w-10 h-10 rounded-full bg-surface-container-high text-on-surface hover:bg-surface-variant flex items-center justify-center transition-colors" type="button">
+<span class="material-symbols-outlined text-[20px]">person_add</span>
+</button>
+</div>
+</div>
+<!-- Segmented Navigation Filter & Sound Radar Switcher -->
+<div class="relative z-10 flex flex-wrap items-center justify-between gap-space-sm bg-surface-container-low p-1.5 rounded-2xl mb-space-xl">
+<div class="flex items-center gap-1 overflow-x-auto">
+<button class="px-space-md py-space-xs rounded-xl bg-surface-container-highest text-on-surface font-headline-sm text-headline-sm shadow-sm" type="button">
+          All Friends <span class="ml-1 text-outline font-label-mono-sm text-label-mono-sm">24</span>
+</button>
+<button class="px-space-md py-space-xs rounded-xl text-on-surface-variant hover:text-on-surface hover:bg-surface-container font-body-md text-body-md transition-colors flex items-center gap-space-xs" type="button">
+<span class="w-2 h-2 rounded-full bg-secondary animate-ping"></span>
+<span>Listening Now</span>
+<span class="px-1.5 py-0.5 rounded-full bg-secondary/15 text-secondary font-label-mono-sm text-label-mono-sm">7</span>
+</button>
+<button class="px-space-md py-space-xs rounded-xl text-on-surface-variant hover:text-on-surface hover:bg-surface-container font-body-md text-body-md transition-colors" type="button">
+          Invitations Pending <span class="ml-1 px-1.5 py-0.5 rounded-full bg-tertiary-container/30 text-tertiary font-label-mono-sm text-label-mono-sm">2</span>
+</button>
+<button class="px-space-md py-space-xs rounded-xl text-on-surface-variant hover:text-on-surface hover:bg-surface-container font-body-md text-body-md transition-colors" type="button">
+          Activity Feed
+        </button>
+</div>
+<div class="hidden lg:flex items-center gap-space-sm pr-space-sm">
+<span class="font-label-mono-sm text-label-mono-sm text-outline uppercase tracking-wider">Spatial Audio Aura</span>
+<span class="inline-flex items-center px-2 py-0.5 rounded-full bg-surface-container-highest text-secondary font-label-mono-sm text-label-mono-sm">Dolby Sync Active</span>
+</div>
+</div>
+<!-- MAIN ASYMMETRIC GRID: Live Listening Spotlight & Side Feed -->
+<div class="relative z-10 grid grid-cols-1 xl:grid-cols-12 gap-space-lg items-start">
+<!-- Live Listening Friends Spotlight Cards (8 Cols) -->
+<div class="xl:col-span-8 flex flex-col gap-space-lg">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<span class="font-label-mono-md text-label-mono-md uppercase tracking-wider text-secondary flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px]">sensors</span> Active Soundwaves
+            </span>
+<span class="text-outline">/</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Instant 1-Click Sync</span>
+</div>
+<div class="flex items-center gap-1 text-outline">
+<button aria-label="Grid layout" class="p-1 rounded-lg hover:text-on-surface hover:bg-surface-container-high transition-colors" type="button">
+<span class="material-symbols-outlined text-[18px]">grid_view</span>
+</button>
+<button aria-label="Sort options" class="p-1 rounded-lg hover:text-on-surface hover:bg-surface-container-high transition-colors" type="button">
+<span class="material-symbols-outlined text-[18px]">filter_list</span>
+</button>
+</div>
+</div>
+<!-- 4 Bespoke Spotlight Cards Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-space-md">
+<!-- CARD 1: EMMA (Heroic Ambient Glow, Real-time Equalizer) -->
+<div class="group relative rounded-2xl bg-surface-container-low p-space-md flex flex-col justify-between overflow-hidden shadow-xl hover:shadow-[0_8px_32px_rgba(160,120,255,0.22)] transition-all">
+<!-- Spectral Hue Backing -->
+<div class="pointer-events-none absolute -bottom-10 -right-10 w-44 h-44 bg-primary-container/20 rounded-full blur-3xl group-hover:bg-primary-container/30 transition-colors"></div>
+<div>
+<!-- Top Row: Avatar & Status Indicator -->
+<div class="flex items-center justify-between mb-space-md">
+<div class="flex items-center gap-space-sm">
+<div class="relative">
+<img class="w-12 h-12 rounded-full object-cover shadow-md" data-alt="Close-up portrait of Emma, an indie music lover with soft violet ambient lighting highlighting her face and vintage headphones resting on her shoulders in a moody atmospheric studio setting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCnFbI1J_-Rf3I4biZ0lH2MOvqHfbeNqRZshCfX1ko6mklNJ4vGy5sRj4PRxfVVppxrA5umkfHU-hF_megO57pyoabCxrx-JIBLavg_Z1WP4KOdroIVuELQKA8_ebUNHsQVuKXElbxQUVIxnhulRAM7rEfoFhbryU68Rhfyp-CpiLtOViOeya7RdVB1Hxaj0IhRIZcMWRO5QJ7k6R8LDG_prSfokYa5x1dSyha5dh6XjaehBEy_Cwl35A">
+<span class="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-secondary ring-2 ring-surface-container-low"></span>
+</div>
+<div>
+<div class="flex items-center gap-1.5">
+<span class="font-headline-sm text-headline-sm text-on-surface">Emma</span>
+<span class="material-symbols-outlined text-primary text-[16px]" title="Synced Listener Verified">verified</span>
+</div>
+<div class="flex items-center gap-1.5 font-label-mono-sm text-label-mono-sm text-secondary">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+<span>Listening solo · 01:15</span>
+</div>
+</div>
+</div>
+<!-- Animated Soundwave Pill -->
+<div class="flex items-end gap-1 px-space-xs py-1 rounded-full bg-surface-container-high h-6">
+<span class="w-0.5 h-3 bg-secondary rounded-full animate-bounce"></span>
+<span class="w-0.5 h-4 bg-primary rounded-full animate-bounce [animation-delay:0.15s]"></span>
+<span class="w-0.5 h-2 bg-secondary rounded-full animate-bounce [animation-delay:0.3s]"></span>
+<span class="w-0.5 h-5 bg-primary-container rounded-full animate-bounce [animation-delay:0.45s]"></span>
+</div>
+</div>
+<!-- Track Snippet Showcase -->
+<div class="flex items-center gap-space-sm p-space-xs rounded-xl bg-surface-container-high/60 backdrop-blur-md mb-space-md">
+<div class="w-14 h-14 rounded-lg overflow-hidden flex-shrink-0 bg-surface-container-highest">
+<img class="w-full h-full object-cover" data-alt="Monochrome album art for Cigarettes After Sex featuring minimalist dark cinematic typography, hazy smoke aesthetic, and moody monochrome ambient grain." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA-4SfBs9gFGCsC4nfR1jW_2FbnlY6GolsKVtFSU6paxIL__Xz4lpbjpGMug9PpchNqCsRI2PUrIKN9QwK1TBSUU-Newrn-mDppDTYDSPhIJgPdpJX3PgndXdAeO3bpblBxG1l-GRVy8B9vgUsEK-VdgyXqXbQbQ68bADDAZwLaOyKB85yW3JUr3hrZ-sFGtn8rnNfgksSpa6Ci1DAcS_eB6jput_z6MG72720_smVDzTST6-gbZ9ZFgA">
+</div>
+<div class="min-w-0 flex-1">
+<span class="font-headline-sm text-headline-sm text-on-surface truncate block">Apocalypse</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant truncate block">Cigarettes After Sex</span>
+<div class="w-full bg-surface-variant h-1 rounded-full mt-1.5 overflow-hidden">
+<div class="bg-primary w-2/5 h-full rounded-full"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Card Actions -->
+<div class="flex items-center gap-space-xs pt-space-xs">
+<button class="flex-1 flex items-center justify-center gap-space-2xs py-space-xs px-space-sm rounded-full bg-primary-container text-on-primary-container font-headline-sm text-headline-sm hover:brightness-110 active:scale-95 shadow-[0_0_16px_rgba(160,120,255,0.3)] transition-all" type="button">
+<span class="material-symbols-outlined text-[18px]">headphones</span>
+<span>Listen Together</span>
+</button>
+<button aria-label="Message Emma" class="w-9 h-9 rounded-full bg-surface-container-high text-on-surface hover:bg-surface-variant flex items-center justify-center transition-colors" type="button">
+<span class="material-symbols-outlined text-[18px]">chat</span>
+</button>
+<button aria-label="Send Reaction" class="w-9 h-9 rounded-full bg-surface-container-high text-on-surface hover:bg-surface-variant flex items-center justify-center transition-colors" type="button">
+<span class="material-symbols-outlined text-[18px]">favorite</span>
+</button>
+</div>
+</div>
+<!-- CARD 2: RYAN (In Public Room 'Tokyo Chill', Multiple Listeners) -->
+<div class="group relative rounded-2xl bg-surface-container-low p-space-md flex flex-col justify-between overflow-hidden shadow-xl hover:shadow-[0_8px_32px_rgba(76,215,246,0.22)] transition-all">
+<!-- Ambient Teal Glow -->
+<div class="pointer-events-none absolute -bottom-10 -right-10 w-44 h-44 bg-secondary/15 rounded-full blur-3xl group-hover:bg-secondary/25 transition-colors"></div>
+<div>
+<div class="flex items-center justify-between mb-space-md">
+<div class="flex items-center gap-space-sm">
+<div class="relative">
+<img class="w-12 h-12 rounded-full object-cover shadow-md" data-alt="Portrait of Ryan sitting in a neon-lit cyberpunk apartment overlooking night rain in Tokyo with reflective glass aesthetics and warm cyan street reflections." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA3racjRHbyq-eTYUQpS-5w-4lpYqHate-aqrQ-G7uxFT5o8_jcVSAfJK_2c9jmnlGir7pwlvWvqG_P6mDsngnL8z4zCmO1W81JVV7tkhx2UcK3cyCj_QNJWOcBKhetFs-TS2e9p0puBDbVynTvX6oYkp_xaMkyRkpPzWX8mDpjHPjZZ-jkaOIfnshyJeYiLgp_YhZyV5skLp3qRFJlXDJN3b-zzIgFpD8RpPg-_c4cXGSuP84DDL0cGA">
+<span class="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-secondary ring-2 ring-surface-container-low"></span>
+</div>
+<div>
+<span class="font-headline-sm text-headline-sm text-on-surface block">Ryan</span>
+<div class="flex items-center gap-1 font-label-mono-sm text-label-mono-sm text-secondary truncate">
+<span class="material-symbols-outlined text-[14px]">sensors</span>
+<span>In Room: Tokyo Chill</span>
+</div>
+</div>
+</div>
+<!-- Co-listener Stack -->
+<div class="flex items-center -space-x-2">
+<div class="w-6 h-6 rounded-full bg-surface-container-highest flex items-center justify-center text-[10px] font-bold text-on-surface shadow-sm ring-1 ring-surface-container-low">
+                    +12
+                  </div>
+<div class="w-6 h-6 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center text-[10px] font-bold ring-1 ring-surface-container-low">
+                    🎧
+                  </div>
+</div>
+</div>
+<!-- Track Snippet -->
+<div class="flex items-center gap-space-sm p-space-xs rounded-xl bg-surface-container-high/60 backdrop-blur-md mb-space-md">
+<div class="w-14 h-14 rounded-lg overflow-hidden flex-shrink-0 bg-surface-container-highest">
+<img class="w-full h-full object-cover" data-alt="Synthwave retro album artwork for HOME Resonance featuring geometric sunset grids, neon pink and turquoise gradients, and subtle tape scanlines." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBHhUfAlxCxUB0pt6ads2BGvJ8I0fwvfTJy6ho6qzMKr0rfgYA_BpGfOxDL1FJlmiHbrn_CLbEWpjQq1_XyuZnDCIQ5A5hVFKHSQA6CKTH1PoBV-cjZxB219uWbLYHkdMn1gfuPlZUFLZr9stDbLfrfXsGTSsA8s0PlpfDO9rVvOF90GOfNGjTvgZ1tTaaTi-_H9ojgbcEBDVSVZMn5sql1m2CXNJSfOUahQsAAOOaG3rDjFfUljoAlAA">
+</div>
+<div class="min-w-0 flex-1">
+<span class="font-headline-sm text-headline-sm text-on-surface truncate block">Resonance</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant truncate block">HOME</span>
+<div class="flex items-center gap-2 mt-1">
+<span class="px-1.5 py-0.2 rounded bg-surface-container-highest text-secondary font-label-mono-sm text-[10px]">12 co-listeners</span>
+<span class="font-label-mono-sm text-[10px] text-outline">02:40 / 03:32</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Action: Join Room or Wave -->
+<div class="flex items-center gap-space-xs pt-space-xs">
+<button class="flex-1 flex items-center justify-center gap-space-2xs py-space-xs px-space-sm rounded-full bg-secondary-container text-on-secondary-container font-headline-sm text-headline-sm hover:brightness-110 active:scale-95 transition-all shadow-[0_0_16px_rgba(3,181,211,0.25)]" type="button">
+<span class="material-symbols-outlined text-[18px]">meeting_room</span>
+<span>Join Room</span>
+</button>
+<button class="flex items-center gap-1 px-space-sm py-space-xs rounded-full bg-surface-container-high text-on-surface hover:bg-surface-variant font-headline-sm text-headline-sm transition-colors" type="button">
+<span>Wave</span>
+<span>👋</span>
+</button>
+</div>
+</div>
+<!-- CARD 3: SOPHIA (Late night R&B groove) -->
+<div class="group relative rounded-2xl bg-surface-container-low p-space-md flex flex-col justify-between overflow-hidden shadow-xl hover:shadow-[0_8px_32px_rgba(255,81,106,0.18)] transition-all">
+<div class="pointer-events-none absolute -bottom-10 -right-10 w-44 h-44 bg-tertiary-container/15 rounded-full blur-3xl group-hover:bg-tertiary-container/25 transition-colors"></div>
+<div>
+<div class="flex items-center justify-between mb-space-md">
+<div class="flex items-center gap-space-sm">
+<div class="relative">
+<img class="w-12 h-12 rounded-full object-cover shadow-md" data-alt="Portrait of Sophia looking relaxed with soft magenta backlighting, dark aesthetic, modern audio ear monitors in ears, serene expression." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCKjgTczkAaSnS0e7AlQr0iMRWFlIhS6BWdTgf_v2OiscfJTM-zYwMPA1MZ1a3UVvwQxpzdU9OOohQ0W5hw0-506PC5noLWn47oJya_fXIizifx5tBFGBndLQiNHy8vVD2q5kQD_mYZtIUiAvglVsC5ecK-BQXThEhHNBhhlWUsaOjCGgIRnf66OR36IbODGs9GKRNEjjQrCR-FU7VHRIMpE1gDmj5lefhlnwdGvRenF4WlvjTksWlcoQ">
+<span class="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-secondary ring-2 ring-surface-container-low"></span>
+</div>
+<div>
+<span class="font-headline-sm text-headline-sm text-on-surface block">Sophia</span>
+<div class="flex items-center gap-1 font-label-mono-sm text-label-mono-sm text-tertiary truncate">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span>
+<span>Listening now · 44.1kHz Hi-Fi</span>
+</div>
+</div>
+</div>
+<span class="px-2 py-0.5 rounded-full bg-surface-container-high text-outline font-label-mono-sm text-label-mono-sm">R&amp;B Vibe</span>
+</div>
+<!-- Track Info -->
+<div class="flex items-center gap-space-sm p-space-xs rounded-xl bg-surface-container-high/60 backdrop-blur-md mb-space-md">
+<div class="w-14 h-14 rounded-lg overflow-hidden flex-shrink-0 bg-surface-container-highest">
+<img class="w-full h-full object-cover" data-alt="Moody deep blue ocean album artwork with lone figure perched on a diving board, cinematic minimalist aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBPAoLX7mG5fMXXICipGqRAQrgboX8LPPd7glxSQudKBOfQjouSBtvIXCz9tnyFHQzk0QTdu5ZV6opHLCx9QRcrBtSJhGA3_CevjHMnl4E7-VOx2BBDOPK-9qbuubJwhqEcDOkgL3sWKmUK_yhZSfL1K7GMKLGRl0OVlTQuDZkK0ngbdI6kNk_FFLN0yvkwixrAvUflweuea4HHsySygCD3xnNyN3CGwNVnEkBmBquh2q39miwZsklArg">
+</div>
+<div class="min-w-0 flex-1">
+<span class="font-headline-sm text-headline-sm text-on-surface truncate block">Kill Bill</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant truncate block">SZA — SOS</span>
+<div class="w-full bg-surface-variant h-1 rounded-full mt-1.5 overflow-hidden">
+<div class="bg-tertiary-container w-3/4 h-full rounded-full"></div>
+</div>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-space-xs pt-space-xs">
+<button class="flex-1 flex items-center justify-center gap-space-2xs py-space-xs px-space-sm rounded-full bg-primary-container text-on-primary-container font-headline-sm text-headline-sm hover:brightness-110 active:scale-95 shadow-[0_0_16px_rgba(160,120,255,0.3)] transition-all" type="button">
+<span class="material-symbols-outlined text-[18px]">headphones</span>
+<span>Listen Together</span>
+</button>
+<button aria-label="Like Track" class="w-9 h-9 rounded-full bg-surface-container-high text-on-surface hover:bg-surface-variant flex items-center justify-center transition-colors" type="button">
+<span class="material-symbols-outlined text-[18px]">thumb_up</span>
+</button>
+</div>
+</div>
+<!-- CARD 4: LIAM & CHLOE (Duo Synced Session) -->
+<div class="group relative rounded-2xl bg-surface-container-low p-space-md flex flex-col justify-between overflow-hidden shadow-xl hover:shadow-[0_8px_32px_rgba(160,120,255,0.2)] transition-all">
+<div class="pointer-events-none absolute -bottom-10 -right-10 w-44 h-44 bg-primary/10 rounded-full blur-3xl"></div>
+<div>
+<div class="flex items-center justify-between mb-space-md">
+<div class="flex items-center gap-space-sm">
+<!-- Overlapping Duo Avatars -->
+<div class="flex items-center -space-x-3">
+<img class="w-10 h-10 rounded-full object-cover shadow-md ring-2 ring-surface-container-low" data-alt="Portrait of Liam looking thoughtfully towards the camera in a dimly lit music production room with purple ambient lighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB8JGRfm9F-sQQJBaHZCPCFxrY6pmjreYq67hwXJS9hkPwhk0teuZYwBKDT7lYe-aiM79sHldvvDX7ZgXE0BgheAxXOjZ1fAksz_lTqbuTQxer5Vc4tkpKL_L9t9Nq8MnPVLSG-4lnZErKYjZFxTtE9So-mxju2_g7gsuosdZwAFrep5ntJ4M0W6P7zbT8uytvjfuYCSvepkw-SMxwSbIpuBzQN8nVObvhAPQn8c8SBMxaUY_8Dewbk6w">
+<img class="w-10 h-10 rounded-full object-cover shadow-md ring-2 ring-surface-container-low" data-alt="Portrait of Chloe smiling softly wearing sleek wireless earbuds in a modern architectural living space with subtle neon backlights." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAuXh1Sqma-2fJ94xWALjqwM4-riO54N-YA0i2yK6sswZGPazNleT8aV2vgzRXDbmEnxhK3BghI0tO_TCGQ6Niu1IpsRAt-gHkTOcNjGnp0jpdVB4ldqDZQ2bumbyO86i4oatt4lZ8JINW-KbDNghsrM3C1uo9EZket4lkCFqGXhu07IqKpFQN1MpapD6uegIty8maCJAhXevlt9-Ma1RltTW-PcC5xWbmxAFsdEMn0EqN4RcBT9DqXsw">
+</div>
+<div>
+<div class="flex items-center gap-1 font-headline-sm text-headline-sm text-on-surface">
+<span>Liam &amp; Chloe</span>
+</div>
+<div class="flex items-center gap-1 font-label-mono-sm text-label-mono-sm text-primary">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+<span>💜 Duo Session · Dual Sync</span>
+</div>
+</div>
+</div>
+<div class="px-space-xs py-0.5 rounded-full bg-primary-container/20 text-primary font-label-mono-sm text-label-mono-sm">
+                  Private Duo
+                </div>
+</div>
+<!-- Track Snippet -->
+<div class="flex items-center gap-space-sm p-space-xs rounded-xl bg-surface-container-high/60 backdrop-blur-md mb-space-md">
+<div class="w-14 h-14 rounded-lg overflow-hidden flex-shrink-0 bg-surface-container-highest">
+<img class="w-full h-full object-cover" data-alt="Deep crimson and black album artwork for Joji Die For You featuring evocative blurred motion and warm film grain texture." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCJ1SftLZtUaewAMaUoqSKd-LS3qLHPxdgtmwfYgPNJtW_0LDFBWtQVzFVULnU4BPtttTAlvpqOM_Cv8m25l3XpPAOKF6SFJiUy9gvLb2kmTB8G58h4UByANWkku837gT9O0SKdoG8FJ3kUGDV7NSnmEnEe3OgxyMcyID-RGF_nS6kOZY45-2urkooYCIEjpQ6R1btWgYdxjS9TxuMH2P23sq6wwpl3UKeSt19D715B6i-mgEIB21e67Q">
+</div>
+<div class="min-w-0 flex-1">
+<span class="font-headline-sm text-headline-sm text-on-surface truncate block">Die For You</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant truncate block">Joji — SMITHEREENS</span>
+<div class="flex items-center justify-between text-outline font-label-mono-sm text-[10px] mt-1">
+<span>Synced to beat</span>
+<span class="text-secondary">00:48 / 03:31</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Action: Request to Join Duo -->
+<div class="flex items-center gap-space-xs pt-space-xs">
+<button class="flex-1 flex items-center justify-center gap-space-2xs py-space-xs px-space-sm rounded-full bg-surface-container-highest hover:bg-surface-variant text-on-surface font-headline-sm text-headline-sm active:scale-95 transition-all" type="button">
+<span class="material-symbols-outlined text-[18px]">group_add</span>
+<span>Request to Join</span>
+</button>
+<button aria-label="Send Reaction" class="w-9 h-9 rounded-full bg-surface-container-high text-on-surface hover:bg-surface-variant flex items-center justify-center transition-colors" type="button">
+<span class="material-symbols-outlined text-[18px]">favorite</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Collaborative Activity Sparkline Strip -->
+<div class="p-space-md rounded-2xl bg-surface-container-low flex flex-col md:flex-row items-center justify-between gap-space-md shadow-md">
+<div class="flex items-center gap-space-md min-w-0">
+<div class="w-10 h-10 rounded-xl bg-secondary-container/20 text-secondary flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined text-[24px]">ssid_chart</span>
+</div>
+<div>
+<span class="font-headline-sm text-headline-sm text-on-surface block">Network Listening Density</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant block">Friend sync traffic peaked at 11:42 PM (+34% vs yesterday)</span>
+</div>
+</div>
+<!-- Inline SVG Mini Sparkline -->
+<div class="flex items-center gap-space-sm flex-shrink-0 w-full md:w-48">
+<svg class="w-full h-8 overflow-visible" fill="none" stroke="currentColor" viewBox="0 0 100 24">
+<path class="text-secondary" d="M0,18 Q15,22 30,12 T60,8 T80,16 T100,4" fill="none" stroke-linecap="round" stroke-width="2"></path>
+<circle class="fill-secondary" cx="100" cy="4" r="3"></circle>
+</svg>
+<span class="font-label-mono-sm text-label-mono-sm text-secondary">Peak</span>
+</div>
+</div>
+</div>
+<!-- Right Column: Live Friend Activity Timeline (4 Cols) -->
+<div class="xl:col-span-4 flex flex-col gap-space-md">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<span class="font-label-mono-md text-label-mono-md uppercase tracking-wider text-outline flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">history_toggle_off</span> Activity Feed
+            </span>
+</div>
+<button class="font-label-mono-sm text-label-mono-sm text-primary hover:underline" type="button">Mark all read</button>
+</div>
+<div class="flex flex-col gap-space-xs bg-surface-container-low p-space-md rounded-2xl shadow-xl">
+<!-- Event 1: Emma Liked Room -->
+<div class="flex items-start gap-space-sm p-space-xs rounded-xl hover:bg-surface-container-high/50 transition-colors">
+<div class="relative flex-shrink-0">
+<img class="w-9 h-9 rounded-full object-cover" data-alt="Profile avatar portrait of Emma in warm studio lighting with audio equipment." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCtrYGf6BxvydyCwgp1slKm5VYKuUpECnuX8taQIvoMjZpLwCb75tN1ryt5v0iImopQbMXqCNBpQt10Sf_wIUCzfqQsap9BcTkc99dnuLoDjpNLfbkOhrgB4hX6UUV_PdvVjvJxb7iV058s_i8A_gvWFxhPXLM2CLlvPm57bae89y0JVdLGEUGA-JSVm_HDd_W6N-fIqbnB-h_YbJuhvNapXVVWVlrP6VBOngph81wY8g3ZemOp9ieqvw">
+<span class="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-tertiary text-on-tertiary flex items-center justify-center text-[9px]">
+                ❤️
+              </span>
+</div>
+<div class="min-w-0 flex-1">
+<p class="font-body-sm text-body-sm text-on-surface">
+<span class="font-headline-sm text-headline-sm text-on-surface">Emma</span> liked your room
+                <span class="text-primary font-headline-sm text-headline-sm">Late Night Vibes</span>
+</p>
+<span class="font-label-mono-sm text-label-mono-sm text-outline block mt-0.5">3 mins ago · 24 listeners synced</span>
+</div>
+</div>
+<!-- Event 2: Liam Queued Song -->
+<div class="flex items-start gap-space-sm p-space-xs rounded-xl hover:bg-surface-container-high/50 transition-colors">
+<div class="relative flex-shrink-0">
+<img class="w-9 h-9 rounded-full object-cover" data-alt="Liam avatar portrait smiling in recording booth." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCM_YivpS1QvfhvYQdz3BBJPb3Cc5NRrZ6jh6_PiecYlSxZ8r2ckSwJnd_1aMd0olX5guE8VrwCQD23zlLJ11D3J9redQTjhx-PI7VWZn4EUvzra-iTqHCPNinoZmRr71Hpn4bmP9DE3H7QYCQuPhzbmVVfwER8IebJesEzNaJKDJJy660e8TWKd-cayluhgHiG1ut84YMFAHwRdnEx4INjzhFsZQQPDR0W_k_MAkSc4h6qESlRvLtERQ">
+<span class="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center text-[9px]">
+<span class="material-symbols-outlined text-[10px]">playlist_add</span>
+</span>
+</div>
+<div class="min-w-0 flex-1">
+<p class="font-body-sm text-body-sm text-on-surface">
+<span class="font-headline-sm text-headline-sm text-on-surface">Liam</span> queued a track in your session:
+                <span class="text-secondary font-headline-sm text-headline-sm">Glimpse of Us</span>
+</p>
+<span class="font-label-mono-sm text-label-mono-sm text-outline block mt-0.5">14 mins ago · Position #2</span>
+</div>
+</div>
+<!-- Event 3: Marcus earned Badge -->
+<div class="flex items-start gap-space-sm p-space-xs rounded-xl hover:bg-surface-container-high/50 transition-colors">
+<div class="relative flex-shrink-0">
+<img class="w-9 h-9 rounded-full object-cover" data-alt="Portrait of Marcus with headphones on, late night city street background with purple neon hues." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA5HgBTR9QZsoyO2Nw04SovB9m6vTevoD-DlVQlZ_8OYV5SfBQNiJtQ_9eesemQIZ3d5DV1XC9iEvlpYtjanUHndFh6qV-T6LvCWLCR48DOz8x0wJiTnYmOPLKpdF6_NZu7QZmD7ozOyC4wGeAPiDDArPRChztXz19erVHfi8F_MDXxjcHvfPKmajcdMUG4sVCT-wKqhIA8zxc7yz7YvXER1sjuHR8uWSMydnNuB5dX1yX7veb_LNdm3Q">
+<span class="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center text-[9px]">
+                🌙
+              </span>
+</div>
+<div class="min-w-0 flex-1">
+<p class="font-body-sm text-body-sm text-on-surface">
+<span class="font-headline-sm text-headline-sm text-on-surface">Marcus</span> unlocked the
+                <span class="text-primary font-headline-sm text-headline-sm">Night Owl Master 🌙</span> badge
+              </p>
+<span class="font-label-mono-sm text-label-mono-sm text-outline block mt-0.5">1 hr ago · 50+ midnight sessions</span>
+</div>
+</div>
+<!-- Event 4: Chloe started a Jam -->
+<div class="flex items-start gap-space-sm p-space-xs rounded-xl hover:bg-surface-container-high/50 transition-colors">
+<div class="relative flex-shrink-0">
+<img class="w-9 h-9 rounded-full object-cover" data-alt="Chloe portrait smiling under atmospheric teal and violet lighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBVk4qOwaHH4ZfjUcHkX0XgJI82PQdhfGYULmIXTIgjhYDWbSfN_ItaXTDEfFVVngcRe987s4QaGeppmtChB8XTgscMHLmFUQppxqOAIorUeEZ8Ql2OnqMQzqlTqVINU2yyETVNDoBenLpVPoTh6tm4kGZ7F9APwce2_QBtA-MDxC91ONlzU9VBLpIZzCK7vZsGRcYkh_hWfc5FrONWfTeQKZ9ZbPNnPiO5GVSMHTpUPasU0uqBfhG4xQ">
+<span class="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-secondary text-on-secondary flex items-center justify-center text-[9px]">
+                ⚡
+              </span>
+</div>
+<div class="min-w-0 flex-1">
+<p class="font-body-sm text-body-sm text-on-surface">
+<span class="font-headline-sm text-headline-sm text-on-surface">Chloe</span> created a public room
+                <span class="text-secondary font-headline-sm text-headline-sm">Sunset Beats</span>
+</p>
+<span class="font-label-mono-sm text-label-mono-sm text-outline block mt-0.5">2 hrs ago · 8 friends joined</span>
+</div>
+</div>
+<!-- Fast Reaction Bar -->
+<div class="mt-space-sm pt-space-sm bg-surface-container p-space-sm rounded-xl flex items-center justify-between">
+<span class="font-body-sm text-body-sm text-on-surface-variant">Quick Hype</span>
+<div class="flex items-center gap-2">
+<button class="hover:scale-125 transition-transform" type="button">🔥</button>
+<button class="hover:scale-125 transition-transform" type="button">💜</button>
+<button class="hover:scale-125 transition-transform" type="button">🎧</button>
+<button class="hover:scale-125 transition-transform" type="button">⚡</button>
+<button class="hover:scale-125 transition-transform" type="button">😭</button>
+</div>
+</div>
+</div>
+<!-- Audio Latency & Peer Network Mesh Info Card -->
+<div class="bg-surface-container-low p-space-md rounded-2xl flex flex-col gap-space-xs">
+<div class="flex items-center justify-between">
+<span class="font-label-mono-sm text-label-mono-sm text-outline uppercase tracking-wider">WebRTC Peer Health</span>
+<span class="font-label-mono-sm text-label-mono-sm text-secondary">Optimal (0.02% jitter)</span>
+</div>
+<div class="w-full bg-surface-container-highest h-1.5 rounded-full overflow-hidden flex">
+<div class="bg-secondary w-4/5 h-full"></div>
+<div class="bg-primary w-1/5 h-full"></div>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Your node is acting as audio master clock for Alex &amp; Emma.</span>
+</div>
+</div>
+</div>
+<!-- LISTEN TOGETHER MODAL / DRAWER (VISUAL SHOWCASE) -->
+<!-- Integrated directly into the DOM flow with an interactive toggle switch for maximum engagement -->
+<div class="fixed inset-0 z-50 flex items-center justify-center p-space-md bg-surface-container-lowest/80 backdrop-blur-xl transition-opacity duration-300" id="listenModal">
+<!-- Modal Canvas -->
+<div class="relative w-full max-w-lg bg-surface-container-low rounded-3xl p-space-lg shadow-[0_20px_60px_rgba(0,0,0,0.8),0_0_36px_rgba(160,120,255,0.25)] flex flex-col gap-space-md overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+<!-- Ambient Spectral Backdrop for Modal -->
+<div class="pointer-events-none absolute -top-24 -left-24 w-60 h-60 bg-primary-container/20 rounded-full blur-3xl"></div>
+<div class="pointer-events-none absolute -bottom-24 -right-24 w-60 h-60 bg-secondary-container/20 rounded-full blur-3xl"></div>
+<!-- Header -->
+<div class="relative z-10 flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<div class="w-10 h-10 rounded-full bg-primary-container/20 text-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-[22px]">headphones</span>
+</div>
+<div>
+<h2 class="font-headline-lg text-headline-lg text-on-surface leading-tight">Start a Listen Together Session</h2>
+<span class="font-label-mono-sm text-label-mono-sm text-secondary">SYNCHRONIZED AUDITORY TELEMETRY</span>
+</div>
+</div>
+<button class="w-8 h-8 rounded-full bg-surface-container-high hover:bg-surface-variant text-on-surface-variant hover:text-on-surface flex items-center justify-center transition-colors" id="closeModalBtn" type="button">
+<span class="material-symbols-outlined text-[18px]">close</span>
+</button>
+</div>
+<!-- Selected Master Song Preview Card -->
+<div class="relative z-10 p-space-sm rounded-2xl bg-surface-container-high/70 backdrop-blur-md flex items-center justify-between gap-space-sm">
+<div class="flex items-center gap-space-sm min-w-0">
+<div class="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0 bg-surface-container-highest relative">
+<img class="w-full h-full object-cover" data-alt="Album artwork for Blinding Lights by The Weeknd featuring signature red blazer silhouette in night neon city streets." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAkZqFOuJLjXKsTTTGmyk2nx-woTBj_NG40Qc0ESTe2i6Al2iRu3Pc61-hXVGCz6r4DP2FaC1zI-kAcXpeQFplb4QASKyo41rf3RFd3fwAhx1mpFgbw2D0POCw-jdJv6yHDAAtrEoH45UEWyNYUTjgllQxnGYnKHQynV05zYVytsuSnPAESEksPiV1E4cJXjusIbmOiJecMPDtrEisc3P02E5dmy4uvjysszvXhmpresdzT3Ulgn4g9fw">
+<div class="absolute inset-0 bg-primary/20 mix-blend-overlay"></div>
+</div>
+<div class="min-w-0">
+<span class="font-label-mono-sm text-[10px] text-outline uppercase tracking-wider block">Session Anchor Track</span>
+<span class="font-headline-sm text-headline-sm text-on-surface truncate block">Blinding Lights</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant truncate block">The Weeknd — After Hours</span>
+</div>
+</div>
+<button class="px-space-xs py-1 rounded-lg bg-surface-container text-on-surface font-label-mono-sm text-label-mono-sm hover:bg-surface-variant transition-colors flex-shrink-0" type="button">
+            Change Track
+          </button>
+</div>
+<!-- Privacy & Sync Mode Toggle -->
+<div class="relative z-10 flex flex-col gap-space-2xs">
+<label class="font-label-mono-sm text-label-mono-sm uppercase tracking-wider text-outline">Privacy Mode</label>
+<div class="grid grid-cols-2 gap-space-xs bg-surface-container p-1 rounded-xl">
+<button class="py-space-xs rounded-lg bg-surface-container-highest text-primary font-headline-sm text-headline-sm shadow-sm flex items-center justify-center gap-1.5" type="button">
+<span class="material-symbols-outlined text-[18px]">lock</span>
+<span>Duo (Private)</span>
+</button>
+<button class="py-space-xs rounded-lg text-on-surface-variant hover:text-on-surface font-body-md text-body-md flex items-center justify-center gap-1.5 transition-colors" type="button">
+<span class="material-symbols-outlined text-[18px]">public</span>
+<span>Open to Friends</span>
+</button>
+</div>
+</div>
+<!-- Select Friends Checklist -->
+<div class="relative z-10 flex flex-col gap-space-2xs">
+<div class="flex items-center justify-between">
+<label class="font-label-mono-sm text-label-mono-sm uppercase tracking-wider text-outline">Invite Listening Peers</label>
+<span class="font-label-mono-sm text-label-mono-sm text-primary">2 selected</span>
+</div>
+<div class="flex flex-col gap-1.5 max-h-48 overflow-y-auto pr-1">
+<!-- Friend 1: Emma (Checked) -->
+<label class="flex items-center justify-between p-space-xs rounded-xl bg-surface-container hover:bg-surface-container-high cursor-pointer transition-colors">
+<div class="flex items-center gap-space-sm">
+<div class="relative">
+<img class="w-8 h-8 rounded-full object-cover" data-alt="Emma avatar small thumbnail with ambient glow." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAOV3BXLkrHJ7Q_M-WDsmlnb2ehPozoJvzZBFi9JnwtiGLG0lg64tpwYXnyWiyxj2XRKxzSxzQ0J4KMN0XqUpXtoDRyVUZjhwTr0uRKIwunRxeO7FQM7Tpv_t0PNcvNpXVcDZ-sxKm6K7gmrvJrFnC9ETpT_vDgPbAXR0SgOuYRDE5gDev-ktAqowPvVfiSqY1M4bK50Go9WGfL6hyCRqMK3XUqeJCVz0g_CfwdRNH0vej3lWja8TcqfA">
+<span class="absolute bottom-0 right-0 w-2 h-2 rounded-full bg-secondary"></span>
+</div>
+<div>
+<span class="font-headline-sm text-headline-sm text-on-surface block">Emma</span>
+<span class="font-label-mono-sm text-[10px] text-secondary">Active now</span>
+</div>
+</div>
+<input checked="" class="w-5 h-5 rounded-md accent-primary cursor-pointer" type="checkbox">
+</label>
+<!-- Friend 2: Liam (Checked) -->
+<label class="flex items-center justify-between p-space-xs rounded-xl bg-surface-container hover:bg-surface-container-high cursor-pointer transition-colors">
+<div class="flex items-center gap-space-sm">
+<div class="relative">
+<img class="w-8 h-8 rounded-full object-cover" data-alt="Liam avatar small thumbnail smiling." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBokQPvxsTnntwDWDHhfoAVVGzfE_Q-tCqQleiKiKxuF7KUFYvOix-_YJlIyVaAZZEdwB-MKztsG1s-utUFYxXS6voGjh4sh-zagLPzXeCXY1wQ_bzwm6vd9E_sjRotFNY7Zkls8wZk5BI3DDNkSjwcOZRu_k-VO9LW-xDT6leLZEGx3uahUVAyUwSwahcNCrG9OXofOCqgljPXcrYRSIW67_Nr_ykJE0-ihhO8pB3HCLSKrE3oqTOncw">
+<span class="absolute bottom-0 right-0 w-2 h-2 rounded-full bg-secondary"></span>
+</div>
+<div>
+<span class="font-headline-sm text-headline-sm text-on-surface block">Liam</span>
+<span class="font-label-mono-sm text-[10px] text-secondary">Active now</span>
+</div>
+</div>
+<input checked="" class="w-5 h-5 rounded-md accent-primary cursor-pointer" type="checkbox">
+</label>
+<!-- Friend 3: Ryan (Unchecked) -->
+<label class="flex items-center justify-between p-space-xs rounded-xl bg-surface-container hover:bg-surface-container-high cursor-pointer transition-colors">
+<div class="flex items-center gap-space-sm">
+<div class="relative">
+<img class="w-8 h-8 rounded-full object-cover" data-alt="Ryan avatar small thumbnail neon background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD9gs0UJ7hv11PW5eve4NkFOtLsgZyPWikUm8GEFmCCv3sOblq1gDn9xUnJNgoARca10lDwzGLK40aq2xPHjbhJ2u7Ql8oqRN0UKSSjtoKzyC5YUHZt_lmzH_0dv8bebecx_tfByoSymL1-a__kY8gTkp4Zgf3ap2hdmeber5JXbP5xRrqrbCdGNvmRXvgzNgVO7YOJsIB1Dib4FLlNG6tdN_i-ru2XLWNyTGXKOMLSvDBwy47Qx8toAg">
+<span class="absolute bottom-0 right-0 w-2 h-2 rounded-full bg-secondary"></span>
+</div>
+<div>
+<span class="font-headline-sm text-headline-sm text-on-surface block">Ryan</span>
+<span class="font-label-mono-sm text-[10px] text-outline">In room Tokyo Chill</span>
+</div>
+</div>
+<input class="w-5 h-5 rounded-md accent-primary cursor-pointer" type="checkbox">
+</label>
+<!-- Friend 4: Maya (Unchecked) -->
+<label class="flex items-center justify-between p-space-xs rounded-xl bg-surface-container hover:bg-surface-container-high cursor-pointer transition-colors">
+<div class="flex items-center gap-space-sm">
+<div class="relative">
+<img class="w-8 h-8 rounded-full object-cover" data-alt="Portrait of Maya with soft gold lighting and cozy ambient aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBQZIQl7ybn8Lv41NKxcNGDVo1vDzfgyFU59WCn4m-1qo3xTESVVh22HKrnJVYQsktL04jEN6gyB_30m0-zHLeo7RwoBsceV1vnnDHGOu96nVKzSlu4qcZaPuw5mH5MumN6wHtR__J2kp7M9VEg7VC4NirKZYJbDLLZVf18jmb0Elq9xw4gQjWxRkpQJ4thc_BRcS5nd8coq1Q5ZxsQ_hFHxxioRmUklNlve4HdE2xo4NgDf6dV_3w2uA">
+<span class="absolute bottom-0 right-0 w-2 h-2 rounded-full bg-outline"></span>
+</div>
+<div>
+<span class="font-headline-sm text-headline-sm text-on-surface block">Maya</span>
+<span class="font-label-mono-sm text-[10px] text-outline">Offline 12m ago</span>
+</div>
+</div>
+<input class="w-5 h-5 rounded-md accent-primary cursor-pointer" type="checkbox">
+</label>
+</div>
+</div>
+<!-- Sync Latency Fine-print notice -->
+<div class="relative z-10 flex items-center gap-space-xs text-outline font-label-mono-sm text-label-mono-sm">
+<span class="material-symbols-outlined text-[16px] text-secondary">bolt</span>
+<span>Zero-lag buffer protocol will initialize audio hardware simultaneously.</span>
+</div>
+<!-- Main Submission CTA Button -->
+<div class="relative z-10 pt-space-xs">
+<button class="w-full flex items-center justify-center gap-space-xs py-space-sm px-space-md rounded-full bg-primary-container text-on-primary-container font-headline-sm text-headline-sm shadow-[0_0_28px_rgba(160,120,255,0.4)] hover:brightness-110 active:scale-98 transition-all" id="sendInvitesBtn" type="button">
+<span class="material-symbols-outlined text-[20px]">rocket_launch</span>
+<span>Send Invites &amp; Start Sync Playback</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Inline Interaction Logic for Modal & Fast Action Triggers -->
+<script>
+    (function() {
+      const modal = document.getElementById('listenModal');
+      const openBtn = document.getElementById('openModalBtn');
+      const closeBtn = document.getElementById('closeModalBtn');
+      const sendBtn = document.getElementById('sendInvitesBtn');
+
+      // Helper to open/close modal cleanly
+      function toggleModal(show) {
+        if (show) {
+          modal.classList.remove('hidden');
+          modal.classList.add('flex');
+        } else {
+          modal.classList.add('hidden');
+          modal.classList.remove('flex');
+        }
+      }
+
+      if (openBtn) {
+        openBtn.addEventListener('click', () => toggleModal(true));
+      }
+
+      if (closeBtn) {
+        closeBtn.addEventListener('click', () => toggleModal(false));
+      }
+
+      if (sendBtn) {
+        sendBtn.addEventListener('click', () => {
+          sendBtn.innerHTML = '<span class="material-symbols-outlined text-[20px] animate-spin">sync</span><span>Synchronizing peers...</span>';
+          setTimeout(() => {
+            sendBtn.innerHTML = '<span class="material-symbols-outlined text-[20px]">check</span><span>Sync Live!</span>';
+            setTimeout(() => {
+              toggleModal(false);
+              sendBtn.innerHTML = '<span class="material-symbols-outlined text-[20px]">rocket_launch</span><span>Send Invites & Start Sync Playback</span>';
+            }, 800);
+          }, 1000);
+        });
+      }
+
+      // Close modal on outside backdrop click
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+          toggleModal(false);
+        }
+      });
+    })();
+  </script>
+</div></main></div><footer class="fixed bottom-0 left-0 right-0 h-24 bg-surface-container-lowest/95 backdrop-blur-2xl z-50 px-space-lg shadow-[0_-4px_24px_rgba(0,0,0,0.6)] flex items-center justify-between"><div class="flex items-center gap-space-md w-1/4 min-w-[240px]"><div class="relative w-14 h-14 rounded-xl bg-surface-container-high overflow-hidden flex-shrink-0 flex items-center justify-center shadow-lg"><span class="material-symbols-outlined text-primary text-[28px]">album</span><div class="absolute bottom-1 right-1 w-2.5 h-2.5 rounded-full bg-secondary ring-2 ring-surface-container-lowest"></div></div><div class="min-w-0"><div class="font-headline-sm text-headline-sm text-on-surface truncate">Blinding Lights</div><div class="font-body-sm text-body-sm text-on-surface-variant truncate">The Weeknd</div><div class="flex items-center gap-1 font-label-mono-sm text-label-mono-sm text-secondary truncate mt-0.5"><span class="w-1.5 h-1.5 rounded-full bg-secondary"></span><span>Late Night Vibes · 24 listeners</span></div></div><button aria-label="Favorite" class="text-outline hover:text-tertiary transition-colors ml-space-xs" type="button"><span class="material-symbols-outlined text-[20px]">favorite</span></button></div><div class="flex flex-col items-center gap-space-xs w-2/4 max-w-2xl px-space-md"><div class="flex items-center gap-space-md"><button aria-label="Shuffle" class="text-outline hover:text-on-surface transition-colors" type="button"><span class="material-symbols-outlined text-[20px]">shuffle</span></button><button aria-label="Previous track" class="text-on-surface-variant hover:text-on-surface transition-colors" type="button"><span class="material-symbols-outlined text-[22px]">skip_previous</span></button><button aria-label="Play or pause" class="w-11 h-11 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center shadow-[0_0_20px_rgba(160,120,255,0.4)] hover:scale-105 active:scale-95 transition-all" type="button"><span class="material-symbols-outlined text-[26px]">play_arrow</span></button><button aria-label="Next track" class="text-on-surface-variant hover:text-on-surface transition-colors" type="button"><span class="material-symbols-outlined text-[22px]">skip_next</span></button><button aria-label="Repeat" class="text-outline hover:text-on-surface transition-colors" type="button"><span class="material-symbols-outlined text-[20px]">repeat</span></button></div><div class="w-full flex items-center gap-space-sm"><span class="font-label-mono-sm text-label-mono-sm text-outline">01:42</span><div class="relative flex-1 h-1.5 bg-surface-variant rounded-full cursor-pointer group"><div class="absolute left-0 top-0 bottom-0 w-[51%] bg-primary rounded-full group-hover:bg-primary-fixed-dim transition-colors"></div><div class="absolute left-[51%] top-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-primary-fixed shadow-[0_0_8px_rgba(208,188,255,0.8)]"></div><div class="absolute left-[40%] top-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-secondary ring-1 ring-surface-container-lowest" title="Alex synched head"></div><div class="absolute left-[51%] top-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-tertiary ring-1 ring-surface-container-lowest" title="Emma synched head"></div></div><span class="font-label-mono-sm text-label-mono-sm text-outline">03:20</span></div></div><div class="flex items-center justify-end gap-space-md w-1/4 min-w-[240px]"><button class="flex items-center gap-space-xs px-space-md py-space-xs rounded-full bg-primary-container text-on-primary-container font-headline-sm text-headline-sm hover:opacity-95 shadow-[0_0_16px_rgba(160,120,255,0.25)] transition-all" type="button"><span class="material-symbols-outlined text-[18px]">headphones</span><span class="hidden lg:inline">Listen Together</span></button><button aria-label="Open Queue" class="text-outline hover:text-on-surface transition-colors" type="button"><span class="material-symbols-outlined text-[20px]">queue_music</span></button><div class="flex items-center gap-space-2xs"><button aria-label="Mute volume" class="text-outline hover:text-on-surface transition-colors" type="button"><span class="material-symbols-outlined text-[20px]">volume_up</span></button><div class="w-20 h-1.5 bg-surface-variant rounded-full cursor-pointer relative"><div class="absolute left-0 top-0 bottom-0 w-3/4 bg-on-surface-variant rounded-full"></div></div></div><button aria-label="Fullscreen Room" class="text-outline hover:text-on-surface transition-colors" type="button"><span class="material-symbols-outlined text-[20px]">open_in_full</span></button></div></footer></body></html>

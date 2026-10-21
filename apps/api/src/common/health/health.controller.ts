@@ -16,6 +16,16 @@ export class HealthController {
     return { success: true, data: { status: "ok" } };
   }
 
+  /**
+   * Server clock for client-side offset estimation (NTP-style round trip).
+   * Playback positions are anchored to server time, so every client needs to
+   * know how far its own clock is from this one.
+   */
+  @Get("time")
+  time() {
+    return { success: true, data: { now: Date.now() } };
+  }
+
   /** Readiness: are Mongo and Redis actually reachable right now? */
   @Get("ready")
   async ready() {

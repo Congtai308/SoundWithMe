@@ -1,25 +1,12 @@
 import { z } from "zod";
 
-// Username is the public handle — separate from displayName so it can be
-// used safely in URLs and stays stable even if displayName changes.
-const usernameSchema = z
-  .string()
-  .trim()
-  .min(3)
-  .max(24)
-  .regex(
-    /^[a-zA-Z0-9_]+$/,
-    "Username can only contain letters, numbers, and underscores",
-  );
-
 export const registerSchema = z.object({
-  username: usernameSchema,
   email: z.string().trim().toLowerCase().email(),
   // Length only enforced here; hashing/complexity handled server-side.
   // Not a substitute for a real breached-password check, which is a
   // reasonable later hardening step, not a Phase 1 blocker.
   password: z.string().min(8).max(128),
-  displayName: z.string().trim().min(1).max(50).optional(),
+  displayName: z.string().trim().min(1).max(50),
 });
 export type RegisterInput = z.infer<typeof registerSchema>;
 
@@ -36,6 +23,30 @@ export const guestLoginSchema = z.object({
   displayName: z.string().trim().min(1).max(50),
 });
 export type GuestLoginInput = z.infer<typeof guestLoginSchema>;
+
+/** The token from a mailed link (verify email, reset password). */
+const mailedTokenSchema = z.string().trim().min(20).max(200);
+
+/** Sign-up, step 2: the mailed link's token and the password chosen in step 1. */
+export const completeSignupSchema = z.object({
+  token: mailedTokenSchema,
+  password: z.string().min(1).max(128),
+});
+export type CompleteSignupInput = z.infer<typeof completeSignupSchema>;
+
+export const verifyEmailSchema = z.object({ token: mailedTokenSchema });
+export type VerifyEmailInput = z.infer<typeof verifyEmailSchema>;
+
+export const forgotPasswordSchema = z.object({
+  email: z.string().trim().toLowerCase().email(),
+});
+export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>;
+
+export const resetPasswordSchema = z.object({
+  token: mailedTokenSchema,
+  password: registerSchema.shape.password,
+});
+export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;
 
 export const refreshTokenSchema = z.object({
   refreshToken: z.string().min(1),

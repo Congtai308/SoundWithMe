@@ -1,12 +1,68 @@
-import { ConflictException, Injectable, UnauthorizedException } from "@nestjs/common";
+import { ConflictException, HttpException, HttpStatus, Injectable, Logger, UnauthorizedException } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
+import { createHash, randomBytes } from "crypto";
 import * as bcrypt from "bcrypt";
 import type { AuthTokens, AuthenticatedUser } from "@soundwithme/types";
-import type { GuestLoginInput, LoginInput, RegisterInput } from "@soundwithme/validation";
+import type {
+  CompleteSignupInput,
+  GuestLoginInput,
+  LoginInput,
+  RegisterInput,
+  ResetPasswordInput,
+} from "@soundwithme/validation";
 import { ERROR_CODES } from "@soundwithme/constants";
-import { UsersService } from "../users/users.service";
+import { UsersService, type CreateUserInput } from "../users/users.service";
+import type { UserDocument } from "../../database/mongodb/models/user.schema";
 import { TokensService } from "./tokens.service";
+import { RedisService } from "../../database/redis/redis.service";
+import { MailService } from "../mail/mail.service";
+import { rateLimitAddress } from "../../common/utils/client-ip";
 
 const PASSWORD_HASH_ROUNDS = 12;
+/**
+ * Password guessing is limited per email *and address*: 10 tries per 15
+ * minutes from one address. Counting per email alone let anyone lock a
+ * stranger out by typing wrong passwords for them.
+ */
+const LOGIN_ATTEMPTS_PER_ADDRESS = 10;
+/**
+ * Wrong passwords per email from every address together. Past this the
+ * account is under attack from many addresses: only an address with at
+ * most a couple of attempts of its own (the owner, typically) still gets
+ * to try, so the owner isn't locked out with the attacker.
+ */
+const LOGIN_FAILURES_PER_ACCOUNT = 100;
+const LOGIN_FRESH_ADDRESS_ATTEMPTS = 3;
+const LOGIN_WINDOW_SECONDS = 15 * 60;
+/**
+ * Compared against when there is no password to check, so a login takes
+ * the same bcrypt time whether or not the account exists.
+ */
+const DUMMY_PASSWORD_HASH = bcrypt.hash("not-a-real-password", PASSWORD_HASH_ROUNDS);
+
+/** Mailed one-time links: how long each works and which web page opens it. */
+const EMAIL_LINKS = {
+  verify: { ttlSeconds: 24 * 60 * 60, path: "/verify-email" },
+  reset: { ttlSeconds: 60 * 60, path: "/reset-password" },
+} as const;
+/** A sign-up link works this long; a wrong password this many times uses it up. */
+const SIGNUP_TTL_SECONDS = 24 * 60 * 60;
+const SIGNUP_PASSWORD_TRIES = 5;
+type EmailLinkKind = keyof typeof EMAIL_LINKS;
+/**
+ * Account mails per hour. Verification and reset mails are counted apart,
+ * so spamming "forgot password" can't block a confirmation link. Reset
+ * mails count per address and requester, with a higher cap per address
+ * from everyone: an attacker can't use up the owner's own requests, and
+ * every link already mailed keeps working regardless.
+ */
+const VERIFY_MAILS_PER_HOUR = 3;
+const SIGNUP_MAILS_PER_REQUESTER_PER_HOUR = 3;
+const SIGNUP_MAILS_PER_ADDRESS_PER_HOUR = 10;
+const RESET_MAILS_PER_REQUESTER_PER_HOUR = 3;
+const RESET_MAILS_PER_ADDRESS_PER_HOUR = 10;
+/** Once an email's cap is reached, one first ask from a new requester gets through per this many seconds. */
+const FIRST_ASK_SLOT_SECONDS = 3 * 60;
 
 interface GoogleProfile {
   googleId: string;
@@ -17,77 +73,172 @@ interface GoogleProfile {
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+
   constructor(
     private readonly usersService: UsersService,
     private readonly tokensService: TokensService,
+    private readonly redisService: RedisService,
+    private readonly mailService: MailService,
+    private readonly configService: ConfigService,
   ) {}
 
-  async register(input: RegisterInput): Promise<{ user: AuthenticatedUser; tokens: AuthTokens }> {
-    const [existingByEmail, usernameTaken] = await Promise.all([
-      this.usersService.findByEmail(input.email),
-      this.usersService.isUsernameTaken(input.username),
-    ]);
+  /**
+   * Sign-up, step 1. The answer is the same whether or not the email has an
+   * account, and the work happens after the response, so neither the reply
+   * nor its timing says which addresses are taken. The mailbox gets either a
+   * link to finish signing up or a note that it already has an account.
+   */
+  register(input: RegisterInput, clientAddress: string): void {
+    void this.startSignup(input, rateLimitAddress(clientAddress)).catch((error: unknown) => this.logMailFailure(error));
+  }
 
-    if (existingByEmail) {
-      throw new ConflictException({
+  /**
+   * Sign-up, step 2, from the mailed link. Asking for the password again
+   * proves the person holding it also holds the mailbox: someone who signs
+   * up with another person's address can't finish, and the address's owner
+   * can't end up in an account whose password a stranger chose.
+   */
+  async completeSignup(input: CompleteSignupInput): Promise<{ user: AuthenticatedUser; tokens: AuthTokens }> {
+    const redis = this.redisService.getClient();
+    const key = `auth:pending-signup:${hashToken(input.token)}`;
+    const triesKey = `${key}:tries`;
+    // The try is counted with the read, before bcrypt runs, so passwords sent
+    // in parallel can't all slip past the limit.
+    const results = await redis.multi().incr(triesKey).expire(triesKey, SIGNUP_TTL_SECONDS).get(key).exec();
+    const tries = Number(results?.[0]?.[1] ?? 0);
+    const raw = results?.[2]?.[1];
+    const pending = typeof raw === "string" ? parsePendingSignup(raw) : null;
+    if (!pending) throw this.invalidLink();
+    if (tries > SIGNUP_PASSWORD_TRIES) {
+      await redis.del(key, triesKey);
+      throw this.invalidLink();
+    }
+
+    if (!(await bcrypt.compare(input.password, pending.passwordHash))) {
+      if (tries >= SIGNUP_PASSWORD_TRIES) await redis.del(key, triesKey);
+      throw new UnauthorizedException({
         success: false,
-        error: { code: ERROR_CODES.USER_ALREADY_EXISTS, message: "An account with this email already exists" },
+        error: { code: ERROR_CODES.INVALID_CREDENTIALS, message: "That's not the password you chose when signing up" },
       });
     }
-    if (usernameTaken) {
-      throw new ConflictException({
-        success: false,
-        error: { code: ERROR_CODES.USERNAME_TAKEN, message: "This username is already taken" },
-      });
-    }
+    // Only one request gets to use the link.
+    if ((await redis.del(key)) === 0) throw this.invalidLink();
+    await redis.del(triesKey);
 
-    const passwordHash = await bcrypt.hash(input.password, PASSWORD_HASH_ROUNDS);
-    const userDoc = await this.usersService.create({
-      username: input.username,
-      displayName: input.displayName ?? input.username,
-      email: input.email,
-      passwordHash,
+    const now = new Date();
+    // Username is a stable public @handle, but the register form doesn't ask
+    // for one (fewer fields): it comes from the email, as for Google sign-up.
+    const userDoc = await this.createWithUsername(usernamesFromEmail(pending.email), {
+      displayName: pending.displayName,
+      email: pending.email,
+      passwordHash: pending.passwordHash,
       authMethods: ["password"],
       isGuest: false,
+      emailVerifiedAt: now,
+      passwordOwnerVerifiedAt: now,
     });
-
     const user = this.usersService.toAuthenticatedUser(userDoc);
     const tokens = await this.tokensService.issueTokenPair(user);
     return { user, tokens };
   }
 
-  async login(input: LoginInput): Promise<{ user: AuthenticatedUser; tokens: AuthTokens }> {
+  private async startSignup(input: RegisterInput, requester: string): Promise<void> {
+    const withinBudget = await this.withinRequesterAndAddressBudget(
+      "signup",
+      input.email,
+      requester,
+      SIGNUP_MAILS_PER_REQUESTER_PER_HOUR,
+      SIGNUP_MAILS_PER_ADDRESS_PER_HOUR,
+    );
+    if (!withinBudget) return;
+
+    const webAppUrl = this.configService.get<string>("app.webAppUrl");
+    if (await this.usersService.findByEmail(input.email)) {
+      await this.mailService.send({
+        to: input.email,
+        subject: "You already have a SoundWithMe account",
+        text: "Someone (hopefully you) tried to sign up for SoundWithMe with this email, but it already has an account. Sign in instead; if you forgot your password, you can reset it from the sign-in page.\n\nIf it wasn't you, ignore this email: nothing changed.",
+        action: { label: "Sign in", url: `${webAppUrl}/login` },
+      });
+      return;
+    }
+
+    const token = randomBytes(32).toString("base64url");
+    const pending: PendingSignup = {
+      email: input.email,
+      displayName: input.displayName,
+      passwordHash: await bcrypt.hash(input.password, PASSWORD_HASH_ROUNDS),
+    };
+    await this.redisService
+      .getClient()
+      .set(`auth:pending-signup:${hashToken(token)}`, JSON.stringify(pending), "EX", SIGNUP_TTL_SECONDS);
+    await this.mailService.send({
+      to: input.email,
+      // No user-supplied text (like the display name): anyone can make us mail any address.
+      subject: "Finish creating your SoundWithMe account",
+      text: "Open the link and enter the password you chose to finish creating your SoundWithMe account. The link works for 24 hours.\n\nIf you didn't sign up for SoundWithMe, ignore this email: no account is created.",
+      action: { label: "Finish signing up", url: `${webAppUrl}/complete-signup?token=${encodeURIComponent(token)}` },
+    });
+  }
+
+  async login(
+    input: LoginInput,
+    clientAddress: string,
+  ): Promise<{ user: AuthenticatedUser; tokens: AuthTokens }> {
+    const addressKey = `auth:login-attempts:${input.email}:${rateLimitAddress(clientAddress)}`;
+    const accountKey = `auth:login-failures:${input.email}`;
+    const redis = this.redisService.getClient();
+    // The attempt is counted before the password is checked, so guesses sent
+    // in parallel can't all slip past the limit while bcrypt runs.
+    const results = await redis
+      .multi()
+      .incr(addressKey)
+      .expire(addressKey, LOGIN_WINDOW_SECONDS)
+      .get(accountKey)
+      .exec();
+    const attempts = Number(results?.[0]?.[1] ?? 0);
+    const accountFailures = Number(results?.[2]?.[1] ?? 0);
+    if (
+      attempts > LOGIN_ATTEMPTS_PER_ADDRESS ||
+      (accountFailures >= LOGIN_FAILURES_PER_ACCOUNT && attempts > LOGIN_FRESH_ADDRESS_ATTEMPTS)
+    ) {
+      throw new HttpException(
+        {
+          success: false,
+          error: { code: ERROR_CODES.RATE_LIMITED, message: "Too many wrong passwords. Try again in 15 minutes." },
+        },
+        HttpStatus.TOO_MANY_REQUESTS,
+      );
+    }
     const userDoc = await this.usersService.findByEmailWithPassword(input.email);
 
-    // Deliberately identical error for "no such user" and "wrong password" —
-    // distinguishing them lets an attacker enumerate valid emails.
-    const invalidCredentials = () =>
-      new UnauthorizedException({
+    // Deliberately identical error (and timing: bcrypt runs either way) for
+    // "no such user" and "wrong password", so neither reveals which emails exist.
+    const matches = await bcrypt.compare(input.password, userDoc?.passwordHash ?? (await DUMMY_PASSWORD_HASH));
+    if (!userDoc?.passwordHash || !matches) {
+      await redis.multi().incr(accountKey).expire(accountKey, LOGIN_WINDOW_SECONDS).exec();
+      throw new UnauthorizedException({
         success: false,
-        error: { code: ERROR_CODES.INVALID_CREDENTIALS, message: "Invalid email or password" },
+        error: {
+          code: ERROR_CODES.INVALID_CREDENTIALS,
+          message: "Invalid email or password",
+        },
       });
-
-    if (!userDoc || !userDoc.passwordHash) {
-      throw invalidCredentials();
     }
-
-    const passwordMatches = await bcrypt.compare(input.password, userDoc.passwordHash);
-    if (!passwordMatches) {
-      throw invalidCredentials();
-    }
+    await redis.del(addressKey);
 
     const user = this.usersService.toAuthenticatedUser(userDoc);
     const tokens = await this.tokensService.issueTokenPair(user);
     return { user, tokens };
   }
 
-  async loginAsGuest(input: GuestLoginInput): Promise<{ user: AuthenticatedUser; tokens: AuthTokens }> {
+  async loginAsGuest(
+    input: GuestLoginInput,
+  ): Promise<{ user: AuthenticatedUser; tokens: AuthTokens }> {
     // Guest accounts get a generated, collision-safe username derived from
     // the display name — they never need to be memorable/typed by anyone.
-    const username = await this.generateGuestUsername();
-
-    const userDoc = await this.usersService.create({
-      username,
+    const userDoc = await this.createWithUsername(guestUsernames(), {
       displayName: input.displayName,
       authMethods: ["guest"],
       isGuest: true,
@@ -103,27 +254,38 @@ export class AuthService {
    * strategy has already verified the profile server-side (see
    * strategies/google.strategy.ts) — this method trusts its input.
    */
-  async loginOrRegisterWithGoogle(profile: GoogleProfile): Promise<{ user: AuthenticatedUser; tokens: AuthTokens }> {
+  async loginOrRegisterWithGoogle(
+    profile: GoogleProfile,
+  ): Promise<{ user: AuthenticatedUser; tokens: AuthTokens }> {
     let userDoc = await this.usersService.findByGoogleId(profile.googleId);
 
     if (!userDoc) {
-      // Link to an existing email/password account rather than creating a
-      // duplicate, if one already exists with this email.
       const existingByEmail = await this.usersService.findByEmail(profile.email);
       if (existingByEmail) {
-        existingByEmail.googleId = profile.googleId;
-        if (!existingByEmail.authMethods.includes("google")) {
-          existingByEmail.authMethods.push("google");
+        // Signing up with a password never proves the email is yours; Google
+        // (verified addresses only, see GoogleStrategy) just did. So the
+        // account is this person's: whoever set its password, possibly
+        // someone who registered the address first to wait for its owner,
+        // loses it and every session. Never moves an account between Google
+        // accounts.
+        if (existingByEmail.googleId) throw this.linkedToAnotherGoogleAccount();
+        if (existingByEmail.emailVerifiedAt && existingByEmail.passwordOwnerVerifiedAt) {
+          // Whoever holds the password proved they own this mailbox: just add Google.
+          const linked = await this.usersService.linkGoogle(existingByEmail.id, profile.googleId);
+          if (!linked) throw this.linkedToAnotherGoogleAccount();
+          userDoc = linked;
+        } else {
+          const claimed = await this.usersService.claimForGoogle(existingByEmail.id, profile.googleId);
+          if (!claimed) throw this.linkedToAnotherGoogleAccount();
+          await this.tokensService.revokeAllForUser(claimed.id);
+          userDoc = claimed;
         }
-        await existingByEmail.save();
-        userDoc = existingByEmail;
       } else {
-        const username = await this.generateUsernameFromEmail(profile.email);
-        userDoc = await this.usersService.create({
-          username,
+        userDoc = await this.createWithUsername(usernamesFromEmail(profile.email), {
           displayName: profile.displayName,
           email: profile.email,
           googleId: profile.googleId,
+          emailVerifiedAt: new Date(),
           avatarUrl: profile.avatarUrl,
           authMethods: ["google"],
           isGuest: false,
@@ -134,6 +296,62 @@ export class AuthService {
     const user = this.usersService.toAuthenticatedUser(userDoc);
     const tokens = await this.tokensService.issueTokenPair(user);
     return { user, tokens };
+  }
+
+  /** Mails a fresh verification link ("resend" for a signed-in user). */
+  async resendVerification(userId: string): Promise<void> {
+    const userDoc = await this.usersService.findById(userId);
+    if (!userDoc?.email || userDoc.emailVerifiedAt) return;
+    await this.sendVerificationEmail(userDoc);
+  }
+
+  /** `signedInUserId`: who opened the link, when they were signed in. */
+  async verifyEmail(token: string, signedInUserId: string | null): Promise<void> {
+    const claim = await this.takeEmailLink("verify", token);
+    if (!claim) throw this.invalidLink();
+    // false only when the address changed since the link was mailed.
+    if (!(await this.usersService.markEmailVerified(claim.userId, claim.email, signedInUserId === claim.userId))) {
+      throw this.invalidLink();
+    }
+  }
+
+  /**
+   * Mails a reset link when the address has an account. Runs after the
+   * response: the answer, and how long it takes, are the same whether or
+   * not the email exists.
+   */
+  forgotPassword(email: string, clientAddress: string): void {
+    void this.sendResetEmail(email, rateLimitAddress(clientAddress)).catch((error: unknown) => this.logMailFailure(error));
+  }
+
+  private async sendResetEmail(email: string, requester: string): Promise<void> {
+    const userDoc = await this.usersService.findByEmail(email);
+    if (!userDoc?.email) return;
+    const withinBudget = await this.withinRequesterAndAddressBudget(
+      "reset",
+      userDoc.email,
+      requester,
+      RESET_MAILS_PER_REQUESTER_PER_HOUR,
+      RESET_MAILS_PER_ADDRESS_PER_HOUR,
+    );
+    if (!withinBudget) return;
+    const url = await this.createEmailLink("reset", userDoc.id, userDoc.email);
+    await this.mailService.send({
+      to: userDoc.email,
+      subject: "Reset your SoundWithMe password",
+      text: "Someone (hopefully you) asked to reset the password of the SoundWithMe account for this email. The link works once, for one hour.\n\nIf it wasn't you, ignore this email: your password stays as it is.",
+      action: { label: "Choose a new password", url },
+    });
+  }
+
+  /** Sets the new password and signs out every session, whoever had the old password included. */
+  async resetPassword(input: ResetPasswordInput): Promise<void> {
+    const claim = await this.takeEmailLink("reset", input.token);
+    const userDoc = claim ? await this.usersService.findById(claim.userId) : null;
+    if (!claim || !userDoc || userDoc.email !== claim.email) throw this.invalidLink();
+    await this.usersService.resetPassword(userDoc.id, await bcrypt.hash(input.password, PASSWORD_HASH_ROUNDS));
+    await this.tokensService.revokeAllForUser(userDoc.id);
+    await this.redisService.getClient().del(`auth:login-failures:${claim.email}`);
   }
 
   async refresh(refreshToken: string): Promise<AuthTokens> {
@@ -148,31 +366,189 @@ export class AuthService {
     await this.tokensService.revokeAllForUser(userId);
   }
 
-  private async generateGuestUsername(): Promise<string> {
-    for (let attempt = 0; attempt < 5; attempt++) {
-      const candidate = `guest_${randomSuffix()}`;
-      if (!(await this.usersService.isUsernameTaken(candidate))) {
-        return candidate;
-      }
+  private async sendVerificationEmail(userDoc: UserDocument): Promise<void> {
+    if (!userDoc.email || userDoc.emailVerifiedAt) return;
+    if (!(await this.withinMailBudget(`verify:${userDoc.email}`, VERIFY_MAILS_PER_HOUR))) {
+      throw new HttpException(
+        {
+          success: false,
+          error: { code: ERROR_CODES.RATE_LIMITED, message: "We just sent you an email. Check your inbox (and spam) first." },
+        },
+        HttpStatus.TOO_MANY_REQUESTS,
+      );
     }
-    // Astronomically unlikely to be reached given the suffix space, but
-    // fail loudly rather than silently looping forever.
-    throw new Error("Could not generate a unique guest username");
+    const url = await this.createEmailLink("verify", userDoc.id, userDoc.email);
+    await this.mailService.send({
+      to: userDoc.email,
+      subject: "Confirm your email for SoundWithMe",
+      // No user-supplied text (like the display name): this address isn't
+      // verified yet, so anyone could make us mail it words of their choosing.
+      text: "Confirm this is your email address, so you can get back into your SoundWithMe account if you forget your password. The link works for 24 hours.\n\nIf you didn't sign up for SoundWithMe, ignore this email.",
+      action: { label: "Confirm my email", url },
+    });
   }
 
-  private async generateUsernameFromEmail(email: string): Promise<string> {
-    const base = (email.split("@")[0] ?? "")
-      .replace(/[^a-zA-Z0-9_]/g, "")
-      .slice(0, 18) || "user";
+  /**
+   * Mail asked for by a requester (an address, see rateLimitAddress) to an
+   * email. Each requester gets `perRequester` an hour, and the email
+   * `perAddress` from everyone. Past that, first asks still get through one
+   * per FIRST_ASK_SLOT_SECONDS, so others using the cap up don't lock the
+   * owner out, while the email gets at most perAddress + 20 an hour.
+   */
+  private async withinRequesterAndAddressBudget(
+    kind: string,
+    email: string,
+    requester: string,
+    perRequester: number,
+    perAddress: number,
+  ): Promise<boolean> {
+    const redis = this.redisService.getClient();
+    const requesterKey = `auth:mail-budget:${kind}:${email}:${requester}`;
+    const addressKey = `auth:mail-budget:${kind}:${email}`;
+    const results = await redis
+      .multi()
+      .incr(requesterKey)
+      .expire(requesterKey, 60 * 60, "NX")
+      .incr(addressKey)
+      .expire(addressKey, 60 * 60, "NX")
+      .exec();
+    const byRequester = Number(results?.[0]?.[1] ?? 0);
+    const byAddress = Number(results?.[2]?.[1] ?? 0);
+    if (byRequester > perRequester) return false;
+    if (byAddress <= perAddress) return true;
+    if (byRequester !== 1) return false;
+    // Past the cap, a first ask gets through once per slot: paced by time, not
+    // a pool others could drain in advance, so the owner waits a few minutes
+    // at most while the email still can't be flooded.
+    const slot = await redis.set(`${addressKey}:first-ask-slot`, "1", "EX", FIRST_ASK_SLOT_SECONDS, "NX");
+    if (slot === "OK") return true;
+    // Missed the slot: this ask doesn't count, so trying again later is still a first ask.
+    await redis.decr(requesterKey);
+    return false;
+  }
 
-    for (let attempt = 0; attempt < 5; attempt++) {
-      const candidate = attempt === 0 ? base : `${base}${randomSuffix()}`;
-      if (!(await this.usersService.isUsernameTaken(candidate))) {
-        return candidate;
+  private async withinMailBudget(bucket: string, perHour: number): Promise<boolean> {
+    const redis = this.redisService.getClient();
+    const key = `auth:mail-budget:${bucket}`;
+    const sent = await redis.incr(key);
+    if (sent === 1) await redis.expire(key, 60 * 60);
+    return sent <= perHour;
+  }
+
+  /**
+   * A one-time link. Only the token's hash is stored, with the user and the
+   * address it was mailed to, so reading Redis can't produce working links.
+   */
+  private async createEmailLink(kind: EmailLinkKind, userId: string, email: string): Promise<string> {
+    const token = randomBytes(32).toString("base64url");
+    const { ttlSeconds, path } = EMAIL_LINKS[kind];
+    await this.redisService
+      .getClient()
+      .set(`auth:email-link:${kind}:${hashToken(token)}`, JSON.stringify({ userId, email }), "EX", ttlSeconds);
+    const webAppUrl = this.configService.get<string>("app.webAppUrl");
+    return `${webAppUrl}${path}?token=${encodeURIComponent(token)}`;
+  }
+
+  /** Redeems a link: GETDEL, so it works once. */
+  private async takeEmailLink(kind: EmailLinkKind, token: string): Promise<{ userId: string; email: string } | null> {
+    const raw = await this.redisService.getClient().getdel(`auth:email-link:${kind}:${hashToken(token)}`);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as { userId?: unknown; email?: unknown };
+    return typeof parsed.userId === "string" && typeof parsed.email === "string"
+      ? { userId: parsed.userId, email: parsed.email }
+      : null;
+  }
+
+  private invalidLink(): HttpException {
+    return new HttpException(
+      {
+        success: false,
+        error: { code: ERROR_CODES.INVALID_LINK, message: "This link has expired or was already used. Ask for a new one." },
+      },
+      HttpStatus.BAD_REQUEST,
+    );
+  }
+
+  private logMailFailure(error: unknown): void {
+    this.logger.warn(`Could not send mail: ${error instanceof Error ? error.message : String(error)}`);
+  }
+
+  private linkedToAnotherGoogleAccount(): ConflictException {
+    return new ConflictException({
+      success: false,
+      error: {
+        code: ERROR_CODES.USER_ALREADY_EXISTS,
+        message: "This email's account is already linked to a different Google account",
+      },
+    });
+  }
+
+  /**
+   * Creates the user with the first free username from `candidates`. The
+   * unique index decides, not a prior lookup, so two sign-ups racing for the
+   * same handle both succeed (the loser takes the next candidate). A clash
+   * on the email means the account already exists.
+   */
+  private async createWithUsername(
+    candidates: Iterable<string>,
+    input: Omit<CreateUserInput, "username">,
+  ): Promise<UserDocument> {
+    for (const username of candidates) {
+      if (await this.usersService.isUsernameTaken(username)) continue;
+      try {
+        return await this.usersService.create({ ...input, username });
+      } catch (error: unknown) {
+        const field = duplicateKeyField(error);
+        if (field === "username") continue;
+        if (field === "email") {
+          throw new ConflictException({
+            success: false,
+            error: { code: ERROR_CODES.USER_ALREADY_EXISTS, message: "An account with this email already exists" },
+          });
+        }
+        throw error;
       }
     }
+    // Astronomically unlikely given the suffix space, but fail loudly rather than loop forever.
     throw new Error("Could not generate a unique username");
   }
+}
+
+const USERNAME_ATTEMPTS = 6;
+
+function* guestUsernames(): Generator<string> {
+  for (let attempt = 0; attempt < USERNAME_ATTEMPTS; attempt++) yield `guest_${randomSuffix()}`;
+}
+
+/** The email's local part first, then the same with a random suffix. */
+function* usernamesFromEmail(email: string): Generator<string> {
+  const base = (email.split("@")[0] ?? "").replace(/[^a-zA-Z0-9_]/g, "").slice(0, 18) || "user";
+  yield base;
+  for (let attempt = 1; attempt < USERNAME_ATTEMPTS; attempt++) yield `${base}${randomSuffix()}`;
+}
+
+/** The field a MongoDB E11000 error is about, or null for any other error. */
+function duplicateKeyField(error: unknown): string | null {
+  if (typeof error !== "object" || error === null || (error as { code?: unknown }).code !== 11000) return null;
+  const keyPattern = (error as { keyPattern?: Record<string, unknown> }).keyPattern ?? {};
+  return Object.keys(keyPattern)[0] ?? "unknown";
+}
+
+interface PendingSignup {
+  email: string;
+  displayName: string;
+  passwordHash: string;
+}
+
+function parsePendingSignup(raw: string): PendingSignup | null {
+  const parsed = JSON.parse(raw) as Partial<Record<keyof PendingSignup, unknown>>;
+  return typeof parsed.email === "string" && typeof parsed.displayName === "string" && typeof parsed.passwordHash === "string"
+    ? { email: parsed.email, displayName: parsed.displayName, passwordHash: parsed.passwordHash }
+    : null;
+}
+
+function hashToken(token: string): string {
+  return createHash("sha256").update(token).digest("hex");
 }
 
 function randomSuffix(): string {

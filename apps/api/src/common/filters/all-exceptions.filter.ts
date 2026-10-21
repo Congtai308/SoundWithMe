@@ -19,6 +19,13 @@ export class AllExceptionsFilter implements ExceptionFilter {
   private readonly logger = new Logger("ExceptionFilter");
 
   catch(exception: unknown, host: ArgumentsHost) {
+    // Socket errors are reported by realtime/ws-exception.filter.ts; this
+    // filter only knows how to write HTTP responses.
+    if (host.getType() !== "http") {
+      this.logger.error(exception instanceof Error ? exception.stack : JSON.stringify(exception));
+      return;
+    }
+
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
 
