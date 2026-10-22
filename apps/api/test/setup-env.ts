@@ -16,3 +16,4 @@ process.env.GOOGLE_CLIENT_SECRET ??= "test-google-client-secret";
 // mail through the harness; without credentials MailService only logs).
 process.env.SMTP_USER = "";
 process.env.SMTP_PASS = "";
+process.env.BREVO_API_KEY = "";

@@ -11,22 +11,35 @@ export interface OutgoingMail {
 }
 
 /**
- * Sends account mail over SMTP (Gmail with an App Password, see
- * app.config.ts). Without SMTP credentials mails are written to the log
- * instead, links included, so sign-up and password reset still work
- * locally.
+ * Sends account mail over SMTP (Gmail with an App Password) or, where SMTP
+ * is blocked, through Brevo's HTTPS API (see app.config.ts). Without
+ * credentials mails are written to the log instead, links included, so
+ * sign-up and password reset still work locally.
  */
 @Injectable()
 export class MailService {
   private readonly logger = new Logger(MailService.name);
   private readonly transport: Transporter | null;
+  private readonly brevoApiKey: string | null;
   private readonly from: string;
 
   constructor(configService: ConfigService) {
-    const mail = configService.get<{ host: string; port: number; user?: string; pass?: string; from: string }>("app.mail")!;
+    const mail = configService.get<{
+      brevoApiKey?: string;
+      host: string;
+      port: number;
+      user?: string;
+      pass?: string;
+      from: string;
+    }>("app.mail")!;
     this.from = mail.from;
+    this.brevoApiKey = mail.brevoApiKey || null;
+    if (this.brevoApiKey?.startsWith("xsmtpsib-")) {
+      // Brevo hands out SMTP keys and API keys on the same page; only the latter works here.
+      this.logger.error("BREVO_API_KEY is a Brevo SMTP key; create an API key (xkeysib-…) under SMTP & API → API Keys.");
+    }
     this.transport =
-      mail.user && mail.pass
+      !this.brevoApiKey && mail.user && mail.pass
         ? createTransport({
             host: mail.host,
             port: mail.port,
@@ -37,13 +50,44 @@ export class MailService {
   }
 
   async send(mail: OutgoingMail): Promise<void> {
-    const text = mail.action ? `${mail.text}\n\n${mail.action.label}: ${mail.action.url}` : mail.text;
+    const text = mail.action ? `${mail.text}
+
+${mail.action.label}: ${mail.action.url}` : mail.text;
+    if (this.brevoApiKey) return this.sendWithBrevo(this.brevoApiKey, mail, text);
     if (!this.transport) {
-      this.logger.log(`(no SMTP configured) Mail to ${mail.to} — ${mail.subject}\n${text}`);
+      this.logger.log(`(no SMTP configured) Mail to ${mail.to} — ${mail.subject}
+${text}`);
       return;
     }
     await this.transport.sendMail({ from: this.from, to: mail.to, subject: mail.subject, text, html: toHtml(mail) });
   }
+
+  private async sendWithBrevo(apiKey: string, mail: OutgoingMail, text: string): Promise<void> {
+    const res = await fetch("https://api.brevo.com/v3/smtp/email", {
+      method: "POST",
+      headers: { "api-key": apiKey, "content-type": "application/json", accept: "application/json" },
+      body: JSON.stringify({
+        sender: parseAddress(this.from),
+        to: [{ email: mail.to }],
+        subject: mail.subject,
+        textContent: text,
+        htmlContent: toHtml(mail),
+      }),
+      signal: AbortSignal.timeout(15_000),
+    });
+    if (!res.ok) {
+      // Brevo's error body names the problem (unverified sender, bad key); it holds no secrets.
+      throw new Error(`Brevo rejected the mail (${res.status}): ${(await res.text()).slice(0, 300)}`);
+    }
+  }
+}
+
+/** "Name <a@b.c>" or "a@b.c" → Brevo's sender object. */
+export function parseAddress(value: string): { name?: string; email: string } {
+  const match = /^\s*(.*?)\s*<([^>]+)>\s*$/.exec(value);
+  if (!match) return { email: value.trim() };
+  const name = match[1]!.replace(/^"|"$/g, "");
+  return name ? { name, email: match[2]!.trim() } : { email: match[2]!.trim() };
 }
 
 function escapeHtml(value: string): string {
