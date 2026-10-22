@@ -38,9 +38,13 @@ export const appConfig = registerAs("app", () => ({
     .filter(Boolean),
   // Outgoing mail (email verification, password reset). Gmail: host
   // smtp.gmail.com, port 465, user = the Gmail address, pass = an App
-  // Password (Google Account → Security → App passwords). Without user/pass
-  // mails are only written to the API log, which is enough for local dev.
+  // Password (Google Account → Security → App passwords). Hosts that block
+  // SMTP (Render's free plan) send through Brevo's HTTPS API instead: set
+  // BREVO_API_KEY (an "xkeysib-" API key) and MAIL_FROM, a sender verified in
+  // Brevo. Without either, mails are only written to the API log, which is
+  // enough for local dev.
   mail: {
+    brevoApiKey: process.env.BREVO_API_KEY,
     host: process.env.SMTP_HOST ?? "smtp.gmail.com",
     port: Number(process.env.SMTP_PORT ?? 465),
     user: process.env.SMTP_USER,
