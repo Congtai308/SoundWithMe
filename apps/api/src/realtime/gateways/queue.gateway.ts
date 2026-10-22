@@ -1,4 +1,4 @@
-import { UseFilters, type OnModuleInit } from "@nestjs/common";
+import { Logger, UseFilters, type OnModuleDestroy, type OnModuleInit } from "@nestjs/common";
 import {
   ConnectedSocket,
   MessageBody,
@@ -6,7 +6,7 @@ import {
   WebSocketGateway,
   WebSocketServer,
 } from "@nestjs/websockets";
-import { SOCKET_EVENTS } from "@soundwithme/constants";
+import { ERROR_CODES, SOCKET_EVENTS } from "@soundwithme/constants";
 import {
   nextEventSchema,
   queueAddEventSchema,
@@ -24,24 +24,41 @@ import {
 import type { QueueItem } from "@soundwithme/types";
 import { ZodValidationPipe } from "../../common/pipes/zod-validation.pipe";
 import { QueueService } from "../../modules/queue/queue.service";
+import { PlaybackService } from "../../modules/playback/playback.service";
 import { AppEventsService } from "../../common/events/app-events.service";
 import { WsExceptionFilter } from "../ws-exception.filter";
 import { RATE_LIMITS, assertJoined, consumeRateLimit } from "../socket-guards";
 import type { AppServer, AppSocket } from "../realtime.types";
 
+/** How often the server looks for songs that have ended. */
+const ADVANCE_TICK_MS = 1_000;
+/** Tabs usually report a song's end themselves; the server steps in this long after it. */
+const ADVANCE_GRACE_MS = 1_200;
+
 /** Shared room queue. Permissions are checked against the stored room in QueueService. */
 @UseFilters(WsExceptionFilter)
 @WebSocketGateway({ namespace: "/" })
-export class QueueGateway implements OnModuleInit {
+export class QueueGateway implements OnModuleInit, OnModuleDestroy {
+  private readonly logger = new Logger(QueueGateway.name);
+  private advanceTimer: NodeJS.Timeout | null = null;
+  private advancing = false;
+
   @WebSocketServer()
   private readonly server!: AppServer;
 
   constructor(
     private readonly queueService: QueueService,
+    private readonly playbackService: PlaybackService,
     private readonly events: AppEventsService,
   ) {}
 
+  onModuleDestroy(): void {
+    if (this.advanceTimer) clearInterval(this.advanceTimer);
+  }
+
   onModuleInit(): void {
+    this.advanceTimer = setInterval(() => void this.advanceEndedSongs(), ADVANCE_TICK_MS).unref();
+
     // A new song starts with a clean slate of skip votes.
     this.events.on("room.trackChanged", async ({ roomId, trackId }) => {
       await this.queueService.clearSkipVotes(roomId, trackId);
@@ -161,6 +178,38 @@ export class QueueGateway implements OnModuleInit {
     return run;
   }
 
+  /**
+   * Moves every room whose song is over on to its next one, by the server's
+   * clock: a room never waits for a tab to notice (hidden tabs are
+   * throttled, phones sleep, nobody may be connected at all). Tabs that see
+   * the end first still advance it at once; the version check lets exactly
+   * one advance through, so the two never double-skip.
+   */
+  private async advanceEndedSongs(): Promise<void> {
+    if (this.advancing) return;
+    this.advancing = true;
+    try {
+      for (const roomId of await this.playbackService.roomsDueToEnd(Date.now() - ADVANCE_GRACE_MS)) {
+        try {
+          const { needed, version } = await this.queueService.needsNextSong(roomId);
+          if (!needed) continue; // seeked or paused since: its new end is scheduled
+          const advanced = await this.queueService.playNext(roomId, null, version);
+          if (!advanced) continue;
+          this.server.to(roomId).emit(SOCKET_EVENTS.PLAYBACK_STATE, advanced.state);
+          this.broadcastQueue(roomId, advanced.queue);
+        } catch (error: unknown) {
+          // Nothing queued (or the room is gone): the song simply ends here.
+          await this.playbackService.unscheduleEnd(roomId);
+          if (!isExpected(error)) this.logger.warn(`Auto-advance in ${roomId} failed: ${String(error)}`);
+        }
+      }
+    } catch (error: unknown) {
+      this.logger.warn(`Auto-advance round failed: ${String(error)}`);
+    } finally {
+      this.advancing = false;
+    }
+  }
+
   /** Distinct people connected to the room right now. */
   private async listenerCount(roomId: string): Promise<number> {
     const sockets = await this.server.in(roomId).fetchSockets();
@@ -170,4 +219,10 @@ export class QueueGateway implements OnModuleInit {
   private broadcastQueue(roomId: string, queue: QueueItem[]): void {
     this.server.to(roomId).emit(SOCKET_EVENTS.QUEUE_UPDATED, { roomId, queue });
   }
+}
+
+/** Errors that just mean "nothing to advance to": an empty queue, a room that's gone. */
+function isExpected(error: unknown): boolean {
+  const code = (error as { getResponse?: () => { error?: { code?: string } } }).getResponse?.()?.error?.code;
+  return code === ERROR_CODES.QUEUE_EMPTY || code === ERROR_CODES.ROOM_NOT_FOUND || code === ERROR_CODES.ROOM_CLOSED;
 }

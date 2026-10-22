@@ -14,6 +14,8 @@ import { RoomsService } from "../rooms/rooms.service";
 import { MusicService } from "../music/music.service";
 
 const PLAYBACK_STATE_TTL_SECONDS = 60 * 60 * 24;
+/** Redis sorted set: roomId → epoch ms when its song ends by the server's clock (playing rooms only). */
+export const PLAYBACK_ENDS_KEY = "playback:ends";
 const DEFAULT_SPEED = 1;
 
 /**
@@ -209,12 +211,40 @@ export class PlaybackService {
       throw this.corruptedStateError(roomId);
     }
 
-    return this.parseStoredState(roomId, result);
+    const state = this.parseStoredState(roomId, result);
+    await this.scheduleEnd(state);
+    return state;
+  }
+
+  /**
+   * Notes when the song now playing ends (QueueGateway moves the room on
+   * then, whoever is or isn't connected). Paused rooms and songs of unknown
+   * length have no end.
+   */
+  private async scheduleEnd(state: PlaybackState): Promise<void> {
+    const redis = this.redisService.getClient();
+    const durationMs = state.isPlaying ? ((await this.musicService.getTrack(state.trackId))?.durationMs ?? 0) : 0;
+    if (durationMs <= 0 || state.speed <= 0) {
+      await redis.zrem(PLAYBACK_ENDS_KEY, state.roomId);
+      return;
+    }
+    const endsAt = state.serverTimestamp + Math.max(0, durationMs - state.positionMs) / state.speed;
+    await redis.zadd(PLAYBACK_ENDS_KEY, Math.round(endsAt), state.roomId);
+  }
+
+  /** Rooms whose song should have ended by `now`. */
+  async roomsDueToEnd(now: number): Promise<string[]> {
+    return this.redisService.getClient().zrangebyscore(PLAYBACK_ENDS_KEY, 0, now);
+  }
+
+  /** Forgets a room's end (it moved on, or has nothing left to play). */
+  async unscheduleEnd(roomId: string): Promise<void> {
+    await this.redisService.getClient().zrem(PLAYBACK_ENDS_KEY, roomId);
   }
 
   /** Drops a room's playback state (the room ended). */
   async clearPlaybackState(roomId: string): Promise<void> {
-    await this.redisService.getClient().del(this.playbackKey(roomId));
+    await this.redisService.getClient().multi().del(this.playbackKey(roomId)).zrem(PLAYBACK_ENDS_KEY, roomId).exec();
   }
 
   /**
