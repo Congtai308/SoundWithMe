@@ -17,11 +17,11 @@ interface JoinRoomGateProps {
 }
 
 const REASONS: Record<string, { icon: string; title: string }> = {
-  ROOM_FRIENDS_ONLY: { icon: "diversity_3", title: "Friends only" },
-  ROOM_BANNED: { icon: "block", title: "You can't rejoin this room" },
-  ROOM_FULL: { icon: "groups", title: "This room is full" },
-  ROOM_PASSCODE_INVALID: { icon: "password", title: "Wrong passcode" },
-  ROOM_LOCKED: { icon: "lock", title: "Private room" },
+  ROOM_FRIENDS_ONLY: { icon: "diversity_3", title: "Chỉ bạn bè" },
+  ROOM_BANNED: { icon: "block", title: "Bạn không thể vào lại phòng này" },
+  ROOM_FULL: { icon: "groups", title: "Phòng đã đầy" },
+  ROOM_PASSCODE_INVALID: { icon: "password", title: "Sai mật mã" },
+  ROOM_LOCKED: { icon: "lock", title: "Phòng riêng tư" },
 };
 
 /** Shown when the user isn't a member yet: join, or enter a private room's passcode. */
@@ -49,21 +49,21 @@ export function JoinRoomGate({ room, needsPasscode, isJoining, error, onJoin }: 
         {room ? (
           <>
             <span className="font-technical text-label-mono-sm uppercase text-secondary">
-              {room.memberCount} {room.memberCount === 1 ? "listener" : "listeners"} inside
-              {room.type === "friends" && " · friends only"}
-              {room.type === "private" && " · private"}
+              {room.listenerCount} người đang nghe
+              {room.type === "friends" && " · chỉ bạn bè"}
+              {room.type === "private" && " · riêng tư"}
             </span>
             <h1 className="text-headline-xl text-on-surface">{room.name}</h1>
             {room.description && <p className="text-body-lg text-on-surface-variant">{room.description}</p>}
           </>
         ) : (
           <>
-            <span className="font-technical text-label-mono-sm uppercase text-secondary">Private room</span>
-            <h1 className="text-headline-xl text-on-surface">{inviteOnly ? "Invite only" : "Enter the passcode"}</h1>
+            <span className="font-technical text-label-mono-sm uppercase text-secondary">Phòng riêng tư</span>
+            <h1 className="text-headline-xl text-on-surface">{inviteOnly ? "Chỉ vào bằng link mời" : "Nhập mật mã"}</h1>
             <p className="text-body-md text-on-surface-variant">
               {inviteOnly
-                ? "This room only opens with its invite link. Ask the host to send it to you."
-                : "Ask the host for the passcode, or open the invite link they shared."}
+                ? "Phòng này chỉ mở bằng link mời. Nhờ chủ phòng gửi link cho bạn nhé."
+                : "Hỏi chủ phòng mật mã, hoặc mở link mời họ đã gửi."}
             </p>
           </>
         )}
@@ -71,7 +71,7 @@ export function JoinRoomGate({ room, needsPasscode, isJoining, error, onJoin }: 
 
       {askPasscode && (
         <label className="flex w-full max-w-xs flex-col gap-1 text-left">
-          <span className="font-technical text-label-mono-sm uppercase text-outline">Passcode</span>
+          <span className="font-technical text-label-mono-sm uppercase text-outline">Mật mã</span>
           <input
             type="password"
             value={passcode}
@@ -87,7 +87,7 @@ export function JoinRoomGate({ room, needsPasscode, isJoining, error, onJoin }: 
       {error ? (
         <p role="alert" className="flex items-center gap-1.5 text-body-md text-error">
           {reason && <Icon name={reason.icon} className="text-[18px]" />}
-          {error instanceof ApiClientError ? error.message : "Couldn't join this room."}
+          {error instanceof ApiClientError ? error.message : "Không vào được phòng này."}
         </p>
       ) : null}
 
@@ -98,11 +98,11 @@ export function JoinRoomGate({ room, needsPasscode, isJoining, error, onJoin }: 
           className="flex items-center gap-xs rounded-full bg-primary-container px-lg py-sm text-headline-sm text-on-primary-container shadow-[0_0_24px_rgba(160,120,255,0.35)] transition-all active:scale-[0.96] disabled:opacity-60"
         >
           <Icon name={askPasscode ? "key" : "login"} className="text-[20px]" />
-          {isJoining ? "Joining…" : askPasscode ? "Unlock & join" : "Listen together"}
+          {isJoining ? "Đang vào…" : askPasscode ? "Mở khoá & vào" : "Vào nghe cùng"}
         </button>
       )}
       <Link href="/rooms" className="text-body-sm text-on-surface-variant hover:text-on-surface">
-        Back to live rooms
+        Quay lại danh sách phòng
       </Link>
     </form>
   );

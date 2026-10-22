@@ -5,7 +5,7 @@ import { takePendingPlay } from "@/features/rooms/pending-play";
 import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { ApiClientError } from "@/services/api-client";
-import { useCurrentUser } from "@/features/auth/hooks/use-auth";
+import { useCurrentUser, useGuestLogin } from "@/features/auth/hooks/use-auth";
 import { useJoinRoom, useLeaveRoom, useRoom } from "@/features/rooms/hooks/use-rooms";
 import { useRoomLiveStore } from "@/features/rooms/stores/room-live-store";
 import { useRoomSessionStore } from "@/features/rooms/stores/room-session-store";
@@ -27,6 +27,11 @@ import { StatePanel, primaryPillClass, ghostPillClass } from "@/components/ui/St
 
 const ERROR_TOAST_MS = 4_000;
 type MobilePanel = "chat" | "queue";
+
+/** Name for the guest account a signed-out visitor gets on opening a room. */
+function guestName(): string {
+  return `Khách ${Math.floor(1000 + Math.random() * 9000)}`;
+}
 
 /**
  * Listening room — 3-column studio: queue · cinema stage · listeners & chat
@@ -68,6 +73,7 @@ export default function RoomPage() {
 
   const joinRoom = useJoinRoom(roomId);
   const leaveRoom = useLeaveRoom(roomId);
+  const guestLogin = useGuestLogin();
   const [showAddSong, setShowAddSong] = useState(false);
   const [mobilePanel, setMobilePanel] = useState<MobilePanel>("chat");
   const [dialog, setDialog] = useState<"people" | "invite" | null>(null);
@@ -76,6 +82,32 @@ export default function RoomPage() {
   useEffect(() => {
     if (user && isActive) enterSession(roomId);
   }, [user, isActive, roomId, enterSession]);
+
+  // Opening a room signed out: a guest account, no questions asked.
+  const guestTriedRef = useRef(false);
+  const refetchRoom = roomQuery.refetch;
+  useEffect(() => {
+    if (isUserLoading || user || guestTriedRef.current) return;
+    guestTriedRef.current = true;
+    guestLogin.mutate({ displayName: guestName() }, { onSuccess: () => void refetchRoom() });
+  }, [isUserLoading, user, guestLogin, refetchRoom]);
+
+  // Lobby rooms are open to all: walk straight in instead of showing the join screen.
+  const autoJoinTriedRef = useRef(false);
+  const autoJoining = membership === "not-member" && Boolean(room?.topic) && !joinRoom.isError;
+  useEffect(() => {
+    if (!autoJoining || autoJoinTriedRef.current) return;
+    autoJoinTriedRef.current = true;
+    joinRoom.mutate(
+      {},
+      {
+        onSuccess: () => {
+          useRoomLiveStore.getState().setMembership("checking");
+          commands.rejoin();
+        },
+      },
+    );
+  }, [autoJoining, joinRoom, commands]);
 
   // Browsing away keeps the session only if we actually got in.
   useEffect(
@@ -104,18 +136,18 @@ export default function RoomPage() {
     else commands.queueAdd(trackId);
   }, [membership, canAdd, canControl, commands, roomId]);
 
-  if (isUserLoading || roomQuery.isLoading) return <StudioSkeleton />;
+  if (isUserLoading || roomQuery.isLoading || (!user && !guestLogin.isError)) return <StudioSkeleton />;
 
   if (!user) {
     return (
       <PageFrame>
         <StatePanel
           icon="lock"
-          title="Sign in to join this room"
-          body="Rooms are for signed-in listeners. A Fast Pass gets you in with just a name."
+          title="Đăng nhập để vào phòng"
+          body="Không tạo được tài khoản khách. Đăng nhập hoặc vào nhanh chỉ với một cái tên."
           action={
             <Link href="/login" className={primaryPillClass}>
-              Sign in or use a Fast Pass
+              Đăng nhập hoặc vào nhanh
             </Link>
           }
         />
@@ -144,11 +176,11 @@ export default function RoomPage() {
         <StatePanel
           tone="error"
           icon="person_remove"
-          title="You were removed from this room"
-          body="The host removed you, so you can't rejoin this room."
+          title="Bạn đã bị mời ra khỏi phòng"
+          body="Chủ phòng đã mời bạn ra nên bạn không vào lại được phòng này."
           action={
             <Link href="/rooms" className={ghostPillClass}>
-              Browse live rooms
+              Xem các phòng đang mở
             </Link>
           }
         />
@@ -162,11 +194,11 @@ export default function RoomPage() {
         <StatePanel
           tone="error"
           icon="sensors_off"
-          title="This room isn't available"
-          body={roomQuery.error instanceof ApiClientError ? roomQuery.error.message : "It may have been removed, or you may not have access."}
+          title="Phòng này không còn"
+          body={roomQuery.error instanceof ApiClientError ? roomQuery.error.message : "Có thể phòng đã bị xoá, hoặc bạn không có quyền vào."}
           action={
             <Link href="/rooms" className={ghostPillClass}>
-              Browse live rooms
+              Xem các phòng đang mở
             </Link>
           }
         />
@@ -179,21 +211,23 @@ export default function RoomPage() {
       <PageFrame>
         <StatePanel
           icon="podcasts"
-          title="This room has ended"
+          title="Phòng đã kết thúc"
           body={
             closedReason === "inactive"
-              ? "It ended after 30 minutes with nobody in it. Start your own or find another live room."
-              : "The host closed this session. Start your own or find another room that's live."
+              ? "Phòng tự kết thúc sau 30 phút không có ai. Hãy mở phòng mới hoặc tìm phòng khác."
+              : "Chủ phòng đã kết thúc phòng. Hãy mở phòng mới hoặc tìm phòng khác đang mở."
           }
           action={
             <Link href="/rooms" className={primaryPillClass}>
-              Find a live room
+              Tìm phòng đang mở
             </Link>
           }
         />
       </PageFrame>
     );
   }
+
+  if (autoJoining) return <StudioSkeleton />;
 
   if (membership === "not-member") {
     return (
@@ -278,7 +312,7 @@ export default function RoomPage() {
           className="fixed left-1/2 top-20 z-[55] flex -translate-x-1/2 items-center gap-xs rounded-full border border-white/[0.16] bg-[rgba(30,41,59,0.92)] px-md py-xs text-body-sm text-on-surface shadow-xl backdrop-blur-xl"
         >
           <Icon name="error" className="text-[18px] text-error" />
-          {lastError?.message ?? "Couldn't leave the room. Try again."}
+          {lastError?.message ?? "Không rời phòng được. Thử lại nhé."}
         </div>
       )}
 
@@ -306,7 +340,7 @@ export default function RoomPage() {
 
         {/* Below 768px the side columns become tabs under the stage. */}
         <div className="flex flex-col gap-sm md:hidden">
-          <div role="tablist" aria-label="Room panels" className="flex rounded-full bg-surface-container p-1">
+          <div role="tablist" aria-label="Bảng trong phòng" className="flex rounded-full bg-surface-container p-1">
             {(["chat", "queue"] as const).map((panel) => (
               <button
                 key={panel}
@@ -318,7 +352,7 @@ export default function RoomPage() {
                   mobilePanel === panel ? "bg-primary-container text-on-primary-container" : "text-on-surface-variant"
                 }`}
               >
-                {panel === "chat" ? `Chat · ${listeners.length}` : `Queue · ${queue.length}`}
+                {panel === "chat" ? `Chat · ${listeners.length}` : `Hàng chờ · ${queue.length}`}
               </button>
             ))}
           </div>

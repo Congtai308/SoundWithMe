@@ -24,6 +24,7 @@ import { NotificationsModule } from "./modules/notifications/notifications.modul
 import { PresenceModule } from "./modules/presence/presence.module";
 import { FriendsModule } from "./modules/friends/friends.module";
 import { LibraryModule } from "./modules/library/library.module";
+import { LobbyModule } from "./modules/lobby/lobby.module";
 import path from "path";
 @Module({
   imports: [
@@ -63,6 +64,7 @@ import path from "path";
     PresenceModule,
     FriendsModule,
     LibraryModule,
+    LobbyModule,
     RealtimeModule,
   ],
   providers: [

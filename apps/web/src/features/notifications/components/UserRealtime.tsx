@@ -35,7 +35,7 @@ export function UserRealtime() {
       // The karaoke panel announces your own turn itself.
       if (notification.type === "sing_turn") return;
       showToast({ icon: NOTIFICATION_ICON[notification.type], title: notification.title, body: notification.body, href: notification.link });
-      if (document.hidden && "Notification" in window && Notification.permission === "granted") {
+      if (document.hidden && "Thông báo" in window && Notification.permission === "granted") {
         try {
           new Notification(notification.title, { body: notification.body, tag: notification.id });
         } catch {
@@ -51,8 +51,8 @@ export function UserRealtime() {
       if (message.senderId === userId || (window.location.pathname === "/messages" && openThread === message.senderId)) return;
       showToast({
         icon: "chat_bubble",
-        title: "New message",
-        body: message.kind === "track" ? `Shared “${message.track?.title ?? "a song"}”` : message.kind === "room" ? `Invited you to “${message.room?.name ?? "a room"}”` : message.content.slice(0, 120),
+        title: "Tin nhắn mới",
+        body: message.kind === "track" ? `Đã gửi “${message.track?.title ?? "một bài hát"}”` : message.kind === "room" ? `Mời bạn vào “${message.room?.name ?? "một phòng"}”` : message.content.slice(0, 120),
         href: `/messages?with=${message.senderId}`,
       });
     };

@@ -132,9 +132,9 @@ export function AddSongDialog({ canPlayNow, onQueue, onQueueMany, onPlayNow, onC
       >
         <header className="flex items-center justify-between px-lg pb-sm pt-lg">
           <h2 id="add-song-title" className="text-headline-md text-on-surface">
-            Add songs
+            Thêm bài hát
           </h2>
-          <button type="button" onClick={onClose} aria-label="Close" className="rounded-full p-1 text-outline hover:text-on-surface">
+          <button type="button" onClick={onClose} aria-label="Đóng" className="rounded-full p-1 text-outline hover:text-on-surface">
             <Icon name="close" className="text-[22px]" />
           </button>
         </header>
@@ -153,8 +153,8 @@ export function AddSongDialog({ canPlayNow, onQueue, onQueueMany, onPlayNow, onC
                 setInput(e.target.value);
                 resolve.reset();
               }}
-              placeholder="Paste YouTube links (several at once), or search"
-              aria-label="YouTube links or search"
+              placeholder="Dán link YouTube (nhiều link cùng lúc) hoặc tìm kiếm"
+              aria-label="Link YouTube hoặc tên bài hát"
               className="w-full rounded-full border border-white/[0.08] bg-[rgba(18,24,38,0.75)] py-sm pl-[48px] pr-[120px] text-body-md text-on-surface placeholder:text-[#475569] focus:border-[#8B5CF6] focus:outline-none"
             />
             {isLink && (
@@ -163,14 +163,14 @@ export function AddSongDialog({ canPlayNow, onQueue, onQueueMany, onPlayNow, onC
                 disabled={resolve.isPending}
                 className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded-full bg-primary-container px-md py-1.5 text-body-sm font-semibold text-on-primary-container disabled:opacity-60"
               >
-                {progress ? `Finding ${progress.done}/${progress.total}…` : links.length > 1 ? `Find ${links.length}` : "Find"}
+                {progress ? `Đang tìm ${progress.done}/${progress.total}…` : links.length > 1 ? `Tìm ${links.length}` : "Tìm"}
               </button>
             )}
           </div>
           <p className="mt-xs px-xs text-body-sm text-outline">
             {allLinks.length > MAX_QUEUE_ADD_MANY
-              ? `Up to ${MAX_QUEUE_ADD_MANY} links at a time — the first ${MAX_QUEUE_ADD_MANY} will be used.`
-              : "Paste one link or a whole list (one per line). Works with youtube.com, youtu.be, Shorts and YouTube Music."}
+              ? `Tối đa ${MAX_QUEUE_ADD_MANY} link mỗi lần — chỉ lấy ${MAX_QUEUE_ADD_MANY} link đầu.`
+              : "Dán một link hoặc cả danh sách (mỗi dòng một link). Dùng được với youtube.com, youtu.be, Shorts và YouTube Music."}
           </p>
         </form>
 
@@ -189,7 +189,7 @@ export function AddSongDialog({ canPlayNow, onQueue, onQueueMany, onPlayNow, onC
               className="flex items-center gap-1 rounded-full bg-primary-container px-sm py-1 text-body-sm font-semibold text-on-primary-container disabled:opacity-50"
             >
               <Icon name={notYetAdded.length === 0 ? "done_all" : "playlist_add"} className="text-[18px]" />
-              {notYetAdded.length === 0 ? "All queued" : `Queue all ${notYetAdded.length}`}
+              {notYetAdded.length === 0 ? "Đã thêm hết" : `Thêm cả ${notYetAdded.length} bài`}
             </button>
           </div>
         )}
@@ -197,20 +197,20 @@ export function AddSongDialog({ canPlayNow, onQueue, onQueueMany, onPlayNow, onC
         <div className="scrollbar-none mt-sm flex min-h-[120px] flex-1 flex-col gap-1 overflow-y-auto px-sm pb-md">
           {resolve.isError && (
             <p role="alert" className="px-md py-sm text-body-md text-error">
-              {resolve.error instanceof ApiClientError ? resolve.error.message : "Couldn't look up that link."}
+              {resolve.error instanceof ApiClientError ? resolve.error.message : "Không tra được link này."}
             </p>
           )}
-          {!isLink && search.isFetching && <p className="px-md py-sm text-body-sm text-outline">Searching…</p>}
+          {!isLink && search.isFetching && <p className="px-md py-sm text-body-sm text-outline">Đang tìm…</p>}
           {!isLink && input.trim() && search.data && search.data.length === 0 && (
             <p className="px-md py-sm text-body-md text-on-surface-variant">
-              Nothing in the catalog matches. Paste a YouTube link instead.
+              Không tìm thấy bài nào. Thử dán link YouTube nhé.
             </p>
           )}
           {!input.trim() && (
             <div className="flex flex-col items-center gap-xs px-md py-lg text-center">
               <Icon name="smart_display" className="text-[36px] text-tertiary-container" />
-              <p className="text-body-md text-on-surface-variant">Copy songs&apos; links from YouTube and paste them above.</p>
-              <p className="text-body-sm text-outline">Tip: paste a whole list at once, one link per line.</p>
+              <p className="text-body-md text-on-surface-variant">Copy link bài hát trên YouTube rồi dán vào ô bên trên.</p>
+              <p className="text-body-sm text-outline">Mẹo: dán cả danh sách một lần, mỗi dòng một link.</p>
             </div>
           )}
           {results.map((track) => {
@@ -237,7 +237,7 @@ export function AddSongDialog({ canPlayNow, onQueue, onQueueMany, onPlayNow, onC
                     }`}
                   >
                     <Icon name={isAdded ? "check" : "playlist_add"} className="text-[18px]" />
-                    {isAdded ? "Queued" : "Queue"}
+                    {isAdded ? "Đã thêm" : "Thêm"}
                   </button>
                   {canPlayNow && (
                     <button
@@ -246,7 +246,7 @@ export function AddSongDialog({ canPlayNow, onQueue, onQueueMany, onPlayNow, onC
                       className="flex items-center gap-1 rounded-full bg-primary-container px-sm py-1 text-body-sm font-semibold text-on-primary-container"
                     >
                       <Icon name="play_arrow" className="text-[18px]" filled />
-                      Play now
+                      Phát ngay
                     </button>
                   )}
                 </div>
@@ -266,7 +266,7 @@ export function AddSongDialog({ canPlayNow, onQueue, onQueueMany, onPlayNow, onC
               onClick={onClose}
               className="rounded-full bg-primary-container px-md py-1.5 text-body-sm font-semibold text-on-primary-container"
             >
-              Done
+              Xong
             </button>
           </footer>
         )}

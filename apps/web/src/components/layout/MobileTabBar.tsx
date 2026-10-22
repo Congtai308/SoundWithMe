@@ -13,20 +13,20 @@ export function MobileTabBar() {
 
   const tabs = [
     { href: "/", label: "Home", icon: "grid_view" },
-    { href: "/discover", label: "Music", icon: "music_note" },
-    { href: user ? "/rooms/new" : "/login", label: "Create", icon: "add_circle" },
-    { href: "/rooms", label: "Rooms", icon: "sensors" },
-    { href: "/friends", label: "Friends", icon: "group" },
-    { href: "/library", label: "Library", icon: "library_music" },
+    { href: "/discover", label: "Nhạc", icon: "music_note" },
+    { href: user ? "/rooms/new" : "/login", label: "Tạo", icon: "add_circle" },
+    { href: "/rooms", label: "Phòng", icon: "sensors" },
+    { href: "/friends", label: "Bạn bè", icon: "group" },
+    { href: "/library", label: "Thư viện", icon: "library_music" },
   ];
 
   return (
     <nav
-      aria-label="Main"
+      aria-label="Điều hướng chính"
       className="fixed bottom-0 left-0 right-0 z-50 flex h-16 items-stretch justify-around border-t border-white/[0.06] bg-surface-container-lowest sm:hidden"
     >
       {tabs.map((tab) => {
-        const active = tab.label !== "Create" && isActivePath(pathname, tab.href);
+        const active = tab.label !== "Tạo" && isActivePath(pathname, tab.href);
         return (
           <Link
             key={tab.label}

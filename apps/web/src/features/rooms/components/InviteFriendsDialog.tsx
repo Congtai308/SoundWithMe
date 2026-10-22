@@ -29,17 +29,17 @@ export function InviteFriendsDialog({
   const blocked = room.type === "private" && room.hostId !== currentUserId;
 
   return (
-    <Dialog title="Invite friends" onClose={onClose}>
+    <Dialog title="Mời bạn bè" onClose={onClose}>
       {blocked ? (
-        <p className="text-body-md text-on-surface-variant">Only the host can invite people to a private room.</p>
+        <p className="text-body-md text-on-surface-variant">Chỉ chủ phòng được mời người vào phòng riêng tư.</p>
       ) : friends.isLoading ? (
         <div className="h-24 animate-pulse rounded-md bg-surface-container" />
       ) : !friends.data || friends.data.friends.length === 0 ? (
         <div className="flex flex-col items-center gap-sm py-md text-center">
           <Icon name="group_add" className="text-[32px] text-outline" />
-          <p className="text-body-md text-on-surface-variant">No friends yet. Add people on the Friends page.</p>
+          <p className="text-body-md text-on-surface-variant">Chưa có bạn bè. Kết bạn ở trang Bạn bè nhé.</p>
           <Link href="/friends" className="rounded-full bg-primary-container px-md py-1.5 text-headline-sm text-on-primary-container">
-            Find friends
+            Tìm bạn
           </Link>
         </div>
       ) : (
@@ -53,7 +53,7 @@ export function InviteFriendsDialog({
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-body-md font-semibold text-on-surface">{user.displayName}</p>
                   <p className="truncate text-body-sm text-on-surface-variant">
-                    {inRoom ? "Already here" : online ? "Online" : "Offline — they'll see it in their bell"}
+                    {inRoom ? "Đã ở trong phòng" : online ? "Đang online" : "Offline — họ sẽ thấy trong thông báo"}
                   </p>
                 </div>
                 <button
@@ -66,7 +66,7 @@ export function InviteFriendsDialog({
                   className="flex items-center gap-1 rounded-full bg-primary-container px-sm py-1 text-body-sm font-semibold text-on-primary-container disabled:bg-surface-container-high disabled:text-on-surface-variant"
                 >
                   <Icon name={done ? "done" : "send"} className="text-[16px]" />
-                  {done ? "Invited" : "Invite"}
+                  {done ? "Đã mời" : "Mời"}
                 </button>
               </li>
             );

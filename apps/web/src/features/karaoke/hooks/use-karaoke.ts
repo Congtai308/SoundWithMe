@@ -1,5 +1,6 @@
 "use client";
 
+import { errorMessage } from "@/services/error-messages";
 import { useEffect } from "react";
 import { ERROR_CODES, SOCKET_EVENTS } from "@soundwithme/constants";
 import type {
@@ -52,7 +53,7 @@ export const karaoke = {
       mesh?.openingMicrophone(false);
       if (turn && activeRoomId) getSocket().emit(SOCKET_EVENTS.MIC_RELEASE, { roomId: activeRoomId });
       const denied = error instanceof DOMException && (error.name === "NotAllowedError" || error.name === "SecurityError");
-      store.setMicStatus("off", denied ? "Microphone access was blocked — allow it in the browser's address bar." : "No microphone found.");
+      store.setMicStatus("off", denied ? "Trình duyệt đã chặn micro — cho phép ở thanh địa chỉ nhé." : "Không tìm thấy micro.");
     }
   },
 
@@ -139,17 +140,17 @@ export function useKaraoke(roomId: string | null, userId: string | undefined, is
       // The host closed our mic, our turn passed on, or it was lost: stop capturing.
       if (!holdsMic && state.micStatus === "live") {
         stopLocalMic();
-        if (hadLine) useKaraokeStore.getState().setMicStatus("off", "Your turn's over — the mic passed to the next singer.");
+        if (hadLine) useKaraokeStore.getState().setMicStatus("off", "Hết lượt — mic đã chuyển cho người tiếp theo.");
       }
       mesh.syncSingers(singers);
     };
     // The line kept a mic for us: open it (it's released again if the mic can't open).
     const onTurn = ({ roomId: turnRoom }: MicTurnPayload) => {
       if (turnRoom !== roomId) return;
-      showToast({ icon: "mic", tone: "success", title: "Your turn to sing!", body: "Your mic is opening — use headphones." });
-      if (document.hidden && "Notification" in window && Notification.permission === "granted") {
+      showToast({ icon: "mic", tone: "success", title: "Đến lượt bạn hát!", body: "Mic đang bật — nên đeo tai nghe nhé." });
+      if (document.hidden && "Thông báo" in window && Notification.permission === "granted") {
         try {
-          new Notification("Your turn to sing", { body: "A mic is free in your room", tag: `sing-${roomId}` });
+          new Notification("Đến lượt bạn hát", { body: "Phòng của bạn đang có mic trống", tag: `sing-${roomId}` });
         } catch {
           // Some browsers only allow notifications from a service worker.
         }
@@ -169,7 +170,7 @@ export function useKaraoke(roomId: string | null, userId: string | undefined, is
     const onError = (error: ErrorPayload) => {
       if (error.code === ERROR_CODES.MIC_FULL && useKaraokeStore.getState().micStatus === "starting") {
         mesh?.setMic(null);
-        useKaraokeStore.getState().setMicStatus("off", error.message);
+        useKaraokeStore.getState().setMicStatus("off", errorMessage(error.code, error.message));
       }
     };
     // The server echoes ROOM_JOIN once this socket is (back) in the room —
@@ -183,7 +184,7 @@ export function useKaraoke(roomId: string | null, userId: string | undefined, is
         mesh?.destroy();
         mesh = new VoiceMesh(socket, roomId);
         useKaraokeStore.getState().reset(roomId);
-        if (wasSinging) useKaraokeStore.getState().setMicStatus("off", "Connection dropped — tap Sing to take the mic again.");
+        if (wasSinging) useKaraokeStore.getState().setMicStatus("off", "Mất kết nối — bấm Hát để lấy lại mic.");
       }
       sync();
     };

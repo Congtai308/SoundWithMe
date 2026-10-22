@@ -22,9 +22,9 @@ export default function LoginPage() {
   useEffect(() => {
     const error = new URLSearchParams(window.location.search).get("error");
     if (error === "google-linked") {
-      setGoogleError("This email's account is already linked to a different Google account.");
+      setGoogleError("Email này đã được liên kết với một tài khoản Google khác.");
     } else if (error === "google") {
-      setGoogleError("Google sign-in didn't complete. Please try again.");
+      setGoogleError("Đăng nhập Google chưa hoàn tất. Thử lại nhé.");
     }
   }, []);
 
@@ -60,14 +60,14 @@ function HeroPanel() {
       <div className="relative z-10 flex flex-col gap-sm">
         <span className="font-technical flex w-fit items-center gap-1.5 rounded-full bg-primary-container/25 px-xs py-0.5 text-label-mono-sm uppercase text-primary-fixed-dim">
           <span className="h-1.5 w-1.5 rounded-full bg-secondary motion-safe:animate-ping" />
-          Synchronized listening
+          Nghe nhạc đồng bộ
         </span>
         <div className="pt-md">
           <span className="font-technical mb-2xs block text-label-mono-md uppercase tracking-widest text-secondary">
-            Shared acoustics
+            Cùng một giai điệu
           </span>
           <h2 className="text-display-hero leading-none text-on-surface">
-            Music connects us <span className="text-primary">wherever</span> you are.
+            Music connects us <span className="text-primary">dù ở đâu</span> you are.
           </h2>
         </div>
       </div>
@@ -84,7 +84,7 @@ function HeroPanel() {
           <div className="absolute inset-0 bg-gradient-to-t from-surface-container-lowest via-surface-container-lowest/40 to-transparent" />
           <div className="absolute left-3 top-3 flex items-center gap-xs rounded-full bg-surface-container-lowest/80 px-sm py-1 shadow-lg backdrop-blur-xl">
             <span className="h-2 w-2 rounded-full bg-secondary motion-safe:animate-pulse" />
-            <span className="font-technical text-label-mono-sm text-on-surface">SYNCHRONIZED ROOM</span>
+            <span className="font-technical text-label-mono-sm text-on-surface">PHÒNG ĐỒNG BỘ</span>
           </div>
         </div>
 
@@ -92,7 +92,7 @@ function HeroPanel() {
           <div className="flex items-center gap-xs">
             <Icon name="equalizer" className="text-[18px] text-primary" />
             <span className="text-body-sm font-medium text-on-surface-variant">
-              Everyone hears the same moment
+              Mọi người nghe cùng một khoảnh khắc
             </span>
           </div>
           <svg className="h-10 w-full text-primary" fill="none" preserveAspectRatio="none" viewBox="0 0 360 40" aria-hidden="true">

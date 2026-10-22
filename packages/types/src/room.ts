@@ -35,6 +35,19 @@ export interface Room {
   inviteCode: string | null;
   createdAt: string;
   closedAt: string | null;
+  /** One of the always-open lobby rooms (topic set, hosted by the app itself); null for people's rooms. */
+  topic: RoomTopic | null;
+  /** People listening, as shown on room cards. */
+  listenerCount: number;
+  /** Songs waiting in the queue; only on the room list. */
+  upcomingCount?: number;
+}
+
+/** The theme of an always-open lobby room. */
+export interface RoomTopic {
+  slug: string;
+  label: string;
+  emoji: string;
 }
 
 /** Why a room ended — shown to everyone still in it. */

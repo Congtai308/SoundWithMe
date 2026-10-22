@@ -28,13 +28,13 @@ export function MessageBubble({ message, mine, seen }: { message: DirectMessage;
           </div>
           <div className="min-w-0 flex-1">
             <p className="truncate text-headline-sm text-on-surface">{message.room.name}</p>
-            <p className="text-body-sm text-on-surface-variant">Listen together</p>
+            <p className="text-body-sm text-on-surface-variant">Nghe cùng</p>
           </div>
           <Link
             href={message.room.link}
             className="rounded-full bg-primary-container px-md py-1 text-body-sm font-semibold text-on-primary-container"
           >
-            Join
+            Vào
           </Link>
         </div>
       )}
@@ -49,7 +49,7 @@ export function MessageBubble({ message, mine, seen }: { message: DirectMessage;
       )}
       <span className="font-technical px-xs text-label-mono-sm text-outline">
         {formatTime(message.createdAt)}
-        {mine && seen && " · Seen"}
+        {mine && seen && " · Đã xem"}
       </span>
     </div>
   );
@@ -57,7 +57,7 @@ export function MessageBubble({ message, mine, seen }: { message: DirectMessage;
 
 function TrackCard({ track }: { track: SharedTrack }) {
   const { mode, pick } = useTrackActions();
-  const label = mode === "no-room" ? "Play" : mode === "locked" ? null : "Add to room";
+  const label = mode === "no-room" ? "Phát" : mode === "locked" ? null : "Thêm vào phòng";
 
   return (
     <div className="flex w-72 max-w-full items-center gap-sm rounded-lg border border-white/[0.08] bg-surface-container-high p-sm">

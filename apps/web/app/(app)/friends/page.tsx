@@ -29,11 +29,11 @@ export default function FriendsPage() {
       <div className="px-md py-2xl md:px-[40px]">
         <StatePanel
           icon="group"
-          title="Sign in to see your friends"
-          body="Add friends, see who's online and jump into the room they're listening in."
+          title="Đăng nhập để xem bạn bè"
+          body="Kết bạn, xem ai đang online và vào phòng họ đang nghe."
           action={
             <Link href="/login" className={primaryPillClass}>
-              Sign in
+              Đăng nhập
             </Link>
           }
         />
@@ -48,8 +48,8 @@ export default function FriendsPage() {
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-lg px-md py-lg md:px-lg">
       <header className="flex flex-col gap-1">
-        <span className="font-technical text-label-mono-sm uppercase text-secondary">Friends &amp; Presence</span>
-        <h1 className="text-headline-xl text-on-surface">Your people</h1>
+        <span className="font-technical text-label-mono-sm uppercase text-secondary">Bạn bè</span>
+        <h1 className="text-headline-xl text-on-surface">Bạn bè của bạn</h1>
         {user && (
           <p className="text-body-md text-on-surface-variant">
             Your username is <span className="font-technical text-on-surface">@{user.username}</span> — share it so friends can add you.
@@ -60,7 +60,7 @@ export default function FriendsPage() {
       <AddFriend />
 
       {data && data.incoming.length > 0 && (
-        <Section title={`Requests · ${data.incoming.length}`} icon="person_add">
+        <Section title={`Lời mời · ${data.incoming.length}`} icon="person_add">
           {data.incoming.map((request) => (
             <RequestRow key={request.id} request={request} />
           ))}
@@ -70,20 +70,20 @@ export default function FriendsPage() {
       {friends.isLoading ? (
         <div className="h-40 animate-pulse rounded-lg bg-surface-container-low" />
       ) : friends.isError ? (
-        <StatePanel tone="error" icon="error" title="Couldn't load your friends" body="Check your connection and try again." />
+        <StatePanel tone="error" icon="error" title="Không tải được danh sách bạn bè" body="Kiểm tra kết nối mạng rồi thử lại." />
       ) : data && data.friends.length === 0 ? (
-        <StatePanel icon="diversity_3" title="No friends yet" body="Search for someone by name or username above and send a request." />
+        <StatePanel icon="diversity_3" title="Chưa có bạn bè" body="Tìm theo tên hoặc username ở trên rồi gửi lời mời kết bạn." />
       ) : (
         <>
           {listening.length > 0 && (
-            <Section title={`Listening now · ${listening.length}`} icon="graphic_eq">
+            <Section title={`Đang nghe · ${listening.length}`} icon="graphic_eq">
               {listening.map((friend) => (
                 <FriendRow key={friend.user.id} friend={friend} />
               ))}
             </Section>
           )}
           {others.length > 0 && (
-            <Section title={`Friends · ${data?.friends.length ?? 0}`} icon="group">
+            <Section title={`Bạn bè · ${data?.friends.length ?? 0}`} icon="group">
               {others.map((friend) => (
                 <FriendRow key={friend.user.id} friend={friend} />
               ))}
@@ -93,7 +93,7 @@ export default function FriendsPage() {
       )}
 
       {data && data.outgoing.length > 0 && (
-        <Section title={`Sent · ${data.outgoing.length}`} icon="schedule_send">
+        <Section title={`Đã gửi · ${data.outgoing.length}`} icon="schedule_send">
           {data.outgoing.map((request) => (
             <RequestRow key={request.id} request={request} />
           ))}
@@ -129,7 +129,7 @@ function AddFriend() {
   return (
     <section className="flex flex-col gap-xs rounded-lg bg-surface-container-low p-md">
       <label htmlFor="friend-search" className="font-technical text-label-mono-sm uppercase text-outline">
-        Add a friend
+        Thêm bạn
       </label>
       <div className="relative">
         <Icon name="search" className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[20px] text-outline" />
@@ -137,7 +137,7 @@ function AddFriend() {
           id="friend-search"
           value={query}
           onChange={(event) => setQuery(event.target.value)}
-          placeholder="Name or username…"
+          placeholder="Tên hoặc username…"
           maxLength={40}
           autoComplete="off"
           className="w-full rounded-full bg-surface-container py-xs pl-10 pr-md text-body-md text-on-surface placeholder:text-outline focus:outline-none focus:ring-1 focus:ring-primary"
@@ -145,8 +145,8 @@ function AddFriend() {
       </div>
       {debounced.trim().length >= 2 && (
         <ul className="flex flex-col gap-1">
-          {search.isLoading && <li className="px-sm py-xs text-body-sm text-on-surface-variant">Searching…</li>}
-          {search.data?.length === 0 && <li className="px-sm py-xs text-body-sm text-on-surface-variant">No one found.</li>}
+          {search.isLoading && <li className="px-sm py-xs text-body-sm text-on-surface-variant">Đang tìm…</li>}
+          {search.data?.length === 0 && <li className="px-sm py-xs text-body-sm text-on-surface-variant">Không tìm thấy ai.</li>}
           {search.data?.map((result) => (
             <SearchRow
               key={result.user.id}
@@ -158,9 +158,9 @@ function AddFriend() {
                     showToast({
                       icon: status === "accepted" ? "how_to_reg" : "send",
                       tone: "success",
-                      title: status === "accepted" ? `You and ${result.user.displayName} are friends` : "Request sent",
+                      title: status === "accepted" ? `Bạn và ${result.user.displayName} đã là bạn bè` : "Đã gửi lời mời",
                     }),
-                  onError: failed("Couldn't send the request"),
+                  onError: failed("Không gửi được lời mời"),
                 })
               }
             />
@@ -172,10 +172,10 @@ function AddFriend() {
 }
 
 const RELATION_LABEL: Record<UserSearchResult["relation"], string | null> = {
-  self: "You",
-  friend: "Friends",
-  outgoing: "Requested",
-  incoming: "Wants to be friends",
+  self: "Bạn",
+  friend: "Bạn bè",
+  outgoing: "Đã gửi lời mời",
+  incoming: "Muốn kết bạn",
   none: null,
 };
 
@@ -188,7 +188,7 @@ function SearchRow({ result, busy, onAdd }: { result: UserSearchResult; busy: bo
         <p className="truncate text-body-md font-semibold text-on-surface">{result.user.displayName}</p>
         <p className="font-technical truncate text-label-mono-sm text-outline">
           @{result.user.username}
-          {result.user.isGuest && " · guest"}
+          {result.user.isGuest && " · khách"}
         </p>
       </div>
       {result.relation === "none" || result.relation === "incoming" ? (
@@ -199,7 +199,7 @@ function SearchRow({ result, busy, onAdd }: { result: UserSearchResult; busy: bo
           className="flex items-center gap-1 rounded-full bg-primary-container px-sm py-1 text-body-sm font-semibold text-on-primary-container disabled:opacity-50"
         >
           <Icon name={result.relation === "incoming" ? "how_to_reg" : "person_add"} className="text-[16px]" />
-          {result.relation === "incoming" ? "Accept" : "Add"}
+          {result.relation === "incoming" ? "Đồng ý" : "Kết bạn"}
         </button>
       ) : (
         label && <span className="text-body-sm text-on-surface-variant">{label}</span>
@@ -223,7 +223,7 @@ function RequestRow({ request }: { request: FriendRequest }) {
         <button
           type="button"
           disabled={accept.isPending}
-          onClick={() => accept.mutate(request.id, { onError: failed("Couldn't accept") })}
+          onClick={() => accept.mutate(request.id, { onError: failed("Không đồng ý được") })}
           className="flex items-center gap-1 rounded-full bg-primary-container px-sm py-1 text-body-sm font-semibold text-on-primary-container disabled:opacity-50"
         >
           <Icon name="check" className="text-[16px]" /> Accept
@@ -232,10 +232,10 @@ function RequestRow({ request }: { request: FriendRequest }) {
       <button
         type="button"
         disabled={dismiss.isPending}
-        onClick={() => dismiss.mutate(request.id, { onError: failed("Couldn't update the request") })}
+        onClick={() => dismiss.mutate(request.id, { onError: failed("Không cập nhật được lời mời") })}
         className="rounded-full px-sm py-1 text-body-sm text-on-surface-variant hover:bg-white/[0.06] hover:text-on-surface disabled:opacity-50"
       >
-        {incoming ? "Decline" : "Cancel"}
+        {incoming ? "Từ chối" : "Huỷ"}
       </button>
     </li>
   );
@@ -259,11 +259,11 @@ function FriendRow({ friend }: { friend: Friend }) {
                 {activity.trackTitle && <span className="text-on-surface-variant"> · {activity.trackTitle}</span>}
               </>
             ) : (
-              "In a private room"
+              "Đang ở phòng riêng tư"
             )}
           </p>
         ) : (
-          <p className="text-body-sm text-on-surface-variant">{online ? "Online" : "Offline"}</p>
+          <p className="text-body-sm text-on-surface-variant">{online ? "Đang online" : "Offline"}</p>
         )}
       </div>
       {activity?.canJoin && (
@@ -278,21 +278,21 @@ function FriendRow({ friend }: { friend: Friend }) {
         <span className="flex items-center gap-1">
           <button
             type="button"
-            onClick={() => unfriend.mutate(user.id, { onError: failed("Couldn't remove friend") })}
+            onClick={() => unfriend.mutate(user.id, { onError: failed("Không huỷ kết bạn được") })}
             className="rounded-full px-sm py-1 text-body-sm text-error hover:bg-error/10"
           >
-            Remove
+            Huỷ kết bạn
           </button>
           <button type="button" onClick={() => setConfirm(false)} className="rounded-full px-sm py-1 text-body-sm text-on-surface-variant">
-            Keep
+            Giữ lại
           </button>
         </span>
       ) : (
         <button
           type="button"
           onClick={() => setConfirm(true)}
-          aria-label={`Remove ${user.displayName} from friends`}
-          title="Remove friend"
+          aria-label={`Huỷ kết bạn với ${user.displayName}`}
+          title="Huỷ kết bạn"
           className="rounded-full p-1 text-outline hover:text-error"
         >
           <Icon name="person_remove" className="text-[18px]" />

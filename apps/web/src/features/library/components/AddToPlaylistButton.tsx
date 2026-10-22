@@ -39,7 +39,7 @@ export function AddToPlaylistButton({ trackId, className = "" }: { trackId: stri
     showToast({
       icon: "error",
       tone: "error",
-      title: "Couldn't add to the playlist",
+      title: "Không thêm vào playlist được",
       body: error instanceof ApiClientError ? error.message : undefined,
     });
   const addTo = (playlistId: string, name: string) =>
@@ -48,7 +48,7 @@ export function AddToPlaylistButton({ trackId, className = "" }: { trackId: stri
       {
         onSuccess: () => {
           setOpen(false);
-          showToast({ icon: "playlist_add_check", tone: "success", title: `Added to ${name}`, href: "/library" });
+          showToast({ icon: "playlist_add_check", tone: "success", title: `Đã thêm vào ${name}`, href: "/library" });
         },
         onError: failed,
       },
@@ -60,8 +60,8 @@ export function AddToPlaylistButton({ trackId, className = "" }: { trackId: stri
         type="button"
         aria-haspopup="menu"
         aria-expanded={open}
-        aria-label="Add to a playlist"
-        title="Add to a playlist"
+        aria-label="Thêm vào playlist"
+        title="Thêm vào playlist"
         onClick={(event) => {
           event.stopPropagation();
           setOpen((value) => !value);
@@ -76,11 +76,11 @@ export function AddToPlaylistButton({ trackId, className = "" }: { trackId: stri
           onClick={(event) => event.stopPropagation()}
           className="absolute right-0 top-full z-50 mt-1 w-60 overflow-hidden rounded-md border border-white/[0.16] bg-[rgba(30,41,59,0.95)] p-1 shadow-[0_12px_36px_-4px_rgba(0,0,0,0.65)] backdrop-blur-xl"
         >
-          <p className="px-sm py-1 text-label-mono-sm uppercase text-outline">Add to playlist</p>
+          <p className="px-sm py-1 text-label-mono-sm uppercase text-outline">Thêm vào playlist</p>
           <div className="scrollbar-none max-h-52 overflow-y-auto">
-            {playlists.isLoading && <p className="px-sm py-xs text-body-sm text-on-surface-variant">Loading…</p>}
+            {playlists.isLoading && <p className="px-sm py-xs text-body-sm text-on-surface-variant">Đang tải…</p>}
             {playlists.data?.length === 0 && (
-              <p className="px-sm py-xs text-body-sm text-on-surface-variant">No playlists yet — make one below.</p>
+              <p className="px-sm py-xs text-body-sm text-on-surface-variant">Chưa có playlist nào — tạo một cái bên dưới.</p>
             )}
             {playlists.data?.map((playlist) => (
               <button
@@ -118,14 +118,14 @@ export function AddToPlaylistButton({ trackId, className = "" }: { trackId: stri
               value={newName}
               onChange={(event) => setNewName(event.target.value)}
               maxLength={60}
-              placeholder="New playlist…"
-              aria-label="New playlist name"
+              placeholder="Playlist mới…"
+              aria-label="Tên playlist mới"
               className="min-w-0 flex-1 rounded-sm bg-surface-container-highest/60 px-xs py-1 text-body-sm text-on-surface placeholder:text-outline focus:outline-none focus:ring-1 focus:ring-primary"
             />
             <button
               type="submit"
               disabled={!newName.trim() || create.isPending}
-              aria-label="Create playlist and add"
+              aria-label="Tạo playlist và thêm"
               className="rounded-sm bg-primary-container px-xs py-1 text-body-sm text-on-primary-container disabled:opacity-40"
             >
               <Icon name="add" className="text-[16px]" />

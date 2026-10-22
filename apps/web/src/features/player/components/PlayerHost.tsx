@@ -144,7 +144,7 @@ export function PlayerHost({
       {hasTrack && !engineError && tapVideoToStart && (
         <span className="pointer-events-none absolute inset-x-0 top-xs mx-auto flex w-fit items-center gap-1.5 rounded-full bg-black/70 px-md py-1 text-body-sm font-semibold text-on-surface">
           <Icon name="touch_app" className="text-[18px] text-[#f472b6]" />
-          Tap the video to start the sound
+          Chạm vào video để bật tiếng
         </span>
       )}
 
@@ -157,15 +157,15 @@ export function PlayerHost({
           <span className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-[#8B5CF6] to-[#d946ef] shadow-[0_0_32px_rgba(139,92,246,0.5)]">
             <Icon name="headphones" className="text-[26px] text-white" />
           </span>
-          <span className="text-headline-sm">Tap to listen along</span>
-          <span className="px-sm text-body-sm text-on-surface-variant">Your browser needs one click before it plays sound</span>
+          <span className="text-headline-sm">Chạm để nghe cùng</span>
+          <span className="px-sm text-body-sm text-on-surface-variant">Trình duyệt cần bạn bấm một lần trước khi phát tiếng</span>
         </button>
       )}
 
       {hasTrack && !engineError && isBuffering && !needsUserGesture && (
         <span className="absolute bottom-xs right-xs flex items-center gap-1 rounded-full bg-black/60 px-sm py-0.5 text-body-sm text-on-surface-variant backdrop-blur-md">
           <Icon name="progress_activity" className="animate-spin text-[14px]" />
-          Buffering…
+          Đang tải…
         </span>
       )}
     </div>

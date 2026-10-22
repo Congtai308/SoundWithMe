@@ -17,10 +17,10 @@ import { StatePanel, ghostPillClass } from "@/components/ui/StatePanel";
 const SKELETON_COUNT = 10;
 
 const MODE_HINT: Record<TrackActionMode, string> = {
-  control: "Click a video to play it in your room — or queue it if something is already playing.",
-  add: "Click a video to add it to your room's queue.",
-  locked: "Only the host adds songs in the room you're listening to.",
-  "no-room": "Click a video to start a room with it and invite friends to listen together.",
+  control: "Bấm vào video để phát trong phòng của bạn — hoặc thêm vào hàng chờ nếu đang có bài phát.",
+  add: "Bấm vào video để thêm vào hàng chờ phòng bạn.",
+  locked: "Chỉ chủ phòng được thêm bài trong phòng bạn đang nghe.",
+  "no-room": "Bấm vào video để mở phòng với bài đó và mời bạn bè nghe cùng.",
 };
 
 // useSearchParams() requires a Suspense boundary in the App Router, or
@@ -68,12 +68,12 @@ function MusicContent() {
   const searchArtist = (name: string) => router.replace(`/discover?q=${encodeURIComponent(name)}`);
 
   const heading = input.trim()
-    ? `Results for “${input.trim()}”`
+    ? `Kết quả cho “${input.trim()}”`
     : topic
       ? `${topic.emoji} ${topic.label}`
       : vibe
         ? `${vibe.emoji} ${vibe.label}`
-        : "Songs";
+        : "Bài hát";
 
   return (
     <div className="relative mx-auto w-full max-w-[1400px] px-md py-lg md:px-[40px]">
@@ -82,14 +82,14 @@ function MusicContent() {
       <form onSubmit={submit} role="search" className="relative mx-auto mb-xl max-w-2xl">
         <Icon name="search" className="pointer-events-none absolute left-lg top-1/2 z-10 -translate-y-1/2 text-[22px] text-outline" />
         <label htmlFor="music-search" className="sr-only">
-          Find a song
+          Tìm bài hát
         </label>
         <input
           id="music-search"
           type="search"
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="Find a song you want to hear…"
+          placeholder="Tìm bài bạn muốn nghe…"
           className="w-full rounded-full border border-[#8B5CF6]/40 bg-[rgba(18,24,38,0.85)] py-sm pl-[56px] pr-[52px] text-body-lg text-on-surface shadow-[0_0_32px_rgba(139,92,246,0.18)] transition-shadow placeholder:text-[#475569] focus:border-[#8B5CF6] focus:shadow-[0_0_40px_rgba(139,92,246,0.3)] focus:outline-none"
         />
         {input && (
@@ -99,7 +99,7 @@ function MusicContent() {
               setInput("");
               router.replace("/discover");
             }}
-            aria-label="Clear search"
+            aria-label="Xoá tìm kiếm"
             className="absolute right-sm top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full text-outline hover:bg-white/[0.06] hover:text-on-surface"
           >
             <Icon name="close" className="text-[20px]" />
@@ -112,7 +112,7 @@ function MusicContent() {
           <section aria-labelledby="topics-heading" className="mb-lg flex flex-col gap-sm">
             <h2 id="topics-heading" className="font-technical flex items-center gap-1.5 text-label-mono-sm uppercase text-on-surface-variant">
               <Icon name="explore" className="text-[16px] text-tertiary" />
-              What do you want to hear today?
+              Hôm nay bạn muốn nghe gì?
             </h2>
             <div className="flex flex-wrap gap-xs">
               {MUSIC_TOPICS.map((t) => {
@@ -163,16 +163,16 @@ function MusicContent() {
               <StatePanel
                 tone="error"
                 icon={quotaSpent ? "hourglass_top" : "wifi_off"}
-                title={quotaSpent ? "YouTube search is resting" : "Couldn't reach YouTube"}
+                title={quotaSpent ? "Tìm kiếm YouTube đang tạm nghỉ" : "Không kết nối được YouTube"}
                 body={
                   quotaSpent
-                    ? "Today's search quota is used up — it resets in a few hours. Pasting a YouTube link into a room still works."
-                    : "Check your connection and try again."
+                    ? "Hôm nay đã hết lượt tìm kiếm — vài giờ nữa sẽ có lại. Dán link YouTube vào phòng vẫn dùng được."
+                    : "Kiểm tra kết nối mạng rồi thử lại."
                 }
                 action={
                   <button type="button" onClick={() => refetch()} className={ghostPillClass}>
                     <Icon name="refresh" className="text-[18px]" />
-                    Retry
+                    Thử lại
                   </button>
                 }
               />
@@ -185,8 +185,8 @@ function MusicContent() {
             ) : tracks.length === 0 ? (
               <StatePanel
                 icon="search_off"
-                title="No videos found"
-                body="Try another name or topic. If search never returns anything, the server has no YOUTUBE_API_KEY yet — pasting a YouTube link in a room still works."
+                title="Không tìm thấy video nào"
+                body="Thử tên hoặc chủ đề khác. Nếu tìm gì cũng không ra, máy chủ chưa có YOUTUBE_API_KEY — dán link YouTube vào phòng vẫn dùng được."
               />
             ) : (
               <div
@@ -238,14 +238,14 @@ function RecentlyPlayed({ mode, onPick }: { mode: TrackActionMode; onPick: (trac
       <div className="flex items-center justify-between">
         <h2 id="recent-heading" className="flex items-center gap-1.5 text-headline-sm text-on-surface">
           <Icon name="history" className="text-[18px] text-outline" />
-          Recently played
+          Nghe gần đây
         </h2>
         {tracks.length > 0 && (
           <button
             type="button"
             onClick={clear}
-            aria-label="Clear listening history"
-            title="Clear listening history"
+            aria-label="Xoá lịch sử nghe"
+            title="Xoá lịch sử nghe"
             className="flex h-8 w-8 items-center justify-center rounded-full text-outline hover:bg-white/[0.06] hover:text-on-surface"
           >
             <Icon name="delete" className="text-[18px]" />
@@ -254,7 +254,7 @@ function RecentlyPlayed({ mode, onPick }: { mode: TrackActionMode; onPick: (trac
       </div>
 
       {hydrated && tracks.length === 0 ? (
-        <p className="text-body-sm text-outline">Songs you listen to in rooms show up here.</p>
+        <p className="text-body-sm text-outline">Các bài bạn nghe trong phòng sẽ hiện ở đây.</p>
       ) : (
         <ul className="flex flex-col gap-1">
           {tracks.map((track) => (

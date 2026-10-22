@@ -422,7 +422,7 @@ export function useAudioSync({ containerRef, track, onTrackEnded }: AudioSyncOpt
     if (!track) return;
     const source = sourceFor(track);
     if (!source) {
-      store.setEngineError("This track has no playable audio source yet");
+      store.setEngineError("Bài này chưa có nguồn phát");
       return;
     }
 
@@ -467,7 +467,7 @@ export function useAudioSync({ containerRef, track, onTrackEnded }: AudioSyncOpt
       .catch((error: unknown) => {
         if (cancelled) return;
         store.setBuffering(false);
-        store.setEngineError(error instanceof Error ? error.message : "This track could not be loaded");
+        store.setEngineError(error instanceof Error ? error.message : "Không tải được bài này");
       });
     return () => {
       cancelled = true;

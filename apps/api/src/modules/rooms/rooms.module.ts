@@ -5,6 +5,7 @@ import {
   RoomMemberDocument,
   RoomMemberSchema,
 } from "../../database/mongodb/models/room-member.schema";
+import { QueueItemDocument, QueueItemSchema } from "../../database/mongodb/models/queue-item.schema";
 import { FriendsModule } from "../friends/friends.module";
 import { NotificationsModule } from "../notifications/notifications.module";
 import { RedisModule } from "../../database/redis/redis.module";
@@ -16,6 +17,8 @@ import { RoomsService } from "./rooms.service";
     MongooseModule.forFeature([
       { name: RoomDocument.name, schema: RoomSchema },
       { name: RoomMemberDocument.name, schema: RoomMemberSchema },
+      // Read-only here: how many songs wait in each listed room.
+      { name: QueueItemDocument.name, schema: QueueItemSchema },
     ]),
     FriendsModule,
     NotificationsModule,

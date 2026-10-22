@@ -44,10 +44,10 @@ export default function CreateRoomPage() {
             </div>
             <div>
               <span className="font-technical flex items-center gap-2 text-label-mono-sm uppercase text-secondary">
-                Audio stage creator
+                Tạo phòng nghe
                 <span className="h-1.5 w-1.5 rounded-full bg-secondary motion-safe:animate-ping" />
               </span>
-              <h1 className="text-headline-lg text-on-surface">Setup &amp; Broadcast Room</h1>
+              <h1 className="text-headline-lg text-on-surface">Mở phòng mới</h1>
             </div>
           </div>
 
@@ -77,8 +77,8 @@ export default function CreateRoomPage() {
             <div className="mb-lg flex items-center gap-sm rounded-md bg-primary-container/15 p-sm">
               <TrackArt artworkUrl={playTrack?.artworkUrl} seed={playTrackId} size={48} className="rounded-md" />
               <div className="min-w-0">
-                <p className="font-technical text-label-mono-sm uppercase text-secondary">Starts with</p>
-                <p className="truncate text-headline-sm text-on-surface">{playTrack?.title ?? "Loading…"}</p>
+                <p className="font-technical text-label-mono-sm uppercase text-secondary">Bắt đầu với</p>
+                <p className="truncate text-headline-sm text-on-surface">{playTrack?.title ?? "Đang tải…"}</p>
               </div>
             </div>
           )}
@@ -110,10 +110,10 @@ function AlreadyHosting({ room, playTrackId }: { room: Room; playTrackId: string
         <Icon name="podcasts" className="text-[30px]" />
       </div>
       <div className="flex flex-col gap-1">
-        <span className="font-technical text-label-mono-sm uppercase text-secondary">You&apos;re already live</span>
+        <span className="font-technical text-label-mono-sm uppercase text-secondary">Bạn đang mở một phòng rồi</span>
         <h2 className="text-headline-lg text-on-surface">{room.name}</h2>
         <p className="text-body-md text-on-surface-variant">
-          You can host one room at a time. {playTrackId ? "Play the song there, or end" : "Head back in, or end"} it to start a new one.
+          You can host one room at a time. {playTrackId ? "Phát bài đó trong phòng, hoặc kết thúc" : "Quay lại phòng, hoặc kết thúc"} it to start a new one.
         </p>
       </div>
       <div className="flex w-full flex-col gap-sm sm:flex-row">
@@ -123,7 +123,7 @@ function AlreadyHosting({ room, playTrackId }: { room: Room; playTrackId: string
           className="flex flex-1 items-center justify-center gap-xs rounded-full bg-primary-container px-md py-sm text-headline-sm text-on-primary-container shadow-[0_0_24px_rgba(160,120,255,0.35)]"
         >
           <Icon name="login" className="text-[20px]" />
-          {playTrackId ? "Play it in my room" : "Open my room"}
+          {playTrackId ? "Phát trong phòng của tôi" : "Mở phòng của tôi"}
         </Link>
         <button
           type="button"
@@ -138,10 +138,10 @@ function AlreadyHosting({ room, playTrackId }: { room: Room; playTrackId: string
           className="flex flex-1 items-center justify-center gap-xs rounded-full border border-error/40 bg-error/10 px-md py-sm text-headline-sm text-error hover:bg-error/20 disabled:opacity-60"
         >
           <Icon name="stop_circle" className="text-[20px]" />
-          {leave.isPending ? "Ending…" : "End it & start a new one"}
+          {leave.isPending ? "Đang kết thúc…" : "Kết thúc & mở phòng mới"}
         </button>
       </div>
-      {leave.isError && <p className="text-body-sm text-error">Couldn&apos;t end the room. Try again.</p>}
+      {leave.isError && <p className="text-body-sm text-error">Không kết thúc được phòng. Thử lại nhé.</p>}
     </div>
   );
 }

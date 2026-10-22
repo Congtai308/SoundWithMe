@@ -5,6 +5,7 @@ import type {
   LoginInput,
   RegisterInput,
   ResetPasswordInput,
+  UpdateProfileInput,
 } from "@soundwithme/validation";
 import { apiClient, API_BASE_URL } from "@/services/api-client";
 
@@ -27,6 +28,7 @@ export const authApi = {
     apiClient.post<{ user: AuthenticatedUser }>("/auth/guest", input),
 
   me: () => apiClient.get<{ user: AuthenticatedUser }>("/auth/me"),
+  updateProfile: (input: UpdateProfileInput) => apiClient.patch<{ user: AuthenticatedUser }>("/users/me", input),
 
   logout: () => apiClient.post<{ status: string }>("/auth/logout"),
 

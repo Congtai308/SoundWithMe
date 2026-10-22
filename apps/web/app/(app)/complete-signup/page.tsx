@@ -42,32 +42,32 @@ export default function CompleteSignupPage() {
         <StatePanel
           icon="link_off"
           tone="error"
-          title="This link doesn't work"
-          body="It expired, was already used, or a wrong password was entered too often. Sign up again to get a new one."
+          title="Link này không dùng được"
+          body="Link đã hết hạn, đã được dùng, hoặc nhập sai mật khẩu quá nhiều lần. Đăng ký lại để nhận link mới."
           action={
             <Link href="/login" className={primaryPillClass}>
-              Back to sign up
+              Quay lại đăng ký
             </Link>
           }
         />
       ) : (
         <form onSubmit={submit} className="flex flex-col gap-sm rounded-lg bg-surface-container-low p-lg">
-          <h1 className="text-headline-md text-on-surface">Finish creating your account</h1>
-          <p className="text-body-md text-on-surface-variant">Enter the password you chose when you signed up.</p>
+          <h1 className="text-headline-md text-on-surface">Hoàn tất tạo tài khoản</h1>
+          <p className="text-body-md text-on-surface-variant">Nhập mật khẩu bạn đã chọn khi đăng ký.</p>
           <input
             type="password"
             required
             autoFocus
             autoComplete="current-password"
-            placeholder="Your password"
-            aria-label="Your password"
+            placeholder="Mật khẩu của bạn"
+            aria-label="Mật khẩu của bạn"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className={inputClass}
           />
           {complete.error && (
             <p role="alert" className="text-body-md text-error">
-              {complete.error instanceof ApiClientError ? complete.error.message : "Something went wrong. Try again."}
+              {complete.error instanceof ApiClientError ? complete.error.message : "Có lỗi xảy ra. Thử lại nhé."}
             </p>
           )}
           <button
@@ -75,7 +75,7 @@ export default function CompleteSignupPage() {
             disabled={complete.isPending || complete.isSuccess}
             className={`${primaryPillClass} justify-center disabled:opacity-50`}
           >
-            {complete.isPending || complete.isSuccess ? "Creating your account…" : "Create my account"}
+            {complete.isPending || complete.isSuccess ? "Đang tạo tài khoản…" : "Tạo tài khoản"}
           </button>
         </form>
       )}

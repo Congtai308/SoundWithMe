@@ -202,6 +202,27 @@ export class QueueService {
   }
 
   /**
+   * Whether the room should move to its next song by itself: nothing has
+   * played yet, or the current song is over by the server's clock. With the
+   * version to advance from (0 = no playback yet).
+   */
+  async needsNextSong(roomId: string): Promise<{ needed: boolean; version: number }> {
+    const state = await this.playbackService.getPlaybackState(roomId);
+    if (!state) return { needed: true, version: 0 };
+    return { needed: await this.hasEnded(roomId, state.version), version: state.version };
+  }
+
+  /** Songs a room played or queued lately, newest first. */
+  async recentTrackIds(roomId: string, limit: number): Promise<string[]> {
+    const docs = await this.queueModel.find({ roomId }).sort({ _id: -1 }).limit(limit).select({ trackId: 1 }).exec();
+    return docs.map((doc) => doc.trackId);
+  }
+
+  async upcomingCount(roomId: string): Promise<number> {
+    return this.queueModel.countDocuments({ roomId, status: "queued" }).exec();
+  }
+
+  /**
    * Whether the song at `fromVersion` has played to its end by the server's
    * clock. Songs without a known length (some YouTube links) count as over
    * after ENDED_UNKNOWN_LENGTH_MS, so a listener can't skip one right away.

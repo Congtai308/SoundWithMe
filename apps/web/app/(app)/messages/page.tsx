@@ -27,9 +27,9 @@ export default function MessagesPage() {
 
 function preview(conversation: Conversation, myId: string): string {
   const m = conversation.lastMessage;
-  const prefix = m.senderId === myId ? "You: " : "";
-  if (m.kind === "track") return `${prefix}🎵 ${m.track?.title ?? "A song"}`;
-  if (m.kind === "room") return `${prefix}📻 ${m.room?.name ?? "A room"}`;
+  const prefix = m.senderId === myId ? "Bạn: " : "";
+  if (m.kind === "track") return `${prefix}🎵 ${m.track?.title ?? "Một bài hát"}`;
+  if (m.kind === "room") return `${prefix}📻 ${m.room?.name ?? "Một phòng"}`;
   return `${prefix}${m.content}`;
 }
 
@@ -56,11 +56,11 @@ function MessagesView() {
       <div className="mx-auto max-w-lg px-md py-xl">
         <StatePanel
           icon="chat_bubble"
-          title="Sign in to message friends"
-          body="Send songs and room invites to your friends."
+          title="Đăng nhập để nhắn tin với bạn bè"
+          body="Gửi bài hát và lời mời vào phòng cho bạn bè."
           action={
             <Link href="/login" className={primaryPillClass}>
-              Sign in
+              Đăng nhập
             </Link>
           }
         />
@@ -76,7 +76,7 @@ function MessagesView() {
   return (
     <div className="mx-auto flex h-[calc(100vh-4rem-5rem)] w-full max-w-6xl gap-md px-md py-md sm:h-[calc(100vh-4rem)]">
       <aside className={`${openId ? "hidden md:flex" : "flex"} w-full flex-col gap-sm md:w-80 md:shrink-0`}>
-        <h1 className="text-headline-md text-on-surface">Messages</h1>
+        <h1 className="text-headline-md text-on-surface">Tin nhắn</h1>
         <div className="flex-1 overflow-y-auto rounded-lg bg-surface-container-low p-xs">
           {(inbox?.conversations ?? []).map((c) => (
             <button
@@ -104,7 +104,7 @@ function MessagesView() {
           ))}
           {startable.length > 0 && (
             <>
-              <p className="font-technical px-sm pb-1 pt-sm text-label-mono-sm uppercase text-outline">Start a conversation</p>
+              <p className="font-technical px-sm pb-1 pt-sm text-label-mono-sm uppercase text-outline">Bắt đầu trò chuyện</p>
               {startable.map((f) => (
                 <button
                   key={f.user.id}
@@ -120,7 +120,7 @@ function MessagesView() {
           )}
           {(inbox?.conversations ?? []).length === 0 && startable.length === 0 && (
             <p className="p-sm text-body-md text-on-surface-variant">
-              No messages yet. <Link href="/friends" className="font-semibold text-primary hover:underline">Add friends</Link> to start chatting.
+              No messages yet. <Link href="/friends" className="font-semibold text-primary hover:underline">Kết bạn</Link> to start chatting.
             </p>
           )}
         </div>
@@ -131,7 +131,7 @@ function MessagesView() {
           <Thread key={openId} other={openUser} myId={user.id} canWrite={friendIds.has(openId)} onBack={() => open(null)} />
         ) : (
           <div className="m-auto p-lg">
-            <StatePanel icon="forum" title="Pick a conversation" body="Or start one with a friend from the list." />
+            <StatePanel icon="forum" title="Chọn một cuộc trò chuyện" body="Hoặc bắt đầu với một người bạn trong danh sách." />
           </div>
         )}
       </section>
@@ -180,7 +180,7 @@ function Thread({ other, myId, canWrite, onBack }: { other: PublicUser; myId: st
   return (
     <>
       <header className="flex items-center gap-sm border-b border-white/[0.06] px-md py-sm">
-        <button type="button" onClick={onBack} aria-label="Back to conversations" className="md:hidden">
+        <button type="button" onClick={onBack} aria-label="Quay lại danh sách tin nhắn" className="md:hidden">
           <Icon name="arrow_back" className="text-[22px] text-on-surface-variant" />
         </button>
         <Avatar name={other.displayName} src={other.avatarUrl} size={36} />
@@ -198,10 +198,10 @@ function Thread({ other, myId, canWrite, onBack }: { other: PublicUser; myId: st
             disabled={thread.isFetchingNextPage}
             className="mx-auto text-body-sm font-semibold text-primary hover:underline disabled:opacity-50"
           >
-            {thread.isFetchingNextPage ? "Loading…" : "Load older messages"}
+            {thread.isFetchingNextPage ? "Đang tải…" : "Xem tin nhắn cũ hơn"}
           </button>
         )}
-        {thread.isLoading && <p className="m-auto text-body-md text-on-surface-variant">Loading…</p>}
+        {thread.isLoading && <p className="m-auto text-body-md text-on-surface-variant">Đang tải…</p>}
         {!thread.isLoading && messages.length === 0 && (
           <p className="m-auto text-center text-body-md text-on-surface-variant">
             Say hi to {other.displayName}, or send them a song.
@@ -218,8 +218,8 @@ function Thread({ other, myId, canWrite, onBack }: { other: PublicUser; myId: st
           <button
             type="button"
             onClick={() => setSharing(true)}
-            title="Send a song"
-            aria-label="Send a song"
+            title="Gửi bài hát"
+            aria-label="Gửi bài hát"
             className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-on-surface-variant hover:bg-white/[0.08]"
           >
             <Icon name="music_note" className="text-[20px]" />
@@ -228,8 +228,8 @@ function Thread({ other, myId, canWrite, onBack }: { other: PublicUser; myId: st
             <button
               type="button"
               onClick={() => send.mutate({ kind: "room", roomId })}
-              title={`Invite to ${room?.name ?? "your room"}`}
-              aria-label={`Invite to ${room?.name ?? "your room"}`}
+              title={`Mời vào ${room?.name ?? "phòng của bạn"}`}
+              aria-label={`Mời vào ${room?.name ?? "phòng của bạn"}`}
               className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-on-surface-variant hover:bg-white/[0.08]"
             >
               <Icon name="sensors" className="text-[20px]" />
@@ -241,14 +241,14 @@ function Thread({ other, myId, canWrite, onBack }: { other: PublicUser; myId: st
             onKeyDown={onKeyDown}
             rows={1}
             maxLength={2000}
-            placeholder={`Message ${other.displayName}`}
-            aria-label={`Message ${other.displayName}`}
+            placeholder={`Nhắn cho ${other.displayName}`}
+            aria-label={`Nhắn cho ${other.displayName}`}
             className="max-h-32 min-h-10 flex-1 resize-none rounded-2xl border border-white/[0.12] bg-surface-container-high px-md py-xs text-body-md text-on-surface placeholder:text-outline focus:border-primary focus:outline-none"
           />
           <button
             type="submit"
             disabled={!draft.trim() || send.isPending}
-            aria-label="Send"
+            aria-label="Gửi"
             className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-container text-on-primary-container disabled:opacity-50"
           >
             <Icon name="send" className="text-[20px]" />
@@ -261,7 +261,7 @@ function Thread({ other, myId, canWrite, onBack }: { other: PublicUser; myId: st
       )}
       {send.error && (
         <p role="alert" className="px-md pb-sm text-body-sm text-error">
-          {send.error instanceof ApiClientError ? send.error.message : "Couldn't send. Try again."}
+          {send.error instanceof ApiClientError ? send.error.message : "Không gửi được. Thử lại nhé."}
         </p>
       )}
       {sharing && (
@@ -282,18 +282,18 @@ function PickSongDialog({ onClose, onPick }: { onClose: () => void; onPick: (tra
   const results = useSearchTracks(query);
 
   return (
-    <Dialog title="Send a song" onClose={onClose}>
+    <Dialog title="Gửi bài hát" onClose={onClose}>
       <div className="flex flex-col gap-sm p-md">
         <input
           autoFocus
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search songs"
-          aria-label="Search songs"
+          placeholder="Tìm bài hát"
+          aria-label="Tìm bài hát"
           className="w-full rounded-lg border border-white/[0.12] bg-surface-container-high px-md py-sm text-body-md text-on-surface placeholder:text-outline focus:border-primary focus:outline-none"
         />
         <div className="flex max-h-[50vh] flex-col gap-1 overflow-y-auto">
-          {results.isFetching && <p className="text-body-sm text-on-surface-variant">Searching…</p>}
+          {results.isFetching && <p className="text-body-sm text-on-surface-variant">Đang tìm…</p>}
           {(results.data ?? []).map((track) => (
             <button
               key={track.id}

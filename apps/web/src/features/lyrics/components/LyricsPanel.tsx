@@ -24,7 +24,7 @@ const SCROLL_MIN_MS = 120;
 /** About one frame: the time React takes to commit the newly lit line. */
 const RENDER_LEAD_MS = 16;
 const VERSION_MISMATCH_HINT =
-  "These lyrics follow the album version and this video has extra parts — click the line being sung to line them up.";
+  "Lời này theo bản album, còn video có thêm đoạn khác — bấm vào dòng đang hát để khớp lại.";
 /** Lyrics timed to a recording this much shorter/longer than the video are probably the album cut. */
 const DURATION_MISMATCH_MS = 4_000;
 /** Words ending before this share of the video means it has parts the album cut doesn't (intro, skits). */
@@ -308,14 +308,14 @@ export function LyricsPanel({ track, compact = false }: { track: TrackWithArtist
 
   return (
     <section
-      aria-label="Lyrics"
+      aria-label="Lời bài hát"
       className={`room-panel-static flex flex-col overflow-hidden rounded-lg ${
         !isOpen ? "" : compact ? "md:min-h-[150px] md:flex-[3_1_0%]" : "md:min-h-[240px] md:flex-1 md:basis-0"
       }`}
     >
       <header className="flex items-center gap-sm border-b border-white/[0.08] bg-white/[0.025] px-md py-sm">
         <Icon name="lyrics" className="text-[20px] text-[#c4b5fd]" />
-        <h3 className={`font-technical text-label-mono-sm uppercase tracking-wider text-[#c4b5fd] ${compact ? "sr-only" : ""}`}>Lyrics</h3>
+        <h3 className={`font-technical text-label-mono-sm uppercase tracking-wider text-[#c4b5fd] ${compact ? "sr-only" : ""}`}>Lời bài hát</h3>
         {compact && versionMismatch && (
           <span title={VERSION_MISMATCH_HINT} className="flex shrink-0 text-[#fbbf24]/80">
             <Icon name="touch_app" className="text-[16px]" />
@@ -411,7 +411,7 @@ export function LyricsPanel({ track, compact = false }: { track: TrackWithArtist
             type="button"
             onClick={() => setIsOpen(!isOpen)}
             aria-expanded={isOpen}
-            aria-label={isOpen ? "Hide lyrics" : "Show lyrics"}
+            aria-label={isOpen ? "Ẩn lời" : "Hiện lời"}
             className="flex h-8 w-8 items-center justify-center rounded-full text-on-surface-variant hover:bg-white/[0.06] hover:text-on-surface"
           >
             <Icon name={isOpen ? "expand_less" : "expand_more"} className="text-[22px]" />
@@ -442,11 +442,11 @@ export function LyricsPanel({ track, compact = false }: { track: TrackWithArtist
           className="scrollbar-none relative h-[50vh] overflow-y-auto md:h-auto md:min-h-0 md:flex-1 px-md [mask-image:linear-gradient(to_bottom,transparent,black_20%,black_80%,transparent)]"
         >
           {!track ? (
-            <LyricsNotice text="Lyrics show up here once a song is playing." />
+            <LyricsNotice text="Lời bài hát hiện ở đây khi có bài đang phát." />
           ) : lyrics.isLoading ? (
-            <LyricsNotice text="Finding lyrics…" busy />
+            <LyricsNotice text="Đang tìm lời…" busy />
           ) : lyrics.isError ? (
-            <LyricsNotice text={lyrics.error.message} action={{ label: "Retry", onClick: () => lyrics.refetch() }} />
+            <LyricsNotice text={lyrics.error.message} action={{ label: "Thử lại", onClick: () => lyrics.refetch() }} />
           ) : lines.length > 0 ? (
             <div
               className={`flex flex-col items-center gap-sm text-center ${
@@ -465,7 +465,7 @@ export function LyricsPanel({ track, compact = false }: { track: TrackWithArtist
                     ref={isActive ? activeRef : undefined}
                     aria-current={isActive ? "true" : undefined}
                     onClick={() => syncToLine(line)}
-                    title="Click when this line is being sung"
+                    title="Bấm khi dòng này đang được hát"
                     style={{ opacity: isActive ? 1 : (LINE_OPACITY[Math.min(distance, LINE_OPACITY.length - 1)] ?? 0) + (isNext ? 0.2 : 0) }}
                     className={`block max-w-full rounded-md px-xs transition-[color,opacity,filter] duration-300 hover:bg-white/[0.04] hover:!opacity-100 ${
                       syncing ? "!opacity-90 !blur-none outline-dashed outline-1 outline-white/10 hover:bg-primary-container/25 hover:outline-primary/60" : ""
@@ -487,7 +487,7 @@ export function LyricsPanel({ track, compact = false }: { track: TrackWithArtist
           ) : lyrics.data?.plain ? (
             <p className="whitespace-pre-line py-md text-center text-body-md text-on-surface-variant">{lyrics.data.plain}</p>
           ) : (
-            <LyricsNotice text="No lyrics found for this song." />
+            <LyricsNotice text="Không tìm thấy lời cho bài này." />
           )}
         </div>
       )}

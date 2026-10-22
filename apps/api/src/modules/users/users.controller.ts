@@ -19,11 +19,15 @@ import type { AuthenticatedUser } from "@soundwithme/types";
 import { ZodValidationPipe } from "../../common/pipes/zod-validation.pipe";
 import { CurrentUser } from "../../common/decorators/current-user.decorator";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
+import { AppEventsService } from "../../common/events/app-events.service";
 import { UsersService } from "./users.service";
 
 @Controller("users")
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly events: AppEventsService,
+  ) {}
 
   @UseGuards(JwtAuthGuard)
   @Get("me")
@@ -44,6 +48,11 @@ export class UsersController {
         error: { code: ERROR_CODES.USER_NOT_FOUND, message: "User not found" },
       });
     }
+    this.events.emit("user.profileChanged", {
+      userId: updated.id,
+      displayName: updated.displayName,
+      avatarUrl: updated.avatarUrl ?? null,
+    });
     return {
       success: true,
       data: { user: this.usersService.toAuthenticatedUser(updated) },

@@ -10,7 +10,7 @@ export function VerifyEmailBanner() {
   const resend = useResendVerification();
   if (!user || user.isGuest || !user.email || user.emailVerified) return null;
 
-  const failed = resend.error instanceof ApiClientError ? resend.error.message : resend.error ? "Couldn't send it. Try again." : null;
+  const failed = resend.error instanceof ApiClientError ? resend.error.message : resend.error ? "Không gửi được. Thử lại nhé." : null;
 
   return (
     <div className="mx-md mt-sm flex flex-wrap items-center gap-xs rounded-lg bg-primary-container/15 px-md py-sm text-body-md text-on-surface md:mx-lg">
@@ -19,7 +19,7 @@ export function VerifyEmailBanner() {
         Confirm <span className="font-semibold">{user.email}</span> so you can get back in if you forget your password.
       </span>
       {resend.isSuccess ? (
-        <span className="text-on-surface-variant">Sent. Check your inbox (and spam).</span>
+        <span className="text-on-surface-variant">Đã gửi. Kiểm tra hộp thư (cả mục spam).</span>
       ) : (
         <button
           type="button"
@@ -27,7 +27,7 @@ export function VerifyEmailBanner() {
           onClick={() => resend.mutate()}
           className="font-semibold text-primary hover:underline disabled:opacity-50"
         >
-          {resend.isPending ? "Sending…" : "Send the link again"}
+          {resend.isPending ? "Đang gửi…" : "Gửi lại link"}
         </button>
       )}
       {failed && (

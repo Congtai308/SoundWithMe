@@ -8,10 +8,10 @@
 export type VoiceEffect = "off" | "room" | "hall" | "echo";
 
 export const VOICE_EFFECTS: { value: VoiceEffect; label: string; icon: string }[] = [
-  { value: "off", label: "Dry", icon: "mic" },
-  { value: "room", label: "Room", icon: "meeting_room" },
-  { value: "hall", label: "Hall", icon: "stadium" },
-  { value: "echo", label: "Echo", icon: "graphic_eq" },
+  { value: "off", label: "Gốc", icon: "mic" },
+  { value: "room", label: "Phòng", icon: "meeting_room" },
+  { value: "hall", label: "Hội trường", icon: "stadium" },
+  { value: "echo", label: "Vang", icon: "graphic_eq" },
 ];
 
 interface EffectShape {

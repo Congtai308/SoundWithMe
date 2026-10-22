@@ -29,6 +29,7 @@ import { QueueService } from "../../modules/queue/queue.service";
 import { PresenceService } from "../../modules/presence/presence.service";
 import { FriendshipsService } from "../../modules/friends/friendships.service";
 import { WsAuthService } from "../ws-auth.service";
+import { AppEventsService } from "../../common/events/app-events.service";
 import { WsExceptionFilter } from "../ws-exception.filter";
 import { RATE_LIMITS, assertJoined, consumeRateLimit } from "../socket-guards";
 import { notifyRelayDemand, relaysOfRoom } from "../voice-relay";
@@ -71,10 +72,21 @@ export class PlaybackGateway implements OnGatewayInit, OnGatewayConnection, Befo
     private readonly wsAuthService: WsAuthService,
     private readonly presence: PresenceService,
     private readonly friendships: FriendshipsService,
+    private readonly events: AppEventsService,
   ) {}
 
   /** Rejects unauthenticated handshakes before any event can be received. */
   afterInit(server: AppServer): void {
+    // Sockets keep who they are from the handshake: bring a new name or avatar to them and their rooms.
+    this.events.on("user.profileChanged", async ({ userId, displayName, avatarUrl }) => {
+      const rooms = new Set<string>();
+      for (const socket of await server.in(userRoom(userId)).local.fetchSockets()) {
+        socket.data.user = { ...socket.data.user, displayName, avatarUrl };
+        for (const roomId of Object.keys(socket.data.joinedRooms ?? {})) rooms.add(roomId);
+      }
+      for (const roomId of rooms) await this.broadcastPresence(roomId);
+    });
+
     server.use((socket, next) => {
       this.wsAuthService
         .authenticate(socket.handshake)
@@ -368,8 +380,8 @@ function isListeningRoom(client: AppSocket, roomId: string): boolean {
 }
 
 /** One entry per user, however many tabs they have open. */
-function uniqueListeners(users: { id: string; displayName: string }[]): RoomListener[] {
+function uniqueListeners(users: { id: string; displayName: string; avatarUrl: string | null }[]): RoomListener[] {
   const byId = new Map<string, RoomListener>();
-  for (const user of users) byId.set(user.id, { id: user.id, displayName: user.displayName });
+  for (const user of users) byId.set(user.id, { id: user.id, displayName: user.displayName, avatarUrl: user.avatarUrl });
   return [...byId.values()];
 }

@@ -6,6 +6,7 @@ export interface SocketUser {
   id: string;
   displayName: string;
   isGuest: boolean;
+  avatarUrl: string | null;
 }
 
 /** The login behind a socket, checked again once its access token expires. */

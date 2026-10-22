@@ -25,20 +25,20 @@ interface RoomTypeOption {
 }
 
 const ROOM_TYPES: RoomTypeOption[] = [
-  { value: "public", label: "Public Space", icon: "public", hint: "Listed in Live Rooms — anyone can join." },
-  { value: "duo", label: "1-on-1 Duo", icon: "group", hint: "You and one other listener, by link." },
-  { value: "friends", label: "Friends Only", icon: "diversity_3", hint: "Only your friends can join; they get notified." },
-  { value: "private", label: "Secret & Passcode", icon: "lock", hint: "Hidden. Invite link only, plus an optional passcode." },
+  { value: "public", label: "Công khai", icon: "public", hint: "Hiện trong danh sách phòng — ai cũng vào được." },
+  { value: "duo", label: "Nghe đôi", icon: "group", hint: "Bạn và một người nữa, vào bằng link." },
+  { value: "friends", label: "Chỉ bạn bè", icon: "diversity_3", hint: "Chỉ bạn bè của bạn vào được; họ sẽ nhận thông báo." },
+  { value: "private", label: "Bí mật & mật mã", icon: "lock", hint: "Ẩn. Chỉ vào bằng link mời, có thể thêm mật mã." },
 ];
 
 const CONTROL_OPTIONS: { value: RoomSettings["whoCanControlPlayback"]; label: string; icon: string }[] = [
-  { value: "host", label: "Host & DJs", icon: "lock" },
-  { value: "everyone", label: "Everyone", icon: "group" },
+  { value: "host", label: "Chủ phòng & DJ", icon: "lock" },
+  { value: "everyone", label: "Mọi người", icon: "group" },
 ];
 
 const QUEUE_OPTIONS: { value: RoomSettings["whoCanAddSongs"]; label: string }[] = [
-  { value: "host", label: "Host & DJs" },
-  { value: "everyone", label: "Everyone" },
+  { value: "host", label: "Chủ phòng & DJ" },
+  { value: "everyone", label: "Mọi người" },
 ];
 
 const DEFAULT_MAX_LISTENERS = 50;
@@ -94,13 +94,13 @@ export function CreateRoomForm({ onCreated }: { onCreated: (room: Room) => void 
             <span className="flex-1">
               {error instanceof ApiClientError
                 ? error.code === "RATE_LIMITED"
-                  ? "You've opened a lot of rooms in a short time — wait a few minutes and try again."
+                  ? "Bạn mở nhiều phòng quá trong thời gian ngắn — đợi vài phút rồi thử lại nhé."
                   : error.message
-                : "Couldn't create the room. Try again."}
+                : "Không tạo được phòng. Thử lại nhé."}
             </span>
             {typeof hostedRoomId === "string" && (
               <Link href={`/room/${hostedRoomId}`} className="rounded-full bg-white/10 px-sm py-0.5 font-semibold hover:bg-white/20">
-                Open my room
+                Mở phòng của tôi
               </Link>
             )}
           </div>
@@ -108,11 +108,11 @@ export function CreateRoomForm({ onCreated }: { onCreated: (room: Room) => void 
 
         <div className="flex flex-col gap-sm">
           <label className="flex flex-col gap-1">
-            <span className={labelClass}>Room identity &amp; title</span>
+            <span className={labelClass}>Tên phòng</span>
             <span className="relative flex items-center">
               <input
                 type="text"
-                placeholder="Name your chamber…"
+                placeholder="Đặt tên cho phòng…"
                 maxLength={80}
                 aria-invalid={errors.name ? true : undefined}
                 className={`w-full rounded-md bg-surface-container-highest/60 px-md py-sm pr-10 text-headline-sm text-on-surface shadow-inner placeholder:text-outline focus:bg-surface-container focus:outline-none focus:ring-1 focus:ring-primary-container ${
@@ -126,11 +126,11 @@ export function CreateRoomForm({ onCreated }: { onCreated: (room: Room) => void 
           </label>
 
           <label className="flex flex-col gap-1">
-            <span className={labelClass}>Atmospheric brief / description</span>
+            <span className={labelClass}>Mô tả</span>
             <textarea
               rows={2}
               maxLength={500}
-              placeholder="What's the vibe tonight?"
+              placeholder="Tối nay phòng mình nghe gì?"
               className="w-full resize-none rounded-md bg-surface-container-highest/60 px-md py-sm text-body-md text-on-surface shadow-inner placeholder:text-outline focus:bg-surface-container focus:outline-none focus:ring-1 focus:ring-primary-container"
               {...register("description")}
             />
@@ -139,7 +139,7 @@ export function CreateRoomForm({ onCreated }: { onCreated: (room: Room) => void 
         </div>
 
         <fieldset className="flex flex-col gap-xs">
-          <legend className={`${labelClass} mb-xs`}>Access tier &amp; broadcast scope</legend>
+          <legend className={`${labelClass} mb-xs`}>Ai được vào</legend>
           <div className="grid grid-cols-1 gap-xs sm:grid-cols-2">
             {ROOM_TYPES.map((option) => {
               const selected = roomType === option.value;
@@ -174,12 +174,12 @@ export function CreateRoomForm({ onCreated }: { onCreated: (room: Room) => void 
 
         {roomType === "private" && (
           <label className="flex flex-col gap-1">
-            <span className={labelClass}>Passcode (optional)</span>
+            <span className={labelClass}>Mật mã (không bắt buộc)</span>
             <input
               type="text"
               autoComplete="off"
               maxLength={32}
-              placeholder="4–32 characters — leave empty for invite link only"
+              placeholder="4–32 ký tự — để trống nếu chỉ vào bằng link mời"
               aria-invalid={errors.passcode ? true : undefined}
               className={`w-full rounded-md bg-surface-container-highest/60 px-md py-sm text-body-md text-on-surface shadow-inner placeholder:text-outline focus:bg-surface-container focus:outline-none focus:ring-1 focus:ring-primary-container ${
                 errors.passcode ? "ring-1 ring-error" : ""
@@ -190,7 +190,7 @@ export function CreateRoomForm({ onCreated }: { onCreated: (room: Room) => void 
               <span className="text-body-sm text-error">{errors.passcode.message}</span>
             ) : (
               <span className="text-body-sm text-on-surface-variant">
-                With a passcode, people who know it can get in without the invite link.
+                Có mật mã thì ai biết mật mã vào được mà không cần link mời.
               </span>
             )}
           </label>
@@ -202,9 +202,9 @@ export function CreateRoomForm({ onCreated }: { onCreated: (room: Room) => void 
       <div className="flex flex-col justify-between gap-lg rounded-lg bg-surface-container p-lg md:col-span-5">
         <div className="flex flex-col gap-md">
           <div className="flex items-center justify-between">
-            <span className="text-headline-sm text-on-surface">Session Permissions</span>
+            <span className="text-headline-sm text-on-surface">Quyền trong phòng</span>
             <span className="font-technical rounded-full bg-secondary-container/20 px-2 py-0.5 text-label-mono-sm text-secondary">
-              Server enforced
+              Máy chủ kiểm soát
             </span>
           </div>
 
@@ -212,7 +212,7 @@ export function CreateRoomForm({ onCreated }: { onCreated: (room: Room) => void 
             control={control}
             name="settings.whoCanControlPlayback"
             render={({ field }) => (
-              <Segmented label="Who can control playback?" columns={2}>
+              <Segmented label="Ai được điều khiển nhạc?" columns={2}>
                 {CONTROL_OPTIONS.map((option) => (
                   <SegmentButton key={option.value} selected={field.value === option.value} onClick={() => field.onChange(option.value)}>
                     <Icon name={option.icon} className="text-[16px]" /> {option.label}
@@ -226,7 +226,7 @@ export function CreateRoomForm({ onCreated }: { onCreated: (room: Room) => void 
             control={control}
             name="settings.whoCanAddSongs"
             render={({ field }) => (
-              <Segmented label="Who can queue tracks?" columns={2}>
+              <Segmented label="Ai được thêm bài?" columns={2}>
                 {QUEUE_OPTIONS.map((option) => (
                   <SegmentButton key={option.value} selected={field.value === option.value} onClick={() => field.onChange(option.value)}>
                     {option.label}
@@ -240,7 +240,7 @@ export function CreateRoomForm({ onCreated }: { onCreated: (room: Room) => void 
             control={control}
             name="settings.maxSingers"
             render={({ field }) => (
-              <Segmented label="Karaoke mics open at once" columns={4}>
+              <Segmented label="Số mic karaoke cùng lúc" columns={4}>
                 {SINGER_CHOICES.map((count) => (
                   <SegmentButton key={count} selected={field.value === count} onClick={() => field.onChange(count)}>
                     <Icon name="mic" className="text-[16px]" /> {count}
@@ -255,21 +255,21 @@ export function CreateRoomForm({ onCreated }: { onCreated: (room: Room) => void 
               control={control}
               name="settings.chatEnabled"
               render={({ field }) => (
-                <Toggle icon="chat" label="Enable live chat" checked={field.value ?? true} onChange={field.onChange} />
+                <Toggle icon="chat" label="Bật chat" checked={field.value ?? true} onChange={field.onChange} />
               )}
             />
             <Controller
               control={control}
               name="settings.reactionsEnabled"
               render={({ field }) => (
-                <Toggle icon="add_reaction" label="Allow live reactions" checked={field.value ?? true} onChange={field.onChange} />
+                <Toggle icon="add_reaction" label="Cho phép thả cảm xúc" checked={field.value ?? true} onChange={field.onChange} />
               )}
             />
           </div>
 
           <label className="flex flex-col gap-1.5">
             <span className="flex items-center justify-between">
-              <span className={labelClass}>Max listeners</span>
+              <span className={labelClass}>Số người nghe tối đa</span>
               <span className="font-technical text-label-mono-md text-secondary">{watch("settings.maxListeners")}</span>
             </span>
             <input
@@ -296,10 +296,10 @@ export function CreateRoomForm({ onCreated }: { onCreated: (room: Room) => void 
             className="flex w-full items-center justify-center gap-xs rounded-full bg-primary-container px-md py-sm text-headline-sm text-on-primary-container shadow-[0_0_24px_rgba(160,120,255,0.35)] transition-all active:scale-[0.96] disabled:opacity-60 disabled:shadow-none"
           >
             <Icon name="podcasts" className="text-[20px]" />
-            {createRoom.isPending ? "Opening the stage…" : "Go Live"}
+            {createRoom.isPending ? "Đang mở phòng…" : "Mở phòng"}
           </button>
           <Link href="/rooms" className="text-center text-body-sm text-on-surface-variant hover:text-on-surface">
-            Cancel
+            Huỷ
           </Link>
         </div>
       </div>
@@ -310,14 +310,14 @@ export function CreateRoomForm({ onCreated }: { onCreated: (room: Room) => void 
 /** The house rules, so nothing about rooms comes as a surprise. */
 function RoomRules() {
   const rules: { icon: string; text: string }[] = [
-    { icon: "looks_one", text: "You can host one live room at a time — end it (or hand it to someone) to start another." },
-    { icon: "timer", text: "A room with nobody in it for 30 minutes ends by itself." },
-    { icon: "shield_person", text: "As host you can make DJs, hand the room over, mute chat or remove people (they can't come back)." },
-    { icon: "how_to_vote", text: "Listeners vote songs up or down in the queue, and can vote together to skip the current one." },
+    { icon: "looks_one", text: "Mỗi lúc bạn chỉ làm chủ một phòng — kết thúc (hoặc giao cho người khác) để mở phòng mới." },
+    { icon: "timer", text: "Phòng không có ai trong 30 phút sẽ tự kết thúc." },
+    { icon: "shield_person", text: "Chủ phòng có thể chọn DJ, giao phòng, tắt chat hoặc mời người khác ra (họ không vào lại được)." },
+    { icon: "how_to_vote", text: "Người nghe bình chọn bài trong hàng chờ, và có thể cùng bỏ phiếu để chuyển bài." },
   ];
   return (
-    <section aria-label="Room rules" className="flex flex-col gap-xs rounded-md bg-surface-container p-sm">
-      <span className={labelClass}>Room rules</span>
+    <section aria-label="Luật phòng" className="flex flex-col gap-xs rounded-md bg-surface-container p-sm">
+      <span className={labelClass}>Luật phòng</span>
       <ul className="flex flex-col gap-1.5">
         {rules.map((rule) => (
           <li key={rule.icon} className="flex items-start gap-xs text-body-sm text-on-surface-variant">

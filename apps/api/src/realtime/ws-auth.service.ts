@@ -1,3 +1,4 @@
+import { safeAvatarUrl } from "@soundwithme/validation";
 import { Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { JwtService } from "@nestjs/jwt";
@@ -49,7 +50,7 @@ export class WsAuthService {
     if (!user) return null;
 
     return {
-      user: { id: user.id, displayName: user.displayName, isGuest: user.isGuest },
+      user: { id: user.id, displayName: user.displayName, isGuest: user.isGuest, avatarUrl: safeAvatarUrl(user.avatarUrl) },
       session: { id: sessionId, tokenExpiresAt: payload.exp * 1000 },
     };
   }

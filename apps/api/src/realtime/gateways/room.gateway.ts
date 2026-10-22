@@ -174,7 +174,8 @@ export class RoomGateway implements OnModuleInit, OnModuleDestroy {
   /**
    * Ends rooms that have had nobody connected for ROOM_IDLE_CLOSE_MS. One
    * fetchSockets() per round covers every room (and every API instance);
-   * the empty-since clock restarts whenever anyone is back in.
+   * the empty-since clock restarts whenever anyone is back in. Lobby rooms
+   * never end: their members who aren't connected are let go instead.
    */
   private async sweepIdleRooms(): Promise<void> {
     const redis = this.redisService.getClient();
@@ -183,12 +184,22 @@ export class RoomGateway implements OnModuleInit, OnModuleDestroy {
 
     const [rooms, sockets] = await Promise.all([this.roomsService.listActiveRoomIds(), this.server.fetchSockets()]);
     const occupied = new Set<string>();
-    for (const socket of sockets) for (const room of socket.rooms) occupied.add(room);
+    const connected = new Map<string, Set<string>>();
+    for (const socket of sockets) {
+      for (const room of socket.rooms) {
+        occupied.add(room);
+        connected.set(room, (connected.get(room) ?? new Set()).add(socket.data.user.id));
+      }
+    }
 
     const now = Date.now();
     const emptySince = await redis.hgetall(EMPTY_SINCE_KEY);
     const known = new Set(rooms.map((room) => room.id));
     for (const room of rooms) {
+      if (room.isLobby) {
+        await this.roomsService.pruneLobbyMembers(room.id, connected.get(room.id) ?? new Set());
+        continue;
+      }
       if (occupied.has(room.id)) {
         if (emptySince[room.id] !== undefined) await redis.hdel(EMPTY_SINCE_KEY, room.id);
         continue;

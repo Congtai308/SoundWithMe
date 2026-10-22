@@ -17,12 +17,12 @@ export const NOTIFICATION_ICON: Record<NotificationType, string> = {
 
 function timeAgo(iso: string): string {
   const seconds = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 1000));
-  if (seconds < 60) return "just now";
+  if (seconds < 60) return "vừa xong";
   const minutes = Math.round(seconds / 60);
   if (minutes < 60) return `${minutes}m`;
   const hours = Math.round(minutes / 60);
   if (hours < 24) return `${hours}h`;
-  return `${Math.round(hours / 24)}d`;
+  return `${Math.round(hours / 24)} ngày`;
 }
 
 /** Top-bar bell: friend requests, friends going live, invites, your turn to sing. */
@@ -66,11 +66,11 @@ export function NotificationBell() {
         type="button"
         aria-haspopup="menu"
         aria-expanded={open}
-        aria-label={unread > 0 ? `Notifications, ${unread} unread` : "Notifications"}
+        aria-label={unread > 0 ? `Thông báo, ${unread} chưa đọc` : "Thông báo"}
         onClick={() => {
           setOpen((value) => !value);
           // Asking once, from a click, is the only way browsers allow it.
-          if ("Notification" in window && Notification.permission === "default") void Notification.requestPermission();
+          if ("Thông báo" in window && Notification.permission === "default") void Notification.requestPermission();
         }}
         className="relative flex h-9 w-9 items-center justify-center rounded-full bg-surface-container-low text-on-surface-variant transition-colors hover:text-on-surface"
       >
@@ -87,16 +87,16 @@ export function NotificationBell() {
           className="absolute right-0 top-full z-50 mt-xs flex max-h-[70vh] w-[min(22rem,calc(100vw-2rem))] flex-col overflow-hidden rounded-md border border-white/[0.16] bg-[rgba(30,41,59,0.96)] shadow-[0_12px_36px_-4px_rgba(0,0,0,0.65)] backdrop-blur-xl"
         >
           <div className="flex items-center justify-between border-b border-white/[0.08] px-sm py-xs">
-            <span className="text-headline-sm text-on-surface">Notifications</span>
+            <span className="text-headline-sm text-on-surface">Thông báo</span>
             {unread > 0 && (
               <button type="button" onClick={() => markAll.mutate()} className="text-body-sm text-primary hover:underline">
-                Mark all read
+                Đánh dấu đã đọc hết
               </button>
             )}
           </div>
           <div className="scrollbar-none min-h-0 flex-1 overflow-y-auto p-1">
             {!data || data.items.length === 0 ? (
-              <p className="px-sm py-lg text-center text-body-sm text-on-surface-variant">Nothing yet — friend requests and invites show up here.</p>
+              <p className="px-sm py-lg text-center text-body-sm text-on-surface-variant">Chưa có gì — lời mời kết bạn và lời mời vào phòng sẽ hiện ở đây.</p>
             ) : (
               data.items.map((notification) => (
                 <button
