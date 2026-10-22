@@ -316,6 +316,16 @@ export class RoomsService {
     }
   }
 
+  /** Ends the live lobby rooms whose topic isn't one of `slugs` any more; returns their ids. */
+  async closeLobbyRoomsOutside(slugs: string[]): Promise<string[]> {
+    const stale = await this.roomModel
+      .find({ status: "active", lobbyTopic: { $nin: [null, ...slugs] } })
+      .select({ _id: 1 })
+      .exec();
+    for (const room of stale) await this.closeRoom(room.id, "host-ended");
+    return stale.map((room) => room.id);
+  }
+
   /** The topic slug of an active lobby room; null for any other room. */
   async findLobbyTopic(roomId: string): Promise<string | null> {
     if (!isValidObjectId(roomId)) return null;
