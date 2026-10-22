@@ -1,0 +1,17 @@
+# Never in an image: secrets, local data, build output rebuilt inside.
+**/.env
+**/.env.*
+!.env.example
+**/node_modules
+**/.next
+**/dist
+**/.turbo
+**/coverage
+.git
+.tools
+.playwright-mcp
+CLAUDE-SECURITY-*
+**/*.ini
+**/*cookies.txt
+# Design mockups (several MB of screenshots) aren't part of the app.
+docs/ui

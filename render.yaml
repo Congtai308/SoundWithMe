@@ -1,0 +1,52 @@
+# Render Blueprint: one web service (web + API in one container) and a Redis
+# (Key Value) instance, both on the free plan. MongoDB lives on MongoDB Atlas
+# (free M0). Step by step: docs/DEPLOY.md.
+services:
+  - type: web
+    name: soundwithme
+    runtime: docker
+    plan: free
+    region: singapore
+    dockerfilePath: ./infrastructure/docker/app.Dockerfile
+    dockerContext: .
+    autoDeploy: true
+    branch: main
+    healthCheckPath: /api/v1/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      # Render's proxies in front of the app; see apps/web/server.mjs.
+      - key: TRUSTED_PROXY_HOPS
+        value: "1"
+      - key: LOG_FORWARDED
+        value: "1"
+      - key: REDIS_URL
+        fromService:
+          type: keyvalue
+          name: soundwithme-redis
+          property: connectionString
+      - key: JWT_ACCESS_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      # Set in the dashboard (secrets):
+      - key: MONGODB_URI
+        sync: false
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false
+      - key: YOUTUBE_API_KEY
+        sync: false
+
+  - type: keyvalue
+    name: soundwithme-redis
+    plan: free
+    region: singapore
+    # Reachable only from Render's private network (the service above).
+    ipAllowList: []
+    maxmemoryPolicy: noeviction

@@ -62,6 +62,11 @@ pnpm dev                    # web + api in parallel via Turborepo
 - API: http://localhost:4000/api/v1
 - Health: http://localhost:4000/api/v1/health. Readiness (Mongo + Redis): `/api/v1/ready`
 
+## Deploying
+
+The site runs as one container (web + API) on Render's free plan, with
+MongoDB Atlas and Render Key Value. Step-by-step setup: [docs/DEPLOY.md](docs/DEPLOY.md).
+
 ## Verifying the setup
 
 ```bash
