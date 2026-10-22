@@ -158,15 +158,24 @@ export class LobbyService implements OnApplicationBootstrap, OnModuleDestroy {
   private async hostFor(topic: LobbyTopic) {
     const username = `swm-radio-${topic.slug}`;
     const existing = await this.usersService.findByUsername(username);
-    if (existing) return existing;
+    if (existing) return asAppAccount(existing);
     try {
       return await this.usersService.create({ username, displayName: HOST_DISPLAY_NAME, authMethods: [], isGuest: false });
     } catch (error: unknown) {
       const winner = await this.usersService.findByUsername(username);
       if (!winner) throw error;
-      return winner;
+      return asAppAccount(winner);
     }
   }
+}
+
+/**
+ * People's usernames can't contain "-" (AuthService), so nobody can sign up
+ * as a room's host. Still, an account anyone can sign in to never hosts one.
+ */
+function asAppAccount<T extends { authMethods: unknown[]; isGuest: boolean; username: string }>(user: T): T {
+  if (user.authMethods.length > 0 || user.isGuest) throw new Error(`"${user.username}" isn't one of the app's own accounts`);
+  return user;
 }
 
 function isQueueEmpty(error: unknown): boolean {
