@@ -48,6 +48,12 @@ export class QueueGateway implements OnModuleInit {
       const listeners = await this.listenerCount(roomId);
       this.server.to(roomId).emit(SOCKET_EVENTS.SKIP_STATE, await this.queueService.skipState(roomId, trackId, listeners));
     });
+
+    // A lobby room freshened itself up (songs added, next song started).
+    this.events.on("room.lobbyRefreshed", ({ roomId, state, queue }) => {
+      if (state) this.server.to(roomId).emit(SOCKET_EVENTS.PLAYBACK_STATE, state);
+      this.broadcastQueue(roomId, queue);
+    });
   }
 
   @SubscribeMessage(SOCKET_EVENTS.QUEUE_ADD)

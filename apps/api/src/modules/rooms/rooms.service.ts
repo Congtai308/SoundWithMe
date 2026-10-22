@@ -27,10 +27,12 @@ import type { Room, RoomCloseReason, RoomMember, RoomSettings } from "@soundwith
 import { ERROR_CODES } from "@soundwithme/constants";
 import { RoomDocument } from "../../database/mongodb/models/room.schema";
 import { RoomMemberDocument } from "../../database/mongodb/models/room-member.schema";
+import { QueueItemDocument } from "../../database/mongodb/models/queue-item.schema";
 import { AppEventsService } from "../../common/events/app-events.service";
 import { RedisService } from "../../database/redis/redis.service";
 import { FriendshipsService, isDuplicateKey } from "../friends/friendships.service";
 import { NotificationsService } from "../notifications/notifications.service";
+import { LOBBY_TOPICS, lobbyTopic, seededListeners, type LobbyTopic } from "./lobby.topics";
 
 /** People the host has removed from one room; beyond this the oldest bans drop off. */
 const MAX_BANNED = 500;
@@ -39,6 +41,8 @@ const PASSCODE_HASH_ROUNDS = 10;
 const PASSCODE_ATTEMPTS_PER_ROOM = 10;
 const PASSCODE_WINDOW_SECONDS = 60 * 60;
 const INVITE_CODE_BYTES = 12;
+/** Lobby members who joined this recently aren't pruned yet: their socket may still be connecting. */
+const LOBBY_PRUNE_GRACE_MS = 2 * 60_000;
 
 const DEFAULT_SETTINGS: RoomSettings = {
   whoCanControlPlayback: "host",
@@ -68,6 +72,8 @@ interface Actor {
  * - Removed (kicked) users can't come back to that room.
  * - A room ends when its host ends it, or after 30 minutes with nobody
  *   connected (RoomSweeper).
+ * - Lobby rooms (LOBBY_TOPICS) are public rooms the app itself hosts. They
+ *   never end; people who left without saying so are let go instead.
  */
 @Injectable()
 export class RoomsService {
@@ -77,6 +83,7 @@ export class RoomsService {
     @InjectModel(RoomDocument.name) private readonly roomModel: Model<RoomDocument>,
     @InjectModel(RoomMemberDocument.name)
     private readonly memberModel: Model<RoomMemberDocument>,
+    @InjectModel(QueueItemDocument.name) private readonly queueModel: Model<QueueItemDocument>,
     private readonly friendships: FriendshipsService,
     private readonly notifications: NotificationsService,
     private readonly events: AppEventsService,
@@ -232,31 +239,121 @@ export class RoomsService {
     return room.hostId === userId || room.djIds.includes(userId);
   }
 
+  /** Lobby rooms first (in topic order, on the first page only), then people's rooms, newest first. */
   async listActivePublicRooms(query: ListRoomsQuery): Promise<{ items: Room[]; nextCursor: string | null }> {
-    const filter: Record<string, unknown> = { status: "active", type: "public" };
+    const filter: Record<string, unknown> = { status: "active", type: "public", lobbyTopic: null };
     if (query.cursor && isValidObjectId(query.cursor)) {
       filter._id = { $lt: query.cursor };
     }
 
-    const docs = await this.roomModel
-      .find(filter)
-      .sort({ _id: -1 })
-      .limit(query.limit + 1)
-      .exec();
+    const [lobby, docs] = await Promise.all([
+      query.cursor ? Promise.resolve([]) : this.roomModel.find({ status: "active", lobbyTopic: { $ne: null } }).exec(),
+      this.roomModel
+        .find(filter)
+        .sort({ _id: -1 })
+        .limit(query.limit + 1)
+        .exec(),
+    ]);
+    const order = (doc: RoomDocument) => LOBBY_TOPICS.findIndex((topic) => topic.slug === doc.lobbyTopic);
+    lobby.sort((a, b) => order(a) - order(b));
 
     const hasMore = docs.length > query.limit;
     const page = hasMore ? docs.slice(0, query.limit) : docs;
+    const rooms = [...lobby, ...page];
+    const upcoming = await this.upcomingCounts(rooms.map((doc) => doc.id));
 
     return {
-      items: page.map((d) => this.toRoom(d, null)),
+      items: rooms.map((d) => ({ ...this.toRoom(d, null), upcomingCount: upcoming.get(d.id) ?? 0 })),
       nextCursor: hasMore ? String(page[page.length - 1]!._id) : null,
     };
   }
 
+  private async upcomingCounts(roomIds: string[]): Promise<Map<string, number>> {
+    if (roomIds.length === 0) return new Map();
+    const counts = await this.queueModel
+      .aggregate<{ _id: string; count: number }>([
+        { $match: { roomId: { $in: roomIds }, status: "queued" } },
+        { $group: { _id: "$roomId", count: { $sum: 1 } } },
+      ])
+      .exec();
+    return new Map(counts.map((row) => [row._id, row.count]));
+  }
+
+  /**
+   * The live lobby room for `topic`, opened (hosted by `hostId`, the app's
+   * account for it) if there isn't one. Safe to call repeatedly and from
+   * several instances: one live room per host is enforced by the database.
+   */
+  async ensureLobbyRoom(hostId: string, topic: LobbyTopic): Promise<Room> {
+    const existing = await this.findActiveHostedRoom(hostId);
+    if (existing) {
+      if (existing.name !== topic.name || existing.description !== topic.description) {
+        existing.name = topic.name;
+        existing.description = topic.description;
+        await existing.save();
+      }
+      return this.toRoom(existing, null);
+    }
+    try {
+      const room = await this.roomModel.create({
+        name: topic.name,
+        description: topic.description,
+        hostId,
+        type: "public",
+        status: "active",
+        // Nobody can pause the room for everyone; skip votes and the queue are open to all.
+        settings: { ...DEFAULT_SETTINGS, maxListeners: MAX_ROOM_LISTENERS },
+        memberCount: 1,
+        lobbyTopic: topic.slug,
+      });
+      await this.memberModel.create({ roomId: room.id, userId: hostId, role: "host" });
+      return this.toRoom(room, null);
+    } catch (error: unknown) {
+      if (!isDuplicateKey(error)) throw error;
+      const winner = await this.findActiveHostedRoom(hostId);
+      if (!winner) throw error;
+      return this.toRoom(winner, null);
+    }
+  }
+
+  /** The topic slug of an active lobby room; null for any other room. */
+  async findLobbyTopic(roomId: string): Promise<string | null> {
+    if (!isValidObjectId(roomId)) return null;
+    const room = await this.roomModel.findOne({ _id: roomId, status: "active" }).select({ lobbyTopic: 1 }).lean().exec();
+    return room?.lobbyTopic ?? null;
+  }
+
+  /**
+   * Lobby rooms never end, so people who closed the tab without leaving
+   * would pile up as members. Ends the memberships of everyone not
+   * connected (`connectedUserIds`), except the host and very recent joins.
+   */
+  async pruneLobbyMembers(roomId: string, connectedUserIds: Set<string>): Promise<number> {
+    const room = await this.roomModel.findOne({ _id: roomId, status: "active", lobbyTopic: { $ne: null } }).exec();
+    if (!room) return 0;
+    const stale = await this.memberModel
+      .find({
+        roomId,
+        leftAt: null,
+        userId: { $nin: [room.hostId, ...connectedUserIds] },
+        joinedAt: { $lt: new Date(Date.now() - LOBBY_PRUNE_GRACE_MS) },
+      })
+      .select({ userId: 1 })
+      .exec();
+    let pruned = 0;
+    for (const member of stale) {
+      const ended = await this.memberModel.updateOne({ _id: member._id, leftAt: null }, { leftAt: new Date() }).exec();
+      if (ended.modifiedCount === 0) continue;
+      pruned++;
+      await this.roomModel.updateOne({ _id: roomId, memberCount: { $gt: 1 } }, { $inc: { memberCount: -1 } }).exec();
+    }
+    return pruned;
+  }
+
   /** Ids of every active room — for the inactivity sweeper. */
-  async listActiveRoomIds(): Promise<{ id: string; createdAt: Date }[]> {
-    const docs = await this.roomModel.find({ status: "active" }).select({ _id: 1, createdAt: 1 }).exec();
-    return docs.map((doc) => ({ id: doc.id, createdAt: doc.createdAt }));
+  async listActiveRoomIds(): Promise<{ id: string; createdAt: Date; isLobby: boolean }[]> {
+    const docs = await this.roomModel.find({ status: "active" }).select({ _id: 1, createdAt: 1, lobbyTopic: 1 }).exec();
+    return docs.map((doc) => ({ id: doc.id, createdAt: doc.createdAt, isLobby: Boolean(doc.lobbyTopic) }));
   }
 
   /**
@@ -269,6 +366,9 @@ export class RoomsService {
     const room = await this.roomModel.findById(roomId).select("+passcodeHash").exec();
     if (!room) throw this.roomNotFound();
     if (room.status === "closed") throw this.roomClosed();
+
+    // A lobby room freshens up for whoever walks in (LobbyService): queue topped up, finished song moved on.
+    if (room.lobbyTopic) this.events.emit("room.lobbyJoined", { roomId });
 
     const existing = await this.memberModel.findOne({ roomId, userId, leftAt: null }).exec();
     if (existing) return this.toRoomMember(existing);
@@ -656,6 +756,8 @@ export class RoomsService {
       inviteCode: viewerId !== null && viewerId === doc.hostId ? (doc.inviteCode ?? null) : null,
       createdAt: doc.createdAt.toISOString(),
       closedAt: doc.closedAt ? doc.closedAt.toISOString() : null,
+      topic: topicOf(doc),
+      listenerCount: listenerCountOf(doc),
     };
   }
 
@@ -668,6 +770,18 @@ export class RoomsService {
       leftAt: doc.leftAt ? doc.leftAt.toISOString() : null,
     };
   }
+}
+
+function topicOf(doc: RoomDocument): Room["topic"] {
+  const topic = lobbyTopic(doc.lobbyTopic);
+  return topic ? { slug: topic.slug, label: topic.label, emoji: topic.emoji } : null;
+}
+
+/** Lobby rooms: the people in it (not the app, its host) plus a seeded crowd. */
+function listenerCountOf(doc: RoomDocument): number {
+  const members = Math.max(0, doc.memberCount);
+  if (!doc.lobbyTopic || doc.status !== "active") return members;
+  return Math.max(0, members - 1) + seededListeners(doc.id);
 }
 
 /** Rooms created before a setting existed get its default. */

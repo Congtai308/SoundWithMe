@@ -1,6 +1,6 @@
 import { Global, Injectable, Logger, Module } from "@nestjs/common";
 import { EventEmitter } from "events";
-import type { AppNotification, DirectMessage, Room, RoomCloseReason } from "@soundwithme/types";
+import type { AppNotification, DirectMessage, PlaybackState, QueueItem, Room, RoomCloseReason } from "@soundwithme/types";
 
 /**
  * Domain events services raise and the realtime gateways turn into socket
@@ -27,6 +27,10 @@ export interface AppEventMap {
   "user.messagesRead": { conversationId: string; readerId: string; otherId: string; readAt: string };
   /** A member left on their own (REST): their sockets leave the room too. */
   "room.left": { roomId: string; userId: string };
+  /** Someone is joining a lobby room: LobbyService freshens it up. */
+  "room.lobbyJoined": { roomId: string };
+  /** LobbyService topped up a lobby room's queue and/or started its next song: everyone in it is told. */
+  "room.lobbyRefreshed": { roomId: string; state: PlaybackState | null; queue: QueueItem[] };
   /** Logins were revoked: one session (`sessionId`) or all of the user's (null). Their sockets disconnect. */
   "auth.sessionsEnded": { userId: string; sessionId: string | null };
 }

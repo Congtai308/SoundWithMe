@@ -73,6 +73,10 @@ export class RoomDocument extends Document {
   @Prop({ type: Date, default: null })
   closedAt?: Date | null;
 
+  // Lobby rooms (always open, hosted by the app): the topic slug, see lobby.topics.ts.
+  @Prop({ type: String, default: null, index: true })
+  lobbyTopic?: string | null;
+
   createdAt!: Date;
   updatedAt!: Date;
 }

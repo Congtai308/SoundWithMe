@@ -17,3 +17,6 @@ process.env.GOOGLE_CLIENT_SECRET ??= "test-google-client-secret";
 process.env.SMTP_USER = "";
 process.env.SMTP_PASS = "";
 process.env.BREVO_API_KEY = "";
+
+// Suites expect an empty room list; the lobby rooms have a suite of their own.
+process.env.LOBBY_ROOMS = "0";

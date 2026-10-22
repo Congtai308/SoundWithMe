@@ -51,6 +51,8 @@ export const appConfig = registerAs("app", () => ({
     pass: process.env.SMTP_PASS,
     from: process.env.MAIL_FROM ?? process.env.SMTP_USER ?? "SoundWithMe <no-reply@localhost>",
   },
+  // The six always-open themed rooms (LobbyService). "0" turns them off (tests).
+  lobbyRooms: process.env.LOBBY_ROOMS !== "0",
   sentryDsn: process.env.SENTRY_DSN,
   postHogKey: process.env.POSTHOG_KEY,
 }));

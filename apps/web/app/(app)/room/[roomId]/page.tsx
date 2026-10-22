@@ -5,7 +5,7 @@ import { takePendingPlay } from "@/features/rooms/pending-play";
 import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { ApiClientError } from "@/services/api-client";
-import { useCurrentUser } from "@/features/auth/hooks/use-auth";
+import { useCurrentUser, useGuestLogin } from "@/features/auth/hooks/use-auth";
 import { useJoinRoom, useLeaveRoom, useRoom } from "@/features/rooms/hooks/use-rooms";
 import { useRoomLiveStore } from "@/features/rooms/stores/room-live-store";
 import { useRoomSessionStore } from "@/features/rooms/stores/room-session-store";
@@ -27,6 +27,11 @@ import { StatePanel, primaryPillClass, ghostPillClass } from "@/components/ui/St
 
 const ERROR_TOAST_MS = 4_000;
 type MobilePanel = "chat" | "queue";
+
+/** Name for the guest account a signed-out visitor gets on opening a room. */
+function guestName(): string {
+  return `Khách ${Math.floor(1000 + Math.random() * 9000)}`;
+}
 
 /**
  * Listening room — 3-column studio: queue · cinema stage · listeners & chat
@@ -68,6 +73,7 @@ export default function RoomPage() {
 
   const joinRoom = useJoinRoom(roomId);
   const leaveRoom = useLeaveRoom(roomId);
+  const guestLogin = useGuestLogin();
   const [showAddSong, setShowAddSong] = useState(false);
   const [mobilePanel, setMobilePanel] = useState<MobilePanel>("chat");
   const [dialog, setDialog] = useState<"people" | "invite" | null>(null);
@@ -76,6 +82,32 @@ export default function RoomPage() {
   useEffect(() => {
     if (user && isActive) enterSession(roomId);
   }, [user, isActive, roomId, enterSession]);
+
+  // Opening a room signed out: a guest account, no questions asked.
+  const guestTriedRef = useRef(false);
+  const refetchRoom = roomQuery.refetch;
+  useEffect(() => {
+    if (isUserLoading || user || guestTriedRef.current) return;
+    guestTriedRef.current = true;
+    guestLogin.mutate({ displayName: guestName() }, { onSuccess: () => void refetchRoom() });
+  }, [isUserLoading, user, guestLogin, refetchRoom]);
+
+  // Lobby rooms are open to all: walk straight in instead of showing the join screen.
+  const autoJoinTriedRef = useRef(false);
+  const autoJoining = membership === "not-member" && Boolean(room?.topic) && !joinRoom.isError;
+  useEffect(() => {
+    if (!autoJoining || autoJoinTriedRef.current) return;
+    autoJoinTriedRef.current = true;
+    joinRoom.mutate(
+      {},
+      {
+        onSuccess: () => {
+          useRoomLiveStore.getState().setMembership("checking");
+          commands.rejoin();
+        },
+      },
+    );
+  }, [autoJoining, joinRoom, commands]);
 
   // Browsing away keeps the session only if we actually got in.
   useEffect(
@@ -104,7 +136,7 @@ export default function RoomPage() {
     else commands.queueAdd(trackId);
   }, [membership, canAdd, canControl, commands, roomId]);
 
-  if (isUserLoading || roomQuery.isLoading) return <StudioSkeleton />;
+  if (isUserLoading || roomQuery.isLoading || (!user && !guestLogin.isError)) return <StudioSkeleton />;
 
   if (!user) {
     return (
@@ -194,6 +226,8 @@ export default function RoomPage() {
       </PageFrame>
     );
   }
+
+  if (autoJoining) return <StudioSkeleton />;
 
   if (membership === "not-member") {
     return (

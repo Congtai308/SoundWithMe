@@ -21,7 +21,7 @@ import { useSidebarStore } from "./sidebar-store";
 export function Sidebar() {
   const pathname = usePathname();
   const { data: user } = useCurrentUser();
-  const { data: rooms } = useRoomsList({ enabled: Boolean(user) });
+  const { data: rooms } = useRoomsList();
   const hasLiveRooms = (rooms?.length ?? 0) > 0;
   const { data: inbox } = useConversations({ enabled: Boolean(user) });
   const unreadMessages = inbox?.unread ?? 0;

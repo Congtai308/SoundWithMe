@@ -14,7 +14,8 @@ import { MUSIC_TOPICS } from "@/features/music/topics";
 import { Icon } from "@/components/ui/Icon";
 import { StatePanel, primaryPillClass, ghostPillClass } from "@/components/ui/StatePanel";
 
-const HOME_ROOM_LIMIT = 6;
+/** The six lobby rooms and the newest rooms people opened. */
+const HOME_ROOM_LIMIT = 9;
 
 function greetingForHour(hour: number): string {
   if (hour < 5) return "Khuya rồi";
@@ -25,9 +26,10 @@ function greetingForHour(hour: number): string {
 }
 
 export default function HomePage() {
-  const { data: user, isLoading: isUserLoading } = useCurrentUser();
+  const { data: user } = useCurrentUser();
   const isSignedIn = Boolean(user);
-  const rooms = useRoomsList({ enabled: isSignedIn });
+  // Anyone can browse rooms; opening one signs a visitor in as a guest.
+  const rooms = useRoomsList();
 
   const greeting = greetingForHour(new Date().getHours());
   const visibleRooms = rooms.data?.slice(0, HOME_ROOM_LIMIT) ?? [];
@@ -108,26 +110,15 @@ export default function HomePage() {
           title="Phòng đang mở"
           subtitle="Mỗi phòng một vibe riêng — vào nghe cùng mọi người"
           badge={rooms.data && rooms.data.length > 0 ? `${rooms.data.length} phòng live` : undefined}
-          link={isSignedIn ? { href: "/rooms", label: "Xem tất cả" } : undefined}
+          link={{ href: "/rooms", label: "Xem tất cả" }}
         />
 
-        {isUserLoading || (isSignedIn && rooms.isLoading) ? (
-          <div className="grid grid-cols-1 gap-lg sm:grid-cols-2 lg:grid-cols-3">
-            {Array.from({ length: 3 }, (_, i) => (
+        {rooms.isLoading ? (
+          <div className="grid grid-cols-1 gap-md sm:grid-cols-2 lg:grid-cols-3">
+            {Array.from({ length: 6 }, (_, i) => (
               <RoomCardSkeleton key={i} />
             ))}
           </div>
-        ) : !isSignedIn ? (
-          <StatePanel
-            icon="sensors"
-            title="Đăng nhập để xem ai đang nghe"
-            body="Phòng live chỉ hiện với người đã đăng nhập. Dùng Fast Pass là vào được ngay, chỉ cần một cái tên."
-            action={
-              <Link href="/login" className={primaryPillClass}>
-                Đăng nhập hoặc dùng Fast Pass
-              </Link>
-            }
-          />
         ) : rooms.isError ? (
           <StatePanel
             tone="error"
@@ -154,11 +145,21 @@ export default function HomePage() {
             }
           />
         ) : (
-          <div className="grid grid-cols-1 gap-lg sm:grid-cols-2 lg:grid-cols-3">
-            {visibleRooms.map((room, index) => (
-              <RoomCard key={room.id} room={room} featured={index === 0} />
-            ))}
-          </div>
+          <>
+            <div className="grid grid-cols-1 gap-md sm:grid-cols-2 lg:grid-cols-3">
+              {visibleRooms.map((room, index) => (
+                <RoomCard key={room.id} room={room} featured={index === 0} />
+              ))}
+            </div>
+            {(rooms.data?.length ?? 0) > HOME_ROOM_LIMIT && (
+              <div className="mt-lg flex justify-center">
+                <Link href="/rooms" className={ghostPillClass}>
+                  <Icon name="expand_more" className="text-[18px]" />
+                  Xem thêm phòng
+                </Link>
+              </div>
+            )}
+          </>
         )}
       </section>
 

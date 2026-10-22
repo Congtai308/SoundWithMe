@@ -8,8 +8,9 @@ import { Icon } from "@/components/ui/Icon";
 import { StatePanel, primaryPillClass, ghostPillClass } from "@/components/ui/StatePanel";
 
 export default function RoomsPage() {
-  const { data: user, isLoading: isUserLoading } = useCurrentUser();
-  const rooms = useInfiniteRooms({ enabled: Boolean(user) });
+  const { data: user } = useCurrentUser();
+  // Anyone can browse rooms; opening one signs a visitor in as a guest.
+  const rooms = useInfiniteRooms();
   const items = rooms.data?.pages.flatMap((page) => page.items) ?? [];
 
   return (
@@ -32,23 +33,12 @@ export default function RoomsPage() {
         )}
       </header>
 
-      {isUserLoading || (user && rooms.isLoading) ? (
+      {rooms.isLoading ? (
         <RoomGrid>
           {Array.from({ length: 6 }, (_, i) => (
             <RoomCardSkeleton key={i} />
           ))}
         </RoomGrid>
-      ) : !user ? (
-        <StatePanel
-          icon="sensors"
-          title="Sign in to see who's listening"
-          body="Live rooms are visible to signed-in listeners. A Fast Pass gets you in with just a name."
-          action={
-            <Link href="/login" className={primaryPillClass}>
-              Sign in or use a Fast Pass
-            </Link>
-          }
-        />
       ) : rooms.isError ? (
         <StatePanel
           tone="error"
@@ -105,5 +95,5 @@ export default function RoomsPage() {
 }
 
 function RoomGrid({ children }: { children: React.ReactNode }) {
-  return <div className="relative grid grid-cols-1 gap-lg sm:grid-cols-2 md:grid-cols-3">{children}</div>;
+  return <div className="relative grid grid-cols-1 gap-md sm:grid-cols-2 lg:grid-cols-3">{children}</div>;
 }

@@ -48,6 +48,8 @@ function buildRoom(overrides: Partial<Room> = {}): Room {
     inviteCode: null,
     createdAt: new Date().toISOString(),
     closedAt: null,
+    topic: null,
+    listenerCount: 2,
     ...overrides,
   };
 }

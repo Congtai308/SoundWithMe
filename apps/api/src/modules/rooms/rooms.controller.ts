@@ -19,10 +19,8 @@ import { UserThrottlerGuard } from "../../common/guards/user-throttler.guard";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { RoomsService } from "./rooms.service";
 
-// Every route here requires an authenticated user — including browsing
-// (GET). Anonymous room browsing is a reasonable future enhancement, but
-// auth-gating everything by default is the safer starting point.
-@UseGuards(JwtAuthGuard)
+// Every route here requires an authenticated user, except the list of live
+// public rooms: anyone may browse it (opening a room makes a guest account).
 @Controller("rooms")
 export class RoomsController {
   constructor(private readonly roomsService: RoomsService) {}
@@ -32,7 +30,7 @@ export class RoomsController {
    * fast someone can open-and-end rooms in a loop to spam friends' bells.
    */
   @Post()
-  @UseGuards(UserThrottlerGuard)
+  @UseGuards(JwtAuthGuard, UserThrottlerGuard)
   @Throttle({ default: { limit: 6, ttl: 10 * 60_000 } })
   async create(
     @CurrentUser() user: AuthenticatedUser,
@@ -50,11 +48,13 @@ export class RoomsController {
 
   /** The live room you host, or null. */
   @Get("mine/active")
+  @UseGuards(JwtAuthGuard)
   async mine(@CurrentUser() user: AuthenticatedUser) {
     return { success: true, data: { room: await this.roomsService.getActiveHostedRoom(user.id) } };
   }
 
   @Get(":id")
+  @UseGuards(JwtAuthGuard)
   async getOne(
     @Param("id") id: string,
     @CurrentUser() user: AuthenticatedUser,
@@ -65,6 +65,7 @@ export class RoomsController {
   }
 
   @Patch(":id")
+  @UseGuards(JwtAuthGuard)
   async update(
     @Param("id") id: string,
     @CurrentUser() user: AuthenticatedUser,
@@ -75,6 +76,7 @@ export class RoomsController {
   }
 
   @Post(":id/invite")
+  @UseGuards(JwtAuthGuard)
   @HttpCode(200)
   async regenerateInvite(@Param("id") id: string, @CurrentUser() user: AuthenticatedUser) {
     const room = await this.roomsService.regenerateInvite(id, user.id);
@@ -83,7 +85,7 @@ export class RoomsController {
 
   /** Wrong passcodes are throttled per user so a passcode can't be guessed by brute force. */
   @Post(":id/join")
-  @UseGuards(UserThrottlerGuard)
+  @UseGuards(JwtAuthGuard, UserThrottlerGuard)
   @Throttle({ default: { limit: 10, ttl: 60_000 } })
   async join(
     @Param("id") id: string,
@@ -95,6 +97,7 @@ export class RoomsController {
   }
 
   @Post(":id/leave")
+  @UseGuards(JwtAuthGuard)
   async leave(@Param("id") id: string, @CurrentUser() user: AuthenticatedUser) {
     await this.roomsService.leaveRoom(id, user.id);
     return { success: true, data: { status: "ok" } };

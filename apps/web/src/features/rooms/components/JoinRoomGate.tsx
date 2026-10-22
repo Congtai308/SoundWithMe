@@ -49,7 +49,7 @@ export function JoinRoomGate({ room, needsPasscode, isJoining, error, onJoin }: 
         {room ? (
           <>
             <span className="font-technical text-label-mono-sm uppercase text-secondary">
-              {room.memberCount} {room.memberCount === 1 ? "listener" : "listeners"} inside
+              {room.listenerCount} {room.listenerCount === 1 ? "listener" : "listeners"} inside
               {room.type === "friends" && " · friends only"}
               {room.type === "private" && " · private"}
             </span>
