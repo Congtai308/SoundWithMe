@@ -15,10 +15,10 @@ import { useSidebarStore } from "./sidebar-store";
 import { NotificationBell } from "@/features/notifications/components/NotificationBell";
 
 const QUICK_VIBE_LABEL: Record<string, string> = {
-  "late-night": "Late Night",
-  hype: "Hype",
-  focus: "Focus",
-  romantic: "Romantic",
+  "late-night": "Đêm khuya",
+  hype: "Sôi động",
+  focus: "Tập trung",
+  romantic: "Lãng mạn",
 };
 
 export function TopNav() {
@@ -62,19 +62,19 @@ export function TopNav() {
             className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[20px] text-outline"
           />
           <label htmlFor="global-search" className="sr-only">
-            Search songs and artists
+            Tìm bài hát, nghệ sĩ
           </label>
           <input
             id="global-search"
             type="search"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search songs, artists…"
+            placeholder="Tìm bài hát, nghệ sĩ…"
             className="w-full rounded-full bg-surface-container-low py-xs pl-10 pr-md text-body-sm text-on-surface shadow-inner placeholder:text-outline focus:outline-none focus:ring-1 focus:ring-primary"
           />
         </form>
 
-        <nav className={`hidden items-center gap-xs ${inRoom ? "" : "lg:flex"}`} aria-label="Quick vibes">
+        <nav className={`hidden items-center gap-xs ${inRoom ? "" : "lg:flex"}`} aria-label="Chọn nhanh">
           {QUICK_VIBES.map((vibe) => (
             <Link
               key={vibe.slug}
@@ -95,7 +95,7 @@ export function TopNav() {
               triggerClassName="flex rounded-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary"
               trigger={
                 <>
-                  <span className="sr-only">Account menu</span>
+                  <span className="sr-only">Tài khoản</span>
                   <Avatar name={user.displayName} src={user.avatarUrl} size={32} />
                 </>
               }
@@ -105,7 +105,7 @@ export function TopNav() {
               href="/login"
               className="rounded-full bg-primary-container px-md py-1.5 text-headline-sm text-on-primary-container"
             >
-              Sign in
+              Đăng nhập
             </Link>
           )}
         </div>

@@ -79,7 +79,7 @@ export function Toaster() {
             <button
               type="button"
               onClick={() => dismiss(toast.id)}
-              aria-label="Dismiss"
+              aria-label="Đóng"
               className="pointer-events-auto absolute right-1.5 top-1.5 rounded-full p-1 text-outline hover:text-on-surface"
             >
               <Icon name="close" className="text-[16px]" />

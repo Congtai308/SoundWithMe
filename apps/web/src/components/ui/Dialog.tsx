@@ -43,7 +43,7 @@ export function Dialog({
           <h2 id={titleId} className="text-headline-md text-on-surface">
             {title}
           </h2>
-          <button type="button" onClick={onClose} aria-label="Close" className="rounded-full p-1 text-outline hover:text-on-surface">
+          <button type="button" onClick={onClose} aria-label="Đóng" className="rounded-full p-1 text-outline hover:text-on-surface">
             <Icon name="close" className="text-[22px]" />
           </button>
         </header>

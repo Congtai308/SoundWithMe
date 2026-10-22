@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
-import { useLogout } from "@/features/auth/hooks/use-auth";
+import { useCurrentUser, useLogout } from "@/features/auth/hooks/use-auth";
+import { ProfileDialog } from "@/features/profile/components/ProfileDialog";
 import { Icon } from "@/components/ui/Icon";
 
 /** Account popover (Level-3 floating surface) shared by the sidebar card and the mobile top bar. */
@@ -19,7 +20,9 @@ export function AccountMenu({
 }) {
   const router = useRouter();
   const logout = useLogout();
+  const { data: user } = useCurrentUser();
   const [open, setOpen] = useState(false);
+  const [editingProfile, setEditingProfile] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -49,6 +52,20 @@ export function AccountMenu({
             placement === "above" ? "bottom-full left-0 mb-xs" : "right-0 top-full mt-xs"
           }`}
         >
+          {user && (
+            <button
+              type="button"
+              role="menuitem"
+              onClick={() => {
+                setOpen(false);
+                setEditingProfile(true);
+              }}
+              className="flex w-full items-center gap-sm rounded-sm px-sm py-xs text-body-md text-on-surface hover:bg-white/[0.06]"
+            >
+              <Icon name="badge" className="text-[18px]" />
+              Hồ sơ &amp; avatar
+            </button>
+          )}
           <button
             type="button"
             role="menuitem"
@@ -64,10 +81,10 @@ export function AccountMenu({
             className="flex w-full items-center gap-sm rounded-sm px-sm py-xs text-body-md text-on-surface hover:bg-white/[0.06] disabled:opacity-50"
           >
             <Icon name="logout" className="text-[18px]" />
-            {logout.isPending ? "Signing out…" : "Sign out"}
+            {logout.isPending ? "Đang đăng xuất…" : "Đăng xuất"}
           </button>
           {logout.isError && (
-            <p className="px-sm pb-xs text-body-sm text-error">Couldn&apos;t sign out. Try again.</p>
+            <p className="px-sm pb-xs text-body-sm text-error">Không đăng xuất được. Thử lại nhé.</p>
           )}
         </div>
       )}
@@ -80,6 +97,7 @@ export function AccountMenu({
       >
         {trigger}
       </button>
+      {editingProfile && user && <ProfileDialog user={user} onClose={() => setEditingProfile(false)} />}
     </div>
   );
 }

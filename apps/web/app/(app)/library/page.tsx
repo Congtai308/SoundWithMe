@@ -36,11 +36,11 @@ export default function LibraryPage() {
       <div className="px-md py-2xl md:px-[40px]">
         <StatePanel
           icon="library_music"
-          title="Sign in to keep a library"
-          body="Like songs and build playlists, then play them in any room."
+          title="Đăng nhập để lưu thư viện"
+          body="Thích bài hát, tạo playlist rồi phát trong bất kỳ phòng nào."
           action={
             <Link href="/login" className={primaryPillClass}>
-              Sign in
+              Đăng nhập
             </Link>
           }
         />
@@ -51,8 +51,8 @@ export default function LibraryPage() {
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-lg px-md py-lg md:px-lg">
       <header className="flex flex-col gap-1">
-        <span className="font-technical text-label-mono-sm uppercase text-secondary">Library</span>
-        <h1 className="text-headline-xl text-on-surface">Your music</h1>
+        <span className="font-technical text-label-mono-sm uppercase text-secondary">Thư viện</span>
+        <h1 className="text-headline-xl text-on-surface">Nhạc của bạn</h1>
         <RoomHint />
       </header>
 
@@ -72,7 +72,7 @@ export default function LibraryPage() {
             }`}
           >
             <Icon name={value === "liked" ? "favorite" : "queue_music"} className="text-[18px]" filled={tab === value && value === "liked"} />
-            {value === "liked" ? "Liked Songs" : "Playlists"}
+            {value === "liked" ? "Bài đã thích" : "Playlist"}
           </button>
         ))}
       </div>
@@ -94,10 +94,10 @@ function RoomHint() {
   const { room } = useRoomSession();
   const text =
     mode === "no-room"
-      ? "Pick a song to start a room with it — or join a room first and add songs to its queue."
+      ? "Chọn một bài để mở phòng — hoặc vào một phòng trước rồi thêm bài vào hàng chờ."
       : mode === "locked"
-        ? `Only the host and DJs add songs in “${room?.name ?? "this room"}”.`
-        : `Songs you pick go to “${room?.name ?? "your room"}”.`;
+        ? `Chỉ chủ phòng và DJ được thêm bài trong “${room?.name ?? "phòng này"}”.`
+        : `Bài bạn chọn sẽ vào “${room?.name ?? "phòng của bạn"}”.`;
   return <p className="text-body-md text-on-surface-variant">{text}</p>;
 }
 
@@ -113,7 +113,7 @@ function SongRow({
   extra?: React.ReactNode;
 }) {
   const { mode, pick, notice } = useTrackActions();
-  const label = mode === "no-room" ? "Start a room" : mode === "control" ? "Play / queue" : mode === "add" ? "Add to queue" : null;
+  const label = mode === "no-room" ? "Mở phòng" : mode === "control" ? "Phát / thêm" : mode === "add" ? "Thêm vào hàng chờ" : null;
   return (
     <li className="group flex items-center gap-sm rounded-md bg-surface-container-low p-sm">
       <span className="font-technical w-6 text-center text-label-mono-md text-outline">{index + 1}</span>
@@ -148,16 +148,16 @@ function SongRow({
 function LikedSongs() {
   const favorites = useFavorites();
   if (favorites.isLoading) return <div className="h-40 animate-pulse rounded-lg bg-surface-container-low" />;
-  if (favorites.isError) return <StatePanel tone="error" icon="error" title="Couldn't load your liked songs" body="Try again in a moment." />;
+  if (favorites.isError) return <StatePanel tone="error" icon="error" title="Không tải được bài đã thích" body="Thử lại sau giây lát." />;
   if (!favorites.data || favorites.data.length === 0) {
     return (
       <StatePanel
         icon="favorite"
-        title="No liked songs yet"
-        body="Tap the heart on any song — on the Music page or in a room — to save it here."
+        title="Chưa có bài nào được thích"
+        body="Bấm vào trái tim ở bài bất kỳ — trên trang Nhạc hoặc trong phòng — để lưu vào đây."
         action={
           <Link href="/discover" className={primaryPillClass}>
-            Find music
+            Tìm nhạc
           </Link>
         }
       />
@@ -187,12 +187,12 @@ function QueueAllButton({ trackIds }: { trackIds: string[] }) {
         for (let i = 0; i < trackIds.length; i += MAX_QUEUE_ADD_MANY) {
           commands.queueAddMany(trackIds.slice(i, i + MAX_QUEUE_ADD_MANY));
         }
-        showToast({ icon: "queue_music", tone: "success", title: `Queued ${trackIds.length} songs`, body: room ? `in “${room.name}”` : undefined });
+        showToast({ icon: "queue_music", tone: "success", title: `Đã thêm ${trackIds.length} bài`, body: room ? `vào “${room.name}”` : undefined });
       }}
       className="flex items-center gap-1.5 self-start rounded-full bg-gradient-to-r from-[#8B5CF6] to-[#d946ef] px-md py-1.5 text-body-sm font-semibold text-white shadow-[0_0_18px_rgba(139,92,246,0.4)]"
     >
       <Icon name="queue_music" className="text-[18px]" />
-      Queue all in {room?.name ?? "the room"}
+      Queue all in {room?.name ?? "phòng"}
     </button>
   );
 }
@@ -220,7 +220,7 @@ function PlaylistGrid({ onOpen }: { onOpen: (id: string) => void }) {
                 showToast({
                   icon: "error",
                   tone: "error",
-                  title: "Couldn't create the playlist",
+                  title: "Không tạo được playlist",
                   body: error instanceof ApiClientError ? error.message : undefined,
                 }),
             },
@@ -232,8 +232,8 @@ function PlaylistGrid({ onOpen }: { onOpen: (id: string) => void }) {
           value={name}
           onChange={(event) => setName(event.target.value)}
           maxLength={60}
-          placeholder="New playlist name…"
-          aria-label="New playlist name"
+          placeholder="Tên playlist mới…"
+          aria-label="Tên playlist mới"
           className="min-w-0 flex-1 rounded-full bg-surface-container px-md py-xs text-body-md text-on-surface placeholder:text-outline focus:outline-none focus:ring-1 focus:ring-primary"
         />
         <button type="submit" disabled={!name.trim() || create.isPending} className={`${primaryPillClass} disabled:opacity-50`}>
@@ -244,7 +244,7 @@ function PlaylistGrid({ onOpen }: { onOpen: (id: string) => void }) {
       {playlists.isLoading ? (
         <div className="h-40 animate-pulse rounded-lg bg-surface-container-low" />
       ) : !playlists.data || playlists.data.length === 0 ? (
-        <StatePanel icon="queue_music" title="No playlists yet" body="Name one above, then add songs with the + button on any song." />
+        <StatePanel icon="queue_music" title="Chưa có playlist nào" body="Đặt tên ở trên, rồi thêm bài bằng nút + ở bài bất kỳ." />
       ) : (
         <ul className="grid grid-cols-2 gap-md sm:grid-cols-3 lg:grid-cols-4">
           {playlists.data.map((playlist) => (
@@ -276,14 +276,14 @@ function PlaylistView({ id, onBack }: { id: string; onBack: () => void }) {
 
   if (playlist.isLoading) return <div className="h-40 animate-pulse rounded-lg bg-surface-container-low" />;
   if (!playlist.data) {
-    return <StatePanel tone="error" icon="error" title="Playlist not found" body="It may have been deleted." action={<button type="button" onClick={onBack} className={primaryPillClass}>Back</button>} />;
+    return <StatePanel tone="error" icon="error" title="Không tìm thấy playlist" body="Có thể playlist đã bị xoá." action={<button type="button" onClick={onBack} className={primaryPillClass}>Quay lại</button>} />;
   }
   const data = playlist.data;
 
   return (
     <div className="flex flex-col gap-md">
       <div className="flex flex-wrap items-center gap-sm">
-        <button type="button" onClick={onBack} aria-label="Back to playlists" className="rounded-full p-1 text-on-surface-variant hover:text-on-surface">
+        <button type="button" onClick={onBack} aria-label="Quay lại danh sách playlist" className="rounded-full p-1 text-on-surface-variant hover:text-on-surface">
           <Icon name="arrow_back" className="text-[22px]" />
         </button>
         <div className="min-w-0 flex-1">
@@ -300,14 +300,14 @@ function PlaylistView({ id, onBack }: { id: string; onBack: () => void }) {
               onClick={() => del.mutate(data.id, { onSuccess: onBack })}
               className="rounded-full bg-error/15 px-sm py-1 text-body-sm font-semibold text-error"
             >
-              Delete playlist
+              Xoá playlist
             </button>
             <button type="button" onClick={() => setConfirmDelete(false)} className="rounded-full px-sm py-1 text-body-sm text-on-surface-variant">
-              Keep
+              Giữ lại
             </button>
           </span>
         ) : (
-          <button type="button" onClick={() => setConfirmDelete(true)} title="Delete playlist" aria-label="Delete playlist" className="rounded-full p-1 text-outline hover:text-error">
+          <button type="button" onClick={() => setConfirmDelete(true)} title="Xoá playlist" aria-label="Xoá playlist" className="rounded-full p-1 text-outline hover:text-error">
             <Icon name="delete" className="text-[20px]" />
           </button>
         )}
@@ -316,7 +316,7 @@ function PlaylistView({ id, onBack }: { id: string; onBack: () => void }) {
       <QueueAllButton trackIds={data.items.map((item) => item.trackId)} />
 
       {data.items.length === 0 ? (
-        <StatePanel icon="playlist_add" title="Empty playlist" body="Add songs with the + button on any song, on the Music page or in a room." />
+        <StatePanel icon="playlist_add" title="Playlist trống" body="Thêm bài bằng nút + ở bài bất kỳ, trên trang Nhạc hoặc trong phòng." />
       ) : (
         <ol className="flex flex-col gap-1.5">
           {data.items.map((item, index) => (
@@ -329,8 +329,8 @@ function PlaylistView({ id, onBack }: { id: string; onBack: () => void }) {
                 <button
                   type="button"
                   onClick={() => remove.mutate({ playlistId: data.id, itemId: item.id })}
-                  aria-label={`Remove ${item.track.title} from the playlist`}
-                  title="Remove from playlist"
+                  aria-label={`Bỏ ${item.track.title} khỏi playlist`}
+                  title="Bỏ khỏi playlist"
                   className="rounded-full p-1 text-outline hover:text-error"
                 >
                   <Icon name="remove_circle" className="text-[18px]" />

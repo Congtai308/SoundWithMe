@@ -1,12 +1,34 @@
 import { z } from "zod";
 
+/** The avatar set people pick from (apps/web/public/avatars/<id>.svg). */
+export const AVATAR_PRESETS = [
+  "rocker",
+  "diva",
+  "rapper",
+  "bolero",
+  "idol",
+  "pompadour",
+  "disco",
+  "shower",
+  "cat",
+  "frog",
+  "dino",
+  "offkey",
+] as const;
+export type AvatarPreset = (typeof AVATAR_PRESETS)[number];
+
+export const avatarPresetUrl = (id: AvatarPreset) => `/avatars/${id}.svg`;
+
 export const updateProfileSchema = z.object({
   displayName: z.string().trim().min(1).max(50).optional(),
   bio: z.string().trim().max(300).nullable().optional(),
-  // Avatar upload itself is out of scope here (see Architecture Review §55 —
-  // needs real upload validation/object storage) — this only accepts an
-  // already-hosted URL for now, e.g. from a future upload endpoint.
-  avatarUrl: z.string().trim().url().nullable().optional(),
+  // Only one of the app's own avatars (or none): an arbitrary URL would let
+  // anyone load a tracking image into everyone's room. Google photos are set
+  // by sign-in, not here.
+  avatarUrl: z
+    .enum(AVATAR_PRESETS.map(avatarPresetUrl) as [string, ...string[]])
+    .nullable()
+    .optional(),
 });
 export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;
 

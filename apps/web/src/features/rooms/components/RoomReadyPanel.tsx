@@ -35,19 +35,19 @@ export function RoomReadyPanel({ room, playTrackId = null }: { room: Room; playT
       </div>
 
       <div className="flex flex-col gap-xs">
-        <span className="font-technical text-label-mono-sm uppercase text-secondary">Your room is live</span>
+        <span className="font-technical text-label-mono-sm uppercase text-secondary">Phòng của bạn đã mở</span>
         <h2 className="text-headline-xl text-on-surface">{room.name}</h2>
         {room.description && <p className="text-body-lg text-on-surface-variant">{room.description}</p>}
       </div>
 
       <div className="flex w-full flex-col gap-xs text-left">
-        <span className="font-technical text-label-mono-sm uppercase text-outline">Instant invite link</span>
+        <span className="font-technical text-label-mono-sm uppercase text-outline">Link mời</span>
         <div className="flex items-center gap-xs rounded-md bg-surface-container p-xs pl-md shadow-inner">
           <Icon name="link" className="text-[18px] text-outline" />
           <input
             readOnly
             value={inviteUrl}
-            aria-label="Invite link"
+            aria-label="Link mời"
             onFocus={(e) => e.currentTarget.select()}
             className="font-technical min-w-0 flex-1 bg-transparent text-label-mono-md text-on-surface focus:outline-none"
           />
@@ -57,23 +57,23 @@ export function RoomReadyPanel({ room, playTrackId = null }: { room: Room; playT
             className="flex shrink-0 items-center gap-1.5 rounded-full bg-surface-container-high px-md py-xs text-headline-sm text-on-surface hover:bg-surface-container-highest"
           >
             <Icon name={copyState === "copied" ? "done" : "content_copy"} className="text-[18px]" />
-            {copyState === "copied" ? "Copied" : "Copy"}
+            {copyState === "copied" ? "Đã copy" : "Copy"}
           </button>
         </div>
         {copyState === "failed" && (
-          <span className="text-body-sm text-error">Couldn&apos;t access the clipboard — select the link and copy it manually.</span>
+          <span className="text-body-sm text-error">Không truy cập được clipboard — hãy bôi đen link rồi copy thủ công.</span>
         )}
         {room.type === "private" && (
           <span className="text-body-sm text-on-surface-variant">
-            Private: only people with this link{room.hasPasscode ? " or the passcode" : ""} can get in. It isn&apos;t listed anywhere.
+            Private: only people with this link{room.hasPasscode ? " hoặc mật mã" : ""} can get in. It isn&apos;t listed anywhere.
           </span>
         )}
         {room.type === "friends" && (
-          <span className="text-body-sm text-on-surface-variant">Friends only: your friends can join; they&apos;ve been notified.</span>
+          <span className="text-body-sm text-on-surface-variant">Chỉ bạn bè: bạn bè của bạn vào được và đã nhận thông báo.</span>
         )}
         {room.type === "duo" && (
           <span className="text-body-sm text-on-surface-variant">
-            Duo rooms fit you and one other listener — send this link to them.
+            Phòng nghe đôi dành cho bạn và một người nữa — gửi link này cho họ nhé.
           </span>
         )}
       </div>
@@ -85,13 +85,13 @@ export function RoomReadyPanel({ room, playTrackId = null }: { room: Room; playT
           className="flex flex-1 items-center justify-center gap-xs rounded-full bg-primary-container px-md py-sm text-headline-sm text-on-primary-container shadow-[0_0_24px_rgba(160,120,255,0.35)] transition-all active:scale-[0.96]"
         >
           <Icon name="login" className="text-[20px]" />
-          Enter Room
+          Vào phòng
         </Link>
         <Link
           href="/rooms"
           className="flex flex-1 items-center justify-center gap-xs rounded-full border border-white/[0.12] bg-white/[0.06] px-md py-sm text-headline-sm text-on-surface hover:border-white/[0.18]"
         >
-          Browse live rooms
+          Xem các phòng đang mở
         </Link>
       </div>
     </div>

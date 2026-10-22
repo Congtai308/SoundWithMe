@@ -14,6 +14,7 @@ import type {
   RoomListener,
   SkipVoteState,
 } from "@soundwithme/types";
+import { errorMessage } from "@/services/error-messages";
 import type { ErrorPayload } from "@soundwithme/realtime-contracts";
 import { getSocket } from "@/services/socket-client";
 import { usePlayerStore } from "@/features/player/stores/player-store";
@@ -129,7 +130,7 @@ export function useRoomSocket(roomId: string, currentUserId: string | undefined)
         store.setMembership("not-member");
         return;
       }
-      store.setError(error);
+      store.setError({ ...error, message: errorMessage(error.code, error.message) });
     };
 
     socket.on("connect", onConnect);

@@ -81,7 +81,7 @@ export class HtmlAudioEngine implements PlaybackEngine {
       ["canplay", () => this.emitter.emit({ type: "buffering", buffering: false })],
       ["ended", () => this.emitter.emit({ type: "ended" })],
       ["durationchange", () => this.emitter.emit({ type: "duration", durationMs: this.getDurationMs() })],
-      ["error", () => this.emitter.emit({ type: "error", message: "This track could not be loaded" })],
+      ["error", () => this.emitter.emit({ type: "error", message: "Không tải được bài này" })],
     ];
     for (const [event, handler] of handlers) this.audio.addEventListener(event, handler);
     this.detach = () => {
@@ -104,7 +104,7 @@ export class HtmlAudioEngine implements PlaybackEngine {
       };
       const onError = () => {
         cleanup();
-        reject(new Error("This track could not be loaded"));
+        reject(new Error("Không tải được bài này"));
       };
       this.audio.addEventListener("loadedmetadata", onReady);
       this.audio.addEventListener("error", onError);
@@ -118,7 +118,7 @@ export class HtmlAudioEngine implements PlaybackEngine {
       if (error instanceof DOMException && error.name === "NotAllowedError") {
         this.emitter.emit({ type: "autoplay-blocked" });
       } else {
-        this.emitter.emit({ type: "error", message: "Playback failed to start" });
+        this.emitter.emit({ type: "error", message: "Không phát được nhạc" });
       }
     });
   }

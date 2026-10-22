@@ -22,7 +22,7 @@ const spaceGrotesk = Space_Grotesk({
 
 export const metadata: Metadata = {
   title: "SoundWithMe",
-  description: "Music connects us wherever you are.",
+  description: "Âm nhạc kết nối chúng ta, dù bạn ở đâu.",
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

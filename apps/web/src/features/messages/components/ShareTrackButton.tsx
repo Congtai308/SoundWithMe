@@ -21,8 +21,8 @@ export function ShareTrackButton({ trackId, trackTitle }: { trackId: string; tra
       <button
         type="button"
         onClick={() => setOpen(true)}
-        aria-label={`Send “${trackTitle}” to a friend`}
-        title="Send to a friend"
+        aria-label={`Gửi “${trackTitle}” cho bạn bè`}
+        title="Gửi cho bạn bè"
         className="flex h-8 w-8 items-center justify-center rounded-full text-on-surface-variant transition-colors hover:bg-white/[0.08] hover:text-on-surface"
       >
         <Icon name="send" className="text-[18px]" />
@@ -47,8 +47,8 @@ function ShareTrackDialog({ trackId, trackTitle, onClose }: { trackId: string; t
       showToast({
         icon: "error",
         tone: "error",
-        title: `Couldn't send it to ${name}`,
-        body: error instanceof ApiClientError ? error.message : "Try again in a moment.",
+        title: `Không gửi được cho ${name}`,
+        body: error instanceof ApiClientError ? error.message : "Thử lại sau giây lát.",
       });
     } finally {
       setPending(null);
@@ -56,11 +56,11 @@ function ShareTrackDialog({ trackId, trackTitle, onClose }: { trackId: string; t
   };
 
   return (
-    <Dialog title={`Send “${trackTitle}”`} onClose={onClose}>
+    <Dialog title={`Gửi “${trackTitle}”`} onClose={onClose}>
       <div className="flex flex-col gap-1 overflow-y-auto p-md">
-        {isLoading && <p className="text-body-md text-on-surface-variant">Loading your friends…</p>}
+        {isLoading && <p className="text-body-md text-on-surface-variant">Đang tải danh sách bạn bè…</p>}
         {!isLoading && friends.length === 0 && (
-          <p className="text-body-md text-on-surface-variant">Add friends first. Then you can send them songs.</p>
+          <p className="text-body-md text-on-surface-variant">Hãy kết bạn trước, rồi bạn có thể gửi bài hát cho họ.</p>
         )}
         {friends.map(({ user, online }) => {
           const sent = sentTo.has(user.id);
@@ -74,7 +74,7 @@ function ShareTrackDialog({ trackId, trackTitle, onClose }: { trackId: string; t
                 onClick={() => void send(user.id, user.displayName)}
                 className="rounded-full bg-primary-container px-md py-1 text-body-sm font-semibold text-on-primary-container disabled:opacity-60"
               >
-                {sent ? "Sent" : pending === user.id ? "Sending…" : "Send"}
+                {sent ? "Đã gửi" : pending === user.id ? "Đang gửi…" : "Gửi"}
               </button>
             </div>
           );

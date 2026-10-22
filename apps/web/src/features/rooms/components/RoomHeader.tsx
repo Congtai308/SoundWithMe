@@ -11,9 +11,9 @@ import { roomShareUrl } from "../share";
 const CONNECTION_COPY: Record<ConnectionStatus, { label: string; tone: string } | null> = {
   idle: null,
   connected: null,
-  connecting: { label: "Connecting…", tone: "text-secondary" },
-  reconnecting: { label: "Reconnecting — playback will resync", tone: "text-[#f59e0b]" },
-  error: { label: "Can't reach the room server", tone: "text-error" },
+  connecting: { label: "Đang kết nối…", tone: "text-secondary" },
+  reconnecting: { label: "Đang kết nối lại — nhạc sẽ tự đồng bộ", tone: "text-[#f59e0b]" },
+  error: { label: "Không kết nối được máy chủ phòng", tone: "text-error" },
 };
 
 const TYPE_ICON: Record<Room["type"], string> = {
@@ -24,11 +24,11 @@ const TYPE_ICON: Record<Room["type"], string> = {
   community: "groups",
 };
 const TYPE_LABEL: Record<Room["type"], string> = {
-  public: "Public room",
-  duo: "Duo room (2 people)",
-  friends: "Friends-only room",
-  private: "Private room",
-  community: "Community room",
+  public: "Phòng công khai",
+  duo: "Phòng nghe đôi (2 người)",
+  friends: "Phòng chỉ bạn bè",
+  private: "Phòng riêng tư",
+  community: "Phòng cộng đồng",
 };
 
 interface RoomHeaderProps {
@@ -86,7 +86,7 @@ export function RoomHeader({
               <span className="truncate">{room.name}</span>
               {isHost && (
                 <span className="font-technical hidden shrink-0 rounded-full bg-tertiary-container/20 px-1.5 sm:inline py-0.5 text-label-mono-sm uppercase text-tertiary">
-                  Host
+                  Chủ phòng
                 </span>
               )}
               {isDj && (
@@ -116,30 +116,30 @@ export function RoomHeader({
         <button
           type="button"
           onClick={onOpenPeople}
-          aria-label={isHost ? "Manage room and people" : "People in this room"}
-          title={isHost ? "Manage room & people" : "People in this room"}
+          aria-label={isHost ? "Quản lý phòng và mọi người" : "Người trong phòng"}
+          title={isHost ? "Quản lý phòng & mọi người" : "Người trong phòng"}
           className="flex items-center gap-1.5 rounded-md border border-white/[0.12] bg-white/[0.06] px-sm py-1.5 text-body-sm font-medium text-on-surface transition-colors hover:border-white/[0.18]"
         >
           <Icon name={isHost ? "admin_panel_settings" : "group"} className="text-[18px]" />
           <span className="font-technical text-label-mono-sm">{listenerCount}</span>
-          <span className="hidden xl:inline">{isHost ? "Manage" : "People"}</span>
+          <span className="hidden xl:inline">{isHost ? "Quản lý" : "Mọi người"}</span>
         </button>
         <button
           type="button"
           onClick={onOpenInvite}
-          aria-label="Invite friends"
-          title="Invite friends"
+          aria-label="Mời bạn bè"
+          title="Mời bạn bè"
           className="hidden items-center gap-1.5 sm:flex rounded-md border border-white/[0.12] bg-white/[0.06] px-sm py-1.5 text-body-sm font-medium text-on-surface transition-colors hover:border-white/[0.18]"
         >
           <Icon name="person_add" className="text-[18px]" />
-          <span className="hidden xl:inline">Invite</span>
+          <span className="hidden xl:inline">Mời</span>
         </button>
         <button
           type="button"
           onClick={toggleEffects}
           aria-pressed={effectsOn}
-          aria-label={effectsOn ? "Turn off room effects" : "Turn on room effects"}
-          title={effectsOn ? "Effects on — turn off if the room feels slow" : "Effects off — smoother on slower devices"}
+          aria-label={effectsOn ? "Tắt hiệu ứng phòng" : "Bật hiệu ứng phòng"}
+          title={effectsOn ? "Đang bật hiệu ứng — tắt đi nếu thấy máy chậm" : "Đã tắt hiệu ứng — mượt hơn trên máy yếu"}
           className={`hidden items-center gap-1.5 rounded-md border px-sm py-1.5 text-body-sm font-medium transition-colors sm:flex ${
             effectsOn
               ? "border-[#f472b6]/40 bg-[#f472b6]/10 text-[#f9a8d4] hover:border-[#f472b6]/60"
@@ -147,28 +147,28 @@ export function RoomHeader({
           }`}
         >
           <Icon name={effectsOn ? "auto_awesome" : "speed"} className="text-[18px]" />
-          <span className="hidden lg:inline">{effectsOn ? "Effects" : "Lite"}</span>
+          <span className="hidden lg:inline">{effectsOn ? "Hiệu ứng" : "Nhẹ"}</span>
         </button>
         <button
           type="button"
           onClick={share}
-          aria-label={copied === "copied" ? "Link copied" : "Share room link"}
+          aria-label={copied === "copied" ? "Đã copy link" : "Chia sẻ link phòng"}
           className="flex items-center gap-1.5 rounded-md border border-white/[0.12] bg-white/[0.06] px-sm py-1.5 text-body-sm font-medium text-on-surface transition-colors hover:border-white/[0.18]"
         >
           <Icon name={copied === "copied" ? "done" : "share"} className="text-[18px]" />
           <span className="hidden md:inline">
-            {copied === "copied" ? "Link copied" : copied === "failed" ? "Copy failed" : "Share"}
+            {copied === "copied" ? "Đã copy link" : copied === "failed" ? "Copy không được" : "Chia sẻ"}
           </span>
         </button>
         <button
           type="button"
           onClick={onLeave}
           disabled={isLeaving}
-          aria-label={isHost ? "End room" : "Leave room"}
+          aria-label={isHost ? "Kết thúc phòng" : "Rời phòng"}
           className="flex items-center gap-1.5 rounded-md px-sm py-1.5 text-body-sm font-medium text-on-surface-variant transition-colors hover:bg-error-container/30 hover:text-error disabled:opacity-60"
         >
           <Icon name="logout" className="text-[18px]" />
-          <span className="hidden md:inline">{isLeaving ? "Leaving…" : isHost ? "End room" : "Leave"}</span>
+          <span className="hidden md:inline">{isLeaving ? "Đang rời…" : isHost ? "Kết thúc phòng" : "Rời phòng"}</span>
         </button>
       </TopNavSlot>
     </>

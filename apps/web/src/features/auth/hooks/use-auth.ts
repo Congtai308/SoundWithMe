@@ -61,6 +61,11 @@ export function useGuestLogin() {
   });
 }
 
+export function useUpdateProfile() {
+  const invalidate = useInvalidateCurrentUser();
+  return useMutation({ mutationFn: authApi.updateProfile, onSuccess: () => invalidate() });
+}
+
 export function useLogout() {
   const invalidate = useInvalidateCurrentUser();
   return useMutation({

@@ -55,19 +55,19 @@ export function Sidebar() {
           className="mb-md flex w-full items-center justify-center gap-sm rounded-full bg-primary-container px-sm py-sm text-headline-sm text-on-primary-container shadow-[0_0_24px_rgba(160,120,255,0.35)] transition-transform active:scale-95 md:px-md"
         >
           <Icon name="graphic_eq" className="text-[20px]" />
-          <span className="hidden md:inline">Create Room</span>
+          <span className="hidden md:inline">Tạo phòng</span>
         </Link>
 
         <p className="font-technical mb-2xs hidden px-sm text-label-mono-sm uppercase text-outline md:block">
-          Navigation
+          Điều hướng
         </p>
-        <nav className="mb-lg flex flex-col gap-1" aria-label="Main">
+        <nav className="mb-lg flex flex-col gap-1" aria-label="Điều hướng chính">
           {NAV_ITEMS.map((item) => {
             if (item.soon) {
               return (
                 <span
                   key={item.href}
-                  title={`${item.label} — coming soon`}
+                  title={`${item.label} — sắp ra mắt`}
                   aria-disabled="true"
                   className="flex cursor-not-allowed items-center justify-center rounded-lg px-sm py-xs text-outline/60 md:justify-between"
                 >
@@ -76,7 +76,7 @@ export function Sidebar() {
                     <span className="hidden text-body-md md:inline">{item.label}</span>
                   </span>
                   <span className="font-technical hidden rounded-full bg-surface-container-high px-xs py-0.5 text-label-mono-sm uppercase text-outline md:inline">
-                    Soon
+                    Sắp có
                   </span>
                 </span>
               );
@@ -107,7 +107,7 @@ export function Sidebar() {
                 </span>
                 {item.href === "/messages" && unreadMessages > 0 && (
                   <span
-                    aria-label={`${unreadMessages} unread`}
+                    aria-label={`${unreadMessages} chưa đọc`}
                     className="font-technical hidden rounded-full bg-primary-container px-xs py-0.5 text-label-mono-sm text-on-primary-container md:inline"
                   >
                     {unreadMessages > 99 ? "99+" : unreadMessages}

@@ -143,11 +143,11 @@ export default function RoomPage() {
       <PageFrame>
         <StatePanel
           icon="lock"
-          title="Sign in to join this room"
-          body="Rooms are for signed-in listeners. A Fast Pass gets you in with just a name."
+          title="Đăng nhập để vào phòng"
+          body="Không tạo được tài khoản khách. Đăng nhập hoặc vào nhanh chỉ với một cái tên."
           action={
             <Link href="/login" className={primaryPillClass}>
-              Sign in or use a Fast Pass
+              Đăng nhập hoặc vào nhanh
             </Link>
           }
         />
@@ -176,11 +176,11 @@ export default function RoomPage() {
         <StatePanel
           tone="error"
           icon="person_remove"
-          title="You were removed from this room"
-          body="The host removed you, so you can't rejoin this room."
+          title="Bạn đã bị mời ra khỏi phòng"
+          body="Chủ phòng đã mời bạn ra nên bạn không vào lại được phòng này."
           action={
             <Link href="/rooms" className={ghostPillClass}>
-              Browse live rooms
+              Xem các phòng đang mở
             </Link>
           }
         />
@@ -194,11 +194,11 @@ export default function RoomPage() {
         <StatePanel
           tone="error"
           icon="sensors_off"
-          title="This room isn't available"
-          body={roomQuery.error instanceof ApiClientError ? roomQuery.error.message : "It may have been removed, or you may not have access."}
+          title="Phòng này không còn"
+          body={roomQuery.error instanceof ApiClientError ? roomQuery.error.message : "Có thể phòng đã bị xoá, hoặc bạn không có quyền vào."}
           action={
             <Link href="/rooms" className={ghostPillClass}>
-              Browse live rooms
+              Xem các phòng đang mở
             </Link>
           }
         />
@@ -211,15 +211,15 @@ export default function RoomPage() {
       <PageFrame>
         <StatePanel
           icon="podcasts"
-          title="This room has ended"
+          title="Phòng đã kết thúc"
           body={
             closedReason === "inactive"
-              ? "It ended after 30 minutes with nobody in it. Start your own or find another live room."
-              : "The host closed this session. Start your own or find another room that's live."
+              ? "Phòng tự kết thúc sau 30 phút không có ai. Hãy mở phòng mới hoặc tìm phòng khác."
+              : "Chủ phòng đã kết thúc phòng. Hãy mở phòng mới hoặc tìm phòng khác đang mở."
           }
           action={
             <Link href="/rooms" className={primaryPillClass}>
-              Find a live room
+              Tìm phòng đang mở
             </Link>
           }
         />
@@ -312,7 +312,7 @@ export default function RoomPage() {
           className="fixed left-1/2 top-20 z-[55] flex -translate-x-1/2 items-center gap-xs rounded-full border border-white/[0.16] bg-[rgba(30,41,59,0.92)] px-md py-xs text-body-sm text-on-surface shadow-xl backdrop-blur-xl"
         >
           <Icon name="error" className="text-[18px] text-error" />
-          {lastError?.message ?? "Couldn't leave the room. Try again."}
+          {lastError?.message ?? "Không rời phòng được. Thử lại nhé."}
         </div>
       )}
 
@@ -340,7 +340,7 @@ export default function RoomPage() {
 
         {/* Below 768px the side columns become tabs under the stage. */}
         <div className="flex flex-col gap-sm md:hidden">
-          <div role="tablist" aria-label="Room panels" className="flex rounded-full bg-surface-container p-1">
+          <div role="tablist" aria-label="Bảng trong phòng" className="flex rounded-full bg-surface-container p-1">
             {(["chat", "queue"] as const).map((panel) => (
               <button
                 key={panel}
@@ -352,7 +352,7 @@ export default function RoomPage() {
                   mobilePanel === panel ? "bg-primary-container text-on-primary-container" : "text-on-surface-variant"
                 }`}
               >
-                {panel === "chat" ? `Chat · ${listeners.length}` : `Queue · ${queue.length}`}
+                {panel === "chat" ? `Chat · ${listeners.length}` : `Hàng chờ · ${queue.length}`}
               </button>
             ))}
           </div>

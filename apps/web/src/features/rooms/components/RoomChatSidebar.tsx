@@ -72,26 +72,26 @@ export function RoomChatSidebar({
   };
 
   return (
-    <section aria-label="Listeners and chat" className="room-panel flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg">
+    <section aria-label="Người nghe và chat" className="room-panel flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg">
       <header className="flex shrink-0 flex-col gap-sm border-b border-white/[0.08] bg-white/[0.025] px-md py-sm">
         <div className="flex items-center justify-between">
-          <h2 className="text-headline-sm text-on-surface">Listeners</h2>
+          <h2 className="text-headline-sm text-on-surface">Người nghe</h2>
           <span className="font-technical flex items-center gap-1 rounded-full border border-success/30 bg-success/10 px-xs py-0.5 text-label-mono-sm text-success">
             <span className="h-1.5 w-1.5 rounded-full bg-success" />
             {listeners.length} online
           </span>
         </div>
-        <ul className="flex items-center gap-xs" aria-label="People listening now">
+        <ul className="flex items-center gap-xs" aria-label="Người đang nghe">
           {sortedListeners.slice(0, VISIBLE_AVATARS).map((listener) => (
             <li
               key={listener.id}
-              title={`${listener.displayName}${listener.id === hostId ? " (host)" : ""}`}
+              title={`${listener.displayName}${listener.id === hostId ? " (chủ phòng)" : ""}`}
               className={`relative rounded-full ${listener.id === hostId ? "ring-2 ring-tertiary-container ring-offset-2 ring-offset-surface-container-low" : ""}`}
             >
-              <Avatar name={listener.displayName} size={34} online />
+              <Avatar name={listener.displayName} src={listener.avatarUrl} size={34} online />
               {singingUserIds.has(listener.id) && (
                 <span
-                  title="Singing"
+                  title="Đang hát"
                   className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-[#ec4899] text-white shadow"
                 >
                   <Icon name="mic" className="text-[11px]" filled />
@@ -111,7 +111,7 @@ export function RoomChatSidebar({
 
       <div className="flex shrink-0 items-center justify-between px-md pt-sm">
         <span className="font-technical text-label-mono-sm uppercase text-outline">Chat</span>
-        <span className="text-body-sm text-outline">Live room chat</span>
+        <span className="text-body-sm text-outline">Chat trong phòng</span>
       </div>
 
       <div
@@ -124,7 +124,7 @@ export function RoomChatSidebar({
         className="scrollbar-none flex min-h-[200px] flex-1 flex-col gap-sm overflow-y-auto px-md py-sm"
       >
         {!chatEnabled ? (
-          <ChatNotice icon="speaker_notes_off" text="The host turned chat off for this room." />
+          <ChatNotice icon="speaker_notes_off" text="Chủ phòng đã tắt chat." />
         ) : messages.isLoading ? (
           Array.from({ length: 4 }, (_, i) => (
             <div key={i} className="flex gap-sm">
@@ -138,8 +138,8 @@ export function RoomChatSidebar({
         ) : messages.isError ? (
           <ChatNotice
             icon="wifi_off"
-            text="Couldn't load the chat."
-            action={{ label: "Retry", onClick: () => messages.refetch() }}
+            text="Không tải được chat."
+            action={{ label: "Thử lại", onClick: () => messages.refetch() }}
           />
         ) : (
           <>
@@ -153,10 +153,10 @@ export function RoomChatSidebar({
                 disabled={messages.isFetchingNextPage}
                 className="self-center rounded-full bg-surface-container-high px-sm py-1 text-body-sm text-on-surface-variant hover:text-on-surface disabled:opacity-60"
               >
-                {messages.isFetchingNextPage ? "Loading…" : "Load earlier messages"}
+                {messages.isFetchingNextPage ? "Đang tải…" : "Xem tin nhắn cũ hơn"}
               </button>
             )}
-            {ordered.length === 0 && <ChatNotice icon="forum" text="No messages yet — say hi to the room 👋" />}
+            {ordered.length === 0 && <ChatNotice icon="forum" text="Chưa có tin nhắn — chào cả phòng đi 👋" />}
             {ordered.map((message) => {
               // Your own messages sit on the right; everyone else's on the left.
               const isOwn = message.userId === currentUserId;
@@ -170,7 +170,7 @@ export function RoomChatSidebar({
                           message.userId === hostId ? "text-tertiary" : isOwn ? "text-secondary" : "text-primary"
                         }`}
                       >
-                        {isOwn ? "You" : message.authorName}
+                        {isOwn ? "Bạn" : message.authorName}
                       </span>
                       <time dateTime={message.createdAt} className="shrink-0 text-[11px] text-outline">
                         {TIME_FORMAT.format(new Date(message.createdAt))}
@@ -195,14 +195,14 @@ export function RoomChatSidebar({
       </div>
 
       {reactionsEnabled && (
-        <div className="flex shrink-0 items-center justify-between border-t border-white/[0.08] px-sm py-xs" aria-label="Send a reaction">
+        <div className="flex shrink-0 items-center justify-between border-t border-white/[0.08] px-sm py-xs" aria-label="Thả cảm xúc">
           {REACTION_EMOJIS.map((emoji) => (
             <button
               key={emoji}
               type="button"
               disabled={!isConnected}
               onClick={() => onReact(emoji)}
-              aria-label={`React with ${emoji}`}
+              aria-label={`Thả ${emoji}`}
               className="flex h-9 w-9 items-center justify-center rounded-full text-[20px] transition-transform hover:scale-125 hover:bg-white/[0.06] active:scale-95 disabled:opacity-40"
             >
               {emoji}
@@ -213,7 +213,7 @@ export function RoomChatSidebar({
 
       <form onSubmit={submit} className="flex shrink-0 items-center gap-xs border-t border-white/[0.08] p-sm">
         <label htmlFor="room-chat-input" className="sr-only">
-          Message the room
+          Nhắn cho cả phòng
         </label>
         <input
           id="room-chat-input"
@@ -222,14 +222,14 @@ export function RoomChatSidebar({
           maxLength={MAX_MESSAGE_LENGTH}
           disabled={!chatEnabled || isMuted || !isConnected}
           placeholder={
-            !chatEnabled ? "Chat is off" : isMuted ? "The host muted you" : isConnected ? "Say something…" : "Reconnecting…"
+            !chatEnabled ? "Chat đã tắt" : isMuted ? "Chủ phòng đã tắt chat của bạn" : isConnected ? "Nói gì đó…" : "Đang kết nối lại…"
           }
           className="min-w-0 flex-1 rounded-full bg-surface-container px-md py-xs text-body-md text-on-surface placeholder:text-outline focus:outline-none focus:ring-1 focus:ring-primary-container disabled:opacity-60"
         />
         <button
           type="submit"
           disabled={!chatEnabled || isMuted || !isConnected || !draft.trim()}
-          aria-label="Send message"
+          aria-label="Gửi tin nhắn"
           className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary-container text-on-primary-container transition-opacity disabled:opacity-40"
         >
           <Icon name="send" className="text-[18px]" filled />

@@ -74,10 +74,10 @@ export function RoomMainStage({
   const currentPosition = () => clampPosition(usePlayerStore.getState().currentPositionMs, durationMs);
   // Video mode splits the column ~7:3 between the video and the lyrics.
   const isVideo = mode === "video" && hasTrack;
-  const title = track?.title ?? (isTrackLoading ? "Loading…" : hasTrack ? "Unknown track" : "Pick something to play");
+  const title = track?.title ?? (isTrackLoading ? "Đang tải…" : hasTrack ? "Bài không rõ" : "Chọn một bài để phát");
 
   return (
-    <section aria-label="Now playing" className="flex min-h-0 flex-col gap-md md:h-full">
+    <section aria-label="Đang phát" className="flex min-h-0 flex-col gap-md md:h-full">
       <div
         className={`room-stage relative w-full overflow-hidden rounded-lg bg-surface-container-lowest transition-[flex-grow,max-height] duration-300 ${
           isVideo
@@ -109,11 +109,11 @@ export function RoomMainStage({
         ) : (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-sm bg-gradient-to-br from-primary-container/20 via-transparent to-secondary-container/10 p-lg text-center">
             <Icon name="queue_music" className="text-[44px] text-primary" />
-            <p className="text-headline-md text-on-surface">Nothing is playing yet</p>
+            <p className="text-headline-md text-on-surface">Chưa phát bài nào</p>
             <p className="max-w-sm text-body-md text-on-surface-variant">
               {canAdd
-                ? "Add a song from YouTube — everyone in the room will hear it at the same moment."
-                : "Waiting for the host or a DJ to start the music."}
+                ? "Thêm một bài từ YouTube — cả phòng sẽ nghe cùng một lúc."
+                : "Đang chờ chủ phòng hoặc DJ bật nhạc."}
             </p>
             {canAdd && (
               <button
@@ -122,7 +122,7 @@ export function RoomMainStage({
                 className="mt-xs flex items-center gap-xs rounded-full bg-primary-container px-md py-xs text-headline-sm text-on-primary-container shadow-[0_0_20px_rgba(160,120,255,0.35)]"
               >
                 <Icon name="add" className="text-[20px]" />
-                Add a song
+                Thêm bài hát
               </button>
             )}
           </div>
@@ -141,7 +141,7 @@ export function RoomMainStage({
               className="absolute bottom-md right-md z-[21] flex items-center gap-1.5 rounded-md border border-[#8B5CF6]/50 bg-black/60 px-sm py-1 text-body-sm font-semibold text-[#c4b5fd] hover:border-[#8B5CF6]"
             >
               <Icon name={mode === "art" ? "smart_display" : "close_fullscreen"} className="text-[18px]" />
-              {mode === "art" ? "Video" : "Compact"}
+              {mode === "art" ? "Video" : "Thu gọn"}
             </button>
           </>
         )}
@@ -163,7 +163,7 @@ export function RoomMainStage({
           </h2>
           <p className="truncate text-body-md text-on-surface-variant">
             {track ? track.artistName : "SoundWithMe Sync Engine"}
-            {track?.provider === "youtube" && <span className="text-outline"> · via YouTube</span>}
+            {track?.provider === "youtube" && <span className="text-outline"> · từ YouTube</span>}
           </p>
         </div>
         {track && hasTrack && (
@@ -184,7 +184,7 @@ export function RoomMainStage({
           <button
             type="button"
             onClick={toggleMute}
-            aria-label={isMuted ? "Unmute" : "Mute"}
+            aria-label={isMuted ? "Bật tiếng" : "Tắt tiếng"}
             className="flex h-9 w-9 items-center justify-center rounded-full text-on-surface-variant hover:text-on-surface"
           >
             <Icon name={isMuted || volume === 0 ? "volume_off" : volume < 50 ? "volume_down" : "volume_up"} className="text-[22px]" />
@@ -195,7 +195,7 @@ export function RoomMainStage({
             max={100}
             value={isMuted ? 0 : volume}
             onChange={(e) => setVolume(Number(e.target.value))}
-            aria-label="Your volume"
+            aria-label="Âm lượng của bạn"
             className="hidden h-1 w-24 cursor-pointer accent-[#8B5CF6] min-[1600px]:block"
           />
         </div>
@@ -206,13 +206,13 @@ export function RoomMainStage({
             type="button"
             disabled={!canControl || !hasTrack}
             onClick={() => (isPlaying ? onPause(currentPosition()) : onPlay(currentPosition()))}
-            aria-label={isPlaying ? "Pause for everyone" : "Play for everyone"}
-            title={canControl ? undefined : "Only the host and DJs control playback in this room"}
+            aria-label={isPlaying ? "Tạm dừng cho cả phòng" : "Phát cho cả phòng"}
+            title={canControl ? undefined : "Chỉ chủ phòng và DJ điều khiển nhạc trong phòng này"}
             className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-[#d946ef] to-[#ec4899] text-white shadow-[0_0_24px_rgba(236,72,153,0.45)] transition-transform hover:scale-105 active:scale-[0.96] disabled:opacity-40 disabled:shadow-none disabled:hover:scale-100"
           >
             <Icon name={isPlaying ? "pause" : "play_arrow"} className="text-[32px]" filled />
           </button>
-          <TransportButton label="Skip to the next queued song" icon="skip_next" disabled={!canControl || !hasQueue} onClick={onNext} />
+          <TransportButton label="Chuyển sang bài tiếp theo" icon="skip_next" disabled={!canControl || !hasQueue} onClick={onNext} />
         </div>
 
         <div className="flex min-w-0 flex-1 justify-end">
@@ -261,8 +261,8 @@ function SkipVoteButton({
       onClick={() => onVote(!voted)}
       title={
         hasQueue
-          ? `Vote to skip — ${votes}/${needed} votes. Half the room moves to the next song.`
-          : "Nothing queued to skip to"
+          ? `Bỏ phiếu chuyển bài — ${votes}/${needed} phiếu. Đủ nửa phòng là chuyển.`
+          : "Hàng chờ trống, không có bài để chuyển"
       }
       className={`flex items-center gap-1 rounded-full border px-sm py-1 text-body-sm font-semibold transition-colors disabled:opacity-40 ${
         voted
@@ -271,7 +271,7 @@ function SkipVoteButton({
       }`}
     >
       <Icon name="skip_next" className="text-[18px]" />
-      <span>{voted ? "Voted" : "Skip"}</span>
+      <span>{voted ? "Đã bỏ phiếu" : "Chuyển bài"}</span>
       <span className="font-technical text-label-mono-sm">
         {votes}/{needed}
       </span>
@@ -298,7 +298,7 @@ function SeekBar({ durationMs, disabled, onSeek }: { durationMs: number; disable
         value={clampedPosition}
         disabled={disabled}
         onChange={(e) => onSeek(Number(e.target.value))}
-        aria-label="Seek for everyone"
+        aria-label="Tua cho cả phòng"
         className="h-1 w-full cursor-pointer appearance-none rounded-full bg-white/[0.12] accent-[#ec4899] disabled:cursor-default"
         style={{
           background: durationMs
@@ -318,7 +318,7 @@ function SeekBar({ durationMs, disabled, onSeek }: { durationMs: number; disable
 function RestartButton({ disabled, onClick }: { disabled: boolean; onClick: () => void }) {
   const pastStart = usePlayerStore((s) => s.currentPositionMs >= RESTART_THRESHOLD_MS);
   return (
-    <TransportButton label="Restart song for everyone" icon="skip_previous" disabled={disabled} onClick={onClick} hidden={!pastStart} />
+    <TransportButton label="Phát lại từ đầu cho cả phòng" icon="skip_previous" disabled={disabled} onClick={onClick} hidden={!pastStart} />
   );
 }
 
@@ -330,13 +330,13 @@ function SyncBadge() {
   const inSync = isSynced && !needsUserGesture;
   return (
     <span
-      title={driftMs !== null ? `Drift ${Math.round(driftMs)} ms` : undefined}
+      title={driftMs !== null ? `Lệch ${Math.round(driftMs)} ms` : undefined}
       className={`font-technical flex shrink-0 items-center gap-1 rounded-md border px-sm py-1 text-label-mono-sm uppercase ${
         inSync ? "border-[#8B5CF6]/50 bg-[#8B5CF6]/10 text-[#c4b5fd]" : "border-[#f59e0b]/40 bg-[#f59e0b]/10 text-[#f59e0b]"
       }`}
     >
       <Icon name="sensors" className="text-[14px]" />
-      {inSync ? "Live" : "Syncing"}
+      {inSync ? "Live" : "Đang đồng bộ"}
       {driftMs !== null && isPlaying && (
         <span className="hidden normal-case opacity-70 min-[1600px]:inline">· {Math.round(driftMs)}ms</span>
       )}

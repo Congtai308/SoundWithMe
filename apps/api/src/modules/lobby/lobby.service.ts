@@ -15,6 +15,8 @@ export const LOBBY_BATCH = 10;
 const LOW_QUEUE = 3;
 /** Songs a room played lately that it won't pick again while it has others. */
 const RECENT_WINDOW = 40;
+const MIN_SONG_MS = 90_000;
+const MAX_SONG_MS = 10 * 60_000;
 const POOL_TTL_SECONDS = 24 * 60 * 60;
 /** An empty pool (search off or out of quota) is asked again sooner. */
 const EMPTY_POOL_TTL_SECONDS = 10 * 60;
@@ -144,7 +146,10 @@ export class LobbyService implements OnApplicationBootstrap, OnModuleDestroy {
     const ids = new Set<string>();
     for (const query of topic.queries) {
       try {
-        for (const track of await this.musicService.search(query, 25)) ids.add(track.id);
+        for (const track of await this.musicService.search(query, 25)) {
+          // Songs, not Shorts, clips or hour-long mixes.
+          if (track.durationMs >= MIN_SONG_MS && track.durationMs <= MAX_SONG_MS) ids.add(track.id);
+        }
       } catch (error: unknown) {
         this.logger.warn(`Lobby search "${query}" failed: ${error instanceof Error ? error.message : String(error)}`);
       }

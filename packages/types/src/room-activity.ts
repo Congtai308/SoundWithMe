@@ -63,6 +63,7 @@ export interface ReactionEvent {
 export interface RoomListener {
   id: string;
   displayName: string;
+  avatarUrl?: string | null;
 }
 
 /** Votes to skip the song that's playing now. */

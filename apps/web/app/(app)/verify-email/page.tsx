@@ -27,11 +27,11 @@ export default function VerifyEmailPage() {
     panel = (
       <StatePanel
         icon="verified"
-        title="Email confirmed"
-        body="Thanks! You can now reset your password by email if you ever need to."
+        title="Đã xác nhận email"
+        body="Cảm ơn bạn! Giờ bạn có thể đặt lại mật khẩu qua email khi cần."
         action={
           <Link href="/" className={primaryPillClass}>
-            Start listening
+            Bắt đầu nghe
           </Link>
         }
       />
@@ -41,11 +41,11 @@ export default function VerifyEmailPage() {
       <StatePanel
         icon="link_off"
         tone="error"
-        title="This link doesn't work"
+        title="Link này không dùng được"
         body={
           verify.error instanceof ApiClientError
             ? verify.error.message
-            : "Open the newest link we emailed you, or ask for a new one from the banner after signing in."
+            : "Mở link mới nhất trong email, hoặc xin link mới từ thông báo sau khi đăng nhập."
         }
       />
     );
@@ -53,11 +53,11 @@ export default function VerifyEmailPage() {
     panel = (
       <StatePanel
         icon="mark_email_read"
-        title="Confirm your email"
+        title="Xác nhận email"
         body={
           user && !user.isGuest
-            ? `Confirm that ${user.email ?? "this address"} is yours.`
-            : "Sign in first if this is your account, then come back to this link. You can also confirm without signing in."
+            ? `Xác nhận ${user.email ?? "địa chỉ này"} là của bạn.`
+            : "Nếu đây là tài khoản của bạn, hãy đăng nhập trước rồi mở lại link này. Bạn cũng có thể xác nhận mà không cần đăng nhập."
         }
         action={
           <button
@@ -66,7 +66,7 @@ export default function VerifyEmailPage() {
             onClick={() => verify.mutate(token)}
             className={`${primaryPillClass} disabled:opacity-50`}
           >
-            {verify.isPending ? "Confirming…" : "Confirm my email"}
+            {verify.isPending ? "Đang xác nhận…" : "Xác nhận email"}
           </button>
         }
       />

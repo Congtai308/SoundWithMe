@@ -22,11 +22,11 @@ export function UserCard() {
       <div className="p-xs md:p-md">
         <Link
           href="/login"
-          title="Sign in"
+          title="Đăng nhập"
           className="flex items-center justify-center gap-xs rounded-lg bg-surface-container-low px-sm py-sm text-headline-sm text-on-surface transition-colors hover:bg-surface-container"
         >
           <Icon name="login" className="text-[20px]" />
-          <span className="hidden md:inline">Sign in</span>
+          <span className="hidden md:inline">Đăng nhập</span>
         </Link>
       </div>
     );
@@ -46,7 +46,7 @@ export function UserCard() {
                 {user.displayName}
               </span>
               <span className="block truncate text-body-sm text-on-surface-variant">
-                {user.isGuest ? "Guest listener" : `@${user.username}`}
+                {user.isGuest ? "Tài khoản khách" : `@${user.username}`}
               </span>
             </span>
           </span>

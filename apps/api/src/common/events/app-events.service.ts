@@ -31,6 +31,8 @@ export interface AppEventMap {
   "room.lobbyJoined": { roomId: string };
   /** LobbyService topped up a lobby room's queue and/or started its next song: everyone in it is told. */
   "room.lobbyRefreshed": { roomId: string; state: PlaybackState | null; queue: QueueItem[] };
+  /** Someone changed their name or avatar: their open sockets and rooms show the new one. */
+  "user.profileChanged": { userId: string; displayName: string; avatarUrl: string | null };
   /** Logins were revoked: one session (`sessionId`) or all of the user's (null). Their sockets disconnect. */
   "auth.sessionsEnded": { userId: string; sessionId: string | null };
 }

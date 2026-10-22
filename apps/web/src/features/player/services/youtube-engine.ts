@@ -56,11 +56,11 @@ const STATE_POLL_MS = 500;
 const LOAD_TIMEOUT_MS = 10_000;
 
 const ERROR_MESSAGES: Record<number, string> = {
-  2: "This YouTube link is invalid",
-  5: "This video can't be played in the browser",
-  100: "This video was removed or made private",
-  101: "The owner doesn't allow this video to be played outside YouTube",
-  150: "The owner doesn't allow this video to be played outside YouTube",
+  2: "Link YouTube không hợp lệ",
+  5: "Video này không phát được trên trình duyệt",
+  100: "Video đã bị xoá hoặc chuyển sang riêng tư",
+  101: "Chủ video không cho phát ngoài YouTube",
+  150: "Chủ video không cho phát ngoài YouTube",
 };
 
 let apiPromise: Promise<YouTubeNamespace> | null = null;
@@ -82,7 +82,7 @@ export function loadYouTubeApi(): Promise<YouTubeNamespace> {
     script.async = true;
     script.onerror = () => {
       apiPromise = null;
-      reject(new Error("YouTube player failed to load — check your connection or ad blocker"));
+      reject(new Error("Không tải được trình phát YouTube — kiểm tra mạng hoặc trình chặn quảng cáo"));
     };
     document.head.appendChild(script);
   });
@@ -128,7 +128,7 @@ export class YouTubeEngine implements PlaybackEngine {
       this.pendingCue?.reject(new Error("Superseded by a newer track"));
       const timer = window.setTimeout(() => {
         this.pendingCue = null;
-        reject(new Error("YouTube took too long to load this video"));
+        reject(new Error("YouTube tải video quá lâu"));
       }, LOAD_TIMEOUT_MS);
       this.pendingCue = {
         resolve: () => {
@@ -278,7 +278,7 @@ export class YouTubeEngine implements PlaybackEngine {
                   player.cueVideoById(this.videoId);
                   return;
                 }
-                const message = ERROR_MESSAGES[data] ?? "YouTube couldn't play this video";
+                const message = ERROR_MESSAGES[data] ?? "YouTube không phát được video này";
                 this.pendingCue?.reject(new Error(message));
                 this.pendingCue = null;
                 this.emitter.emit({ type: "error", message });

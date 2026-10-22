@@ -28,8 +28,8 @@ export function LikeButton({
     <button
       type="button"
       aria-pressed={isLiked}
-      aria-label={isLiked ? "Remove from Liked Songs" : "Save to Liked Songs"}
-      title={isLiked ? "Remove from Liked Songs" : "Save to Liked Songs"}
+      aria-label={isLiked ? "Bỏ khỏi Bài đã thích" : "Lưu vào Bài đã thích"}
+      title={isLiked ? "Bỏ khỏi Bài đã thích" : "Lưu vào Bài đã thích"}
       onClick={(event) => {
         event.stopPropagation();
         toggle.mutate(
@@ -39,7 +39,7 @@ export function LikeButton({
               showToast({
                 icon: "error",
                 tone: "error",
-                title: "Couldn't update Liked Songs",
+                title: "Không cập nhật được Bài đã thích",
                 body: error instanceof ApiClientError ? error.message : undefined,
               }),
           },

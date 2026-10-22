@@ -1,4 +1,5 @@
 import type { ApiResponse } from "@soundwithme/types";
+import { errorMessage } from "./error-messages";
 
 /**
  * The API's base URL. Opened from another host (a tunnel, a LAN IP), the app
@@ -23,7 +24,7 @@ export class ApiClientError extends Error {
     message: string,
     public readonly details: Record<string, string | number | boolean | null> = {},
   ) {
-    super(message);
+    super(errorMessage(code, message, details));
     this.name = "ApiClientError";
   }
 }

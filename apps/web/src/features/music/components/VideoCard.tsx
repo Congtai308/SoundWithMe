@@ -8,10 +8,10 @@ import { AddToPlaylistButton } from "@/features/library/components/AddToPlaylist
 import { artworkAt } from "@/features/music/artwork";
 
 const PRIMARY_LABEL: Record<TrackActionMode, string> = {
-  control: "Play in your room",
-  add: "Add to your room's queue",
-  locked: "Only the host adds songs in this room",
-  "no-room": "Start a room with this song",
+  control: "Phát trong phòng của bạn",
+  add: "Thêm vào hàng chờ phòng bạn",
+  locked: "Chỉ chủ phòng được thêm bài trong phòng này",
+  "no-room": "Mở phòng với bài này",
 };
 
 interface VideoCardProps {
@@ -71,12 +71,12 @@ export function VideoCard({ track, mode, onPick, onPlayNow, priority = false }: 
         <button
           type="button"
           onClick={() => onPlayNow(track.id)}
-          aria-label={`Play now for everyone: ${track.title}`}
-          title="Play now for everyone"
+          aria-label={`Phát ngay cho cả phòng: ${track.title}`}
+          title="Phát ngay cho cả phòng"
           className="absolute right-1.5 top-1.5 flex h-8 items-center gap-1 rounded-full bg-black/70 px-2 text-body-sm font-semibold text-white opacity-0 transition-opacity hover:bg-black/90 group-hover:opacity-100 focus-visible:opacity-100 [@media(hover:none)]:opacity-100"
         >
           <Icon name="play_circle" className="text-[16px]" filled />
-          Now
+          Phát ngay
         </button>
       )}
 

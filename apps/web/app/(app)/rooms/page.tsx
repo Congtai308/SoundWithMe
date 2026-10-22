@@ -19,16 +19,16 @@ export default function RoomsPage() {
 
       <header className="relative mb-xl flex flex-col justify-between gap-md sm:flex-row sm:items-end">
         <div className="flex flex-col gap-2xs">
-          <span className="font-technical text-label-mono-sm uppercase text-secondary">Live broadcasts</span>
-          <h1 className="text-headline-xl text-on-surface">Live Listening Rooms</h1>
+          <span className="font-technical text-label-mono-sm uppercase text-secondary">Đang phát trực tiếp</span>
+          <h1 className="text-headline-xl text-on-surface">Các phòng đang mở</h1>
           <p className="max-w-2xl text-body-lg text-on-surface-variant">
-            Every room plays in sync — drop in and hear exactly what everyone else is hearing.
+            Mọi phòng đều phát đồng bộ — vào là nghe đúng khoảnh khắc mọi người đang nghe.
           </p>
         </div>
         {user && (
           <Link href="/rooms/new" className={`${primaryPillClass} self-start py-sm sm:self-auto`}>
             <Icon name="add_circle" className="text-[20px]" />
-            Create Room
+            Tạo phòng
           </Link>
         )}
       </header>
@@ -43,24 +43,24 @@ export default function RoomsPage() {
         <StatePanel
           tone="error"
           icon="wifi_off"
-          title="Couldn't load live rooms"
-          body="Check your connection and try again."
+          title="Không tải được danh sách phòng"
+          body="Kiểm tra kết nối mạng rồi thử lại."
           action={
             <button type="button" onClick={() => rooms.refetch()} className={ghostPillClass}>
               <Icon name="refresh" className="text-[18px]" />
-              Retry
+              Thử lại
             </button>
           }
         />
       ) : items.length === 0 ? (
         <StatePanel
           icon="podcasts"
-          title="No rooms are live right now"
-          body="Be the first — open a room and invite your friends."
+          title="Hiện chưa có phòng nào mở"
+          body="Hãy là người đầu tiên — mở phòng và mời bạn bè."
           action={
             <Link href="/rooms/new" className={primaryPillClass}>
               <Icon name="add_circle" className="text-[18px]" />
-              Create Room
+              Tạo phòng
             </Link>
           }
         />
@@ -79,7 +79,7 @@ export default function RoomsPage() {
                 disabled={rooms.isFetchingNextPage}
                 className={`${ghostPillClass} disabled:opacity-60`}
               >
-                {rooms.isFetchingNextPage ? "Loading…" : "Load more rooms"}
+                {rooms.isFetchingNextPage ? "Đang tải…" : "Xem thêm phòng"}
               </button>
             </div>
           )}

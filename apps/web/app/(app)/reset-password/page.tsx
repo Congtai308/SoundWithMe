@@ -11,7 +11,7 @@ const inputClass =
 
 function errorText(error: unknown): string | null {
   if (!error) return null;
-  return error instanceof ApiClientError ? error.message : "Something went wrong. Try again.";
+  return error instanceof ApiClientError ? error.message : "Có lỗi xảy ra. Thử lại nhé.";
 }
 
 /**
@@ -40,8 +40,8 @@ function RequestLinkForm() {
     return (
       <StatePanel
         icon="forward_to_inbox"
-        title="Check your email"
-        body={`If ${email} has an account, a link to choose a new password is on its way. It works once, for one hour.`}
+        title="Kiểm tra email của bạn"
+        body={`Nếu ${email} có tài khoản, link đặt mật khẩu mới đang được gửi tới. Link dùng được một lần, trong một giờ.`}
       />
     );
   }
@@ -53,8 +53,8 @@ function RequestLinkForm() {
 
   return (
     <form onSubmit={submit} className="flex flex-col gap-sm rounded-lg bg-surface-container-low p-lg">
-      <h1 className="text-headline-md text-on-surface">Forgot your password?</h1>
-      <p className="text-body-md text-on-surface-variant">Enter your account&apos;s email and we&apos;ll send you a link to choose a new one.</p>
+      <h1 className="text-headline-md text-on-surface">Quên mật khẩu?</h1>
+      <p className="text-body-md text-on-surface-variant">Nhập email tài khoản, chúng tôi sẽ gửi link để bạn đặt mật khẩu mới.</p>
       <input
         type="email"
         required
@@ -70,10 +70,10 @@ function RequestLinkForm() {
         </p>
       )}
       <button type="submit" disabled={forgot.isPending} className={`${primaryPillClass} justify-center disabled:opacity-50`}>
-        {forgot.isPending ? "Sending…" : "Send me a link"}
+        {forgot.isPending ? "Đang gửi…" : "Gửi link cho tôi"}
       </button>
       <Link href="/login" className="text-center text-body-md font-semibold text-primary hover:underline">
-        Back to sign in
+        Quay lại đăng nhập
       </Link>
     </form>
   );
@@ -89,11 +89,11 @@ function NewPasswordForm({ token }: { token: string }) {
     return (
       <StatePanel
         icon="lock_reset"
-        title="Password changed"
-        body="You've been signed out everywhere. Sign in with your new password."
+        title="Đã đổi mật khẩu"
+        body="Bạn đã được đăng xuất khỏi mọi thiết bị. Đăng nhập bằng mật khẩu mới nhé."
         action={
           <Link href="/login" className={primaryPillClass}>
-            Sign in
+            Đăng nhập
           </Link>
         }
       />
@@ -112,14 +112,14 @@ function NewPasswordForm({ token }: { token: string }) {
 
   return (
     <form onSubmit={submit} className="flex flex-col gap-sm rounded-lg bg-surface-container-low p-lg">
-      <h1 className="text-headline-md text-on-surface">Choose a new password</h1>
+      <h1 className="text-headline-md text-on-surface">Đặt mật khẩu mới</h1>
       <input
         type="password"
         required
         minLength={8}
         maxLength={128}
         autoComplete="new-password"
-        placeholder="New password (8+ characters)"
+        placeholder="Mật khẩu mới (từ 8 ký tự)"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
         className={inputClass}
@@ -128,22 +128,22 @@ function NewPasswordForm({ token }: { token: string }) {
         type="password"
         required
         autoComplete="new-password"
-        placeholder="The same password again"
+        placeholder="Nhập lại mật khẩu"
         value={confirm}
         onChange={(e) => setConfirm(e.target.value)}
         className={inputClass}
       />
       {(mismatch || reset.error) && (
         <p role="alert" className="text-body-md text-error">
-          {mismatch ? "The two passwords don't match." : errorText(reset.error)}
+          {mismatch ? "Hai mật khẩu không khớp." : errorText(reset.error)}
         </p>
       )}
       <button type="submit" disabled={reset.isPending} className={`${primaryPillClass} justify-center disabled:opacity-50`}>
-        {reset.isPending ? "Saving…" : "Save new password"}
+        {reset.isPending ? "Đang lưu…" : "Lưu mật khẩu mới"}
       </button>
       {reset.error instanceof ApiClientError && reset.error.code === "INVALID_LINK" && (
         <Link href="/reset-password" className="text-center text-body-md font-semibold text-primary hover:underline">
-          Send me a new link
+          Gửi link mới cho tôi
         </Link>
       )}
     </form>

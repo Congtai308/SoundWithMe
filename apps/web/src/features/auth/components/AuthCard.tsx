@@ -22,15 +22,15 @@ import { useGuestLogin, useLogin, useRegister } from "../hooks/use-auth";
 export type AuthTab = "login" | "register" | "guest";
 
 const TABS: { id: AuthTab; label: string }[] = [
-  { id: "login", label: "Sign In" },
-  { id: "register", label: "Create Account" },
-  { id: "guest", label: "Fast Pass" },
+  { id: "login", label: "Đăng nhập" },
+  { id: "register", label: "Tạo tài khoản" },
+  { id: "guest", label: "Vào nhanh" },
 ];
 
 const HEADINGS: Record<AuthTab, { eyebrow: string; title: string }> = {
-  login: { eyebrow: "Welcome back", title: "Sign in to your Sonic Identity" },
-  register: { eyebrow: "New listener", title: "Create your Sonic Identity" },
-  guest: { eyebrow: "No account needed", title: "Jump in with a Fast Pass" },
+  login: { eyebrow: "Chào mừng trở lại", title: "Đăng nhập vào tài khoản của bạn" },
+  register: { eyebrow: "Người nghe mới", title: "Tạo tài khoản SoundWithMe" },
+  guest: { eyebrow: "Không cần tài khoản", title: "Vào nghe ngay chỉ với một cái tên" },
 };
 
 const AFTER_AUTH_PATH = "/";
@@ -58,7 +58,7 @@ export function AuthCard({
 
         <div
           role="tablist"
-          aria-label="Authentication method"
+          aria-label="Cách đăng nhập"
           className="inline-flex self-start rounded-full bg-surface-container p-1 shadow-inner sm:self-auto"
         >
           {TABS.map((tab) => (
@@ -88,23 +88,23 @@ export function AuthCard({
               className="flex items-center justify-center gap-sm rounded-full bg-surface-container px-md py-2.5 text-headline-sm text-on-surface shadow-sm transition-all hover:bg-surface-container-high active:scale-[0.98]"
             >
               <GoogleIcon className="h-4 w-4" />
-              Continue with Google
+              Tiếp tục với Google
             </a>
             <button
               type="button"
               disabled
-              title="Apple sign-in is coming soon"
+              title="Đăng nhập bằng Apple sắp có"
               className="flex cursor-not-allowed items-center justify-center gap-sm rounded-full bg-surface-container px-md py-2.5 text-headline-sm text-outline opacity-60"
             >
               <AppleIcon className="h-4 w-4" />
-              Apple · soon
+              Apple · sắp có
             </button>
           </div>
 
           <div className="relative my-xs flex items-center justify-center">
             <div className="h-px w-full bg-surface-container-highest" />
             <span className="font-technical absolute bg-surface-container-low px-sm text-label-mono-sm uppercase text-outline">
-              {activeTab === "login" ? "or use your email" : "or configure audio profile"}
+              {activeTab === "login" ? "hoặc dùng email" : "hoặc tạo tài khoản bằng email"}
             </span>
           </div>
         </>
@@ -120,7 +120,7 @@ export function AuthCard({
 function FormError({ error }: { error: unknown }) {
   if (!error) return null;
   const message =
-    error instanceof ApiClientError ? error.message : "Something went wrong. Try again.";
+    error instanceof ApiClientError ? error.message : "Có lỗi xảy ra. Thử lại nhé.";
   return (
     <div
       role="alert"
@@ -196,7 +196,7 @@ const PasswordInput = forwardRef<HTMLInputElement, Omit<IconInputProps, "icon" |
           <button
             type="button"
             onClick={() => setVisible((v) => !v)}
-            aria-label={visible ? "Hide password" : "Show password"}
+            aria-label={visible ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
             className="flex text-outline hover:text-on-surface"
           >
             <Icon name={visible ? "visibility_off" : "visibility"} className="text-[18px]" />
@@ -252,7 +252,7 @@ function LoginForm({ onSwitchTab }: { onSwitchTab: (tab: AuthTab) => void }) {
     >
       <FormError error={login.error} />
       <div className="grid grid-cols-1 gap-sm sm:grid-cols-2">
-        <Field label="Email address" error={errors.email?.message}>
+        <Field label="Địa chỉ email" error={errors.email?.message}>
           <IconInput
             icon="mail"
             type="email"
@@ -262,24 +262,24 @@ function LoginForm({ onSwitchTab }: { onSwitchTab: (tab: AuthTab) => void }) {
             {...register("email")}
           />
         </Field>
-        <Field label="Master key" error={errors.password?.message}>
+        <Field label="Mật khẩu" error={errors.password?.message}>
           <PasswordInput
             autoComplete="current-password"
-            placeholder="Your password"
+            placeholder="Mật khẩu của bạn"
             invalid={Boolean(errors.password)}
             {...register("password")}
           />
         </Field>
       </div>
-      <SubmitButton pending={login.isPending} idle="Sign in & tune in" busy="Signing in…" />
+      <SubmitButton pending={login.isPending} idle="Đăng nhập" busy="Đang đăng nhập…" />
       <SwitchHint>
         <Link href="/reset-password" className="font-semibold text-primary hover:underline">
-          Forgot your password?
+          Quên mật khẩu?
         </Link>
       </SwitchHint>
       <SwitchHint>
-        New here? <LinkButton onClick={() => onSwitchTab("register")}>Create an account</LinkButton>{" "}
-        or <LinkButton onClick={() => onSwitchTab("guest")}>use a Fast Pass</LinkButton>
+        New here? <LinkButton onClick={() => onSwitchTab("register")}>Tạo tài khoản</LinkButton>{" "}
+        or <LinkButton onClick={() => onSwitchTab("guest")}>vào nhanh không cần tài khoản</LinkButton>
       </SwitchHint>
     </form>
   );
@@ -298,13 +298,13 @@ function RegisterForm({ onSwitchTab }: { onSwitchTab: (tab: AuthTab) => void }) 
     return (
       <div role="status" className="flex flex-col items-center gap-sm pt-md text-center">
         <Icon name="forward_to_inbox" className="text-[40px] text-primary" />
-        <p className="text-headline-sm text-on-surface">Check your email</p>
+        <p className="text-headline-sm text-on-surface">Kiểm tra email của bạn</p>
         <p className="max-w-sm text-body-md text-on-surface-variant">
           We sent a link to <span className="font-semibold text-on-surface">{getValues("email")}</span>. Open it and
           enter your password to finish creating your account. Nothing there? Check spam.
         </p>
         <SwitchHint>
-          Wrong address? <LinkButton onClick={() => registerAccount.reset()}>Start over</LinkButton>
+          Wrong address? <LinkButton onClick={() => registerAccount.reset()}>Làm lại</LinkButton>
         </SwitchHint>
       </div>
     );
@@ -317,18 +317,18 @@ function RegisterForm({ onSwitchTab }: { onSwitchTab: (tab: AuthTab) => void }) 
       className="flex flex-col gap-sm pt-sm"
     >
       <FormError error={registerAccount.error} />
-      <Field label="Display name" hint="public in rooms" error={errors.displayName?.message}>
+      <Field label="Tên hiển thị" hint="mọi người trong phòng sẽ thấy" error={errors.displayName?.message}>
         <IconInput
           icon="badge"
           type="text"
           autoComplete="nickname"
-          placeholder="e.g. Alex Vance"
+          placeholder="VD: Minh Anh"
           invalid={Boolean(errors.displayName)}
           {...register("displayName")}
         />
       </Field>
       <div className="grid grid-cols-1 gap-sm sm:grid-cols-2">
-        <Field label="Email address" error={errors.email?.message}>
+        <Field label="Địa chỉ email" error={errors.email?.message}>
           <IconInput
             icon="mail"
             type="email"
@@ -339,13 +339,13 @@ function RegisterForm({ onSwitchTab }: { onSwitchTab: (tab: AuthTab) => void }) 
           />
         </Field>
         <Field
-          label="Master key"
-          hint={<span className="text-primary-fixed-dim">8+ chars</span>}
+          label="Mật khẩu"
+          hint={<span className="text-primary-fixed-dim">từ 8 ký tự</span>}
           error={errors.password?.message}
         >
           <PasswordInput
             autoComplete="new-password"
-            placeholder="At least 8 characters"
+            placeholder="Ít nhất 8 ký tự"
             invalid={Boolean(errors.password)}
             {...register("password")}
           />
@@ -353,11 +353,11 @@ function RegisterForm({ onSwitchTab }: { onSwitchTab: (tab: AuthTab) => void }) 
       </div>
       <SubmitButton
         pending={registerAccount.isPending}
-        idle="Join the Sonic Circle — Get Started"
-        busy="Sending your link…"
+        idle="Tạo tài khoản"
+        busy="Đang gửi link…"
       />
       <SwitchHint>
-        Already have an account? <LinkButton onClick={() => onSwitchTab("login")}>Sign in</LinkButton>
+        Already have an account? <LinkButton onClick={() => onSwitchTab("login")}>Đăng nhập</LinkButton>
       </SwitchHint>
     </form>
   );
@@ -385,20 +385,20 @@ function GuestForm({ onSwitchTab }: { onSwitchTab: (tab: AuthTab) => void }) {
         Pick a name and you&apos;re in. Guest sessions can join and host rooms, but can&apos;t be
         upgraded to a full account later.
       </p>
-      <Field label="Display name" hint="public in rooms" error={errors.displayName?.message}>
+      <Field label="Tên hiển thị" hint="mọi người trong phòng sẽ thấy" error={errors.displayName?.message}>
         <IconInput
           icon="badge"
           type="text"
           autoComplete="nickname"
-          placeholder="What should people call you?"
+          placeholder="Mọi người nên gọi bạn là gì?"
           invalid={Boolean(errors.displayName)}
           {...register("displayName")}
         />
       </Field>
-      <SubmitButton pending={guestLogin.isPending} idle="Continue as guest" busy="Joining…" />
+      <SubmitButton pending={guestLogin.isPending} idle="Vào với tư cách khách" busy="Đang vào…" />
       <SwitchHint>
         Want to keep your rooms?{" "}
-        <LinkButton onClick={() => onSwitchTab("register")}>Create an account</LinkButton>
+        <LinkButton onClick={() => onSwitchTab("register")}>Tạo tài khoản</LinkButton>
       </SwitchHint>
     </form>
   );

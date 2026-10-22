@@ -49,7 +49,7 @@ export class WsAuthService {
     if (!user) return null;
 
     return {
-      user: { id: user.id, displayName: user.displayName, isGuest: user.isGuest },
+      user: { id: user.id, displayName: user.displayName, isGuest: user.isGuest, avatarUrl: user.avatarUrl ?? null },
       session: { id: sessionId, tokenExpiresAt: payload.exp * 1000 },
     };
   }

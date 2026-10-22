@@ -25,7 +25,7 @@ export function PlayerBar() {
 
   return (
     <footer
-      aria-label="Player"
+      aria-label="Trình phát"
       className="fixed bottom-16 left-0 right-0 z-50 flex h-16 items-center justify-between gap-md bg-surface-container-lowest/95 px-md shadow-[0_-4px_24px_rgba(0,0,0,0.6)] backdrop-blur-2xl sm:bottom-0 sm:h-24 sm:px-lg"
     >
       <div className="flex min-w-0 flex-1 items-center gap-md sm:w-1/4 sm:flex-none md:min-w-[240px]">
@@ -37,14 +37,14 @@ export function PlayerBar() {
           </div>
         )}
         <div className="min-w-0">
-          <p className="truncate text-headline-sm text-on-surface">{active && track ? track.title : "Nothing playing"}</p>
+          <p className="truncate text-headline-sm text-on-surface">{active && track ? track.title : "Chưa phát gì"}</p>
           <p className="truncate text-body-sm text-on-surface-variant">
-            {active && track ? track.artistName : "Join a room to listen together"}
+            {active && track ? track.artistName : "Vào một phòng để nghe cùng mọi người"}
           </p>
           {active && (
             <p className="font-technical flex items-center gap-1 text-label-mono-sm text-secondary">
               <span className={`h-1.5 w-1.5 rounded-full ${isSynced ? "bg-secondary" : "bg-[#f59e0b]"}`} />
-              {isPlaying ? (isSynced ? "In sync" : "Syncing…") : "Paused"}
+              {isPlaying ? (isSynced ? "Đã đồng bộ" : "Đang đồng bộ…") : "Tạm dừng"}
             </p>
           )}
         </div>
@@ -71,7 +71,7 @@ export function PlayerBar() {
           className="flex items-center gap-xs rounded-full bg-primary-container px-sm py-xs text-headline-sm text-on-primary-container shadow-[0_0_16px_rgba(160,120,255,0.25)] transition-opacity hover:opacity-95 sm:px-md"
         >
           <Icon name="headphones" className="text-[18px]" />
-          <span className="hidden md:inline">{roomId ? "In the room" : "Listen Together"}</span>
+          <span className="hidden md:inline">{roomId ? "Trong phòng" : "Nghe cùng"}</span>
         </Link>
       </div>
     </footer>
