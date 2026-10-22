@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { Room } from "@soundwithme/types";
+import { barButtonActiveClass, barButtonClass, barDangerButtonClass } from "@/components/ui/bar-controls";
 import { Icon } from "@/components/ui/Icon";
 import { TopNavSlot } from "@/components/layout/TopNavSlot";
 import type { ConnectionStatus } from "../stores/room-live-store";
@@ -118,7 +119,7 @@ export function RoomHeader({
           onClick={onOpenPeople}
           aria-label={isHost ? "Quản lý phòng và mọi người" : "Người trong phòng"}
           title={isHost ? "Quản lý phòng & mọi người" : "Người trong phòng"}
-          className="flex items-center gap-1.5 rounded-md border border-white/[0.12] bg-white/[0.06] px-sm py-1.5 text-body-sm font-medium text-on-surface transition-colors hover:border-white/[0.18]"
+          className={barButtonClass}
         >
           <Icon name={isHost ? "admin_panel_settings" : "group"} className="text-[18px]" />
           <span className="font-technical text-label-mono-sm">{listenerCount}</span>
@@ -129,7 +130,7 @@ export function RoomHeader({
           onClick={onOpenInvite}
           aria-label="Mời bạn bè"
           title="Mời bạn bè"
-          className="hidden items-center gap-1.5 sm:flex rounded-md border border-white/[0.12] bg-white/[0.06] px-sm py-1.5 text-body-sm font-medium text-on-surface transition-colors hover:border-white/[0.18]"
+          className={`${barButtonClass} !hidden sm:!inline-flex`}
         >
           <Icon name="person_add" className="text-[18px]" />
           <span className="hidden xl:inline">Mời</span>
@@ -140,11 +141,7 @@ export function RoomHeader({
           aria-pressed={effectsOn}
           aria-label={effectsOn ? "Tắt hiệu ứng phòng" : "Bật hiệu ứng phòng"}
           title={effectsOn ? "Đang bật hiệu ứng — tắt đi nếu thấy máy chậm" : "Đã tắt hiệu ứng — mượt hơn trên máy yếu"}
-          className={`hidden items-center gap-1.5 rounded-md border px-sm py-1.5 text-body-sm font-medium transition-colors sm:flex ${
-            effectsOn
-              ? "border-[#f472b6]/40 bg-[#f472b6]/10 text-[#f9a8d4] hover:border-[#f472b6]/60"
-              : "border-white/[0.12] bg-white/[0.06] text-on-surface-variant hover:border-white/[0.18]"
-          }`}
+          className={`${effectsOn ? barButtonActiveClass : barButtonClass} !hidden sm:!inline-flex`}
         >
           <Icon name={effectsOn ? "auto_awesome" : "speed"} className="text-[18px]" />
           <span className="hidden lg:inline">{effectsOn ? "Hiệu ứng" : "Nhẹ"}</span>
@@ -153,7 +150,7 @@ export function RoomHeader({
           type="button"
           onClick={share}
           aria-label={copied === "copied" ? "Đã copy link" : "Chia sẻ link phòng"}
-          className="flex items-center gap-1.5 rounded-md border border-white/[0.12] bg-white/[0.06] px-sm py-1.5 text-body-sm font-medium text-on-surface transition-colors hover:border-white/[0.18]"
+          className={barButtonClass}
         >
           <Icon name={copied === "copied" ? "done" : "share"} className="text-[18px]" />
           <span className="hidden md:inline">
@@ -165,7 +162,7 @@ export function RoomHeader({
           onClick={onLeave}
           disabled={isLeaving}
           aria-label={isHost ? "Kết thúc phòng" : "Rời phòng"}
-          className="flex items-center gap-1.5 rounded-md px-sm py-1.5 text-body-sm font-medium text-on-surface-variant transition-colors hover:bg-error-container/30 hover:text-error disabled:opacity-60"
+          className={barDangerButtonClass}
         >
           <Icon name="logout" className="text-[18px]" />
           <span className="hidden md:inline">{isLeaving ? "Đang rời…" : isHost ? "Kết thúc phòng" : "Rời phòng"}</span>

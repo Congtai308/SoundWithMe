@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCurrentUser } from "@/features/auth/hooks/use-auth";
 import { QUICK_VIBES } from "@/features/music/vibes";
+import { barButtonActiveClass, barButtonClass } from "@/components/ui/bar-controls";
 import { Icon } from "@/components/ui/Icon";
 import { Avatar } from "@/components/ui/Avatar";
 import { BrandLogo } from "@/components/ui/BrandLogo";
@@ -59,7 +60,7 @@ export function TopNav() {
         >
           <Icon
             name="search"
-            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[20px] text-outline"
+            className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[20px] text-outline transition-colors peer-focus:text-primary"
           />
           <label htmlFor="global-search" className="sr-only">
             Tìm bài hát, nghệ sĩ
@@ -70,29 +71,24 @@ export function TopNav() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Tìm bài hát, nghệ sĩ…"
-            className="w-full rounded-full bg-surface-container-low py-xs pl-10 pr-md text-body-sm text-on-surface shadow-inner placeholder:text-outline focus:outline-none focus:ring-1 focus:ring-primary"
+            className="h-10 w-full rounded-full border border-white/[0.1] bg-white/[0.04] pl-11 pr-md text-body-sm text-on-surface transition-all placeholder:text-outline hover:border-white/[0.18] focus:border-primary/60 focus:bg-white/[0.06] focus:outline-none focus:ring-2 focus:ring-primary/25"
           />
         </form>
 
-        <nav className={`hidden items-center gap-xs ${inRoom ? "" : "lg:flex"}`} aria-label="Chọn nhanh">
-          {QUICK_VIBES.map((vibe) => (
-            <Link
-              key={vibe.slug}
-              href={`/discover?vibe=${vibe.slug}`}
-              className="rounded-full bg-surface-container px-sm py-1 text-body-sm text-on-surface-variant transition-colors hover:bg-surface-container-high hover:text-on-surface"
-            >
-              {vibe.emoji} {QUICK_VIBE_LABEL[vibe.slug]}
-            </Link>
-          ))}
+        <nav className={`hidden items-center gap-2 ${inRoom ? "" : "lg:flex"}`} aria-label="Chọn nhanh">
+          {/* Reading the URL's query needs a Suspense boundary in a shared layout. */}
+          <Suspense fallback={<VibeChips active={null} />}>
+            <ActiveVibeChips />
+          </Suspense>
         </nav>
 
-        <div className="flex shrink-0 items-center gap-md">
-          <TopNavSlotTarget name="end" className="flex items-center gap-xs" />
+        <div className="flex shrink-0 items-center gap-2">
+          <TopNavSlotTarget name="end" className="flex items-center gap-2" />
           <NotificationBell />
           {user ? (
             <AccountMenu
               placement="below"
-              triggerClassName="flex rounded-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary"
+              triggerClassName="flex h-10 w-10 items-center justify-center rounded-full border border-white/[0.1] bg-white/[0.04] transition-all hover:border-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
               trigger={
                 <>
                   <span className="sr-only">Tài khoản</span>
@@ -103,7 +99,7 @@ export function TopNav() {
           ) : (
             <Link
               href="/login"
-              className="rounded-full bg-primary-container px-md py-1.5 text-headline-sm text-on-primary-container"
+              className="inline-flex h-10 items-center rounded-full bg-primary-container px-md text-headline-sm text-on-primary-container shadow-[0_0_20px_rgba(160,120,255,0.3)] transition-transform hover:scale-[1.02]"
             >
               Đăng nhập
             </Link>
@@ -111,5 +107,31 @@ export function TopNav() {
         </div>
       </div>
     </header>
+  );
+}
+
+function ActiveVibeChips() {
+  const onDiscover = usePathname() === "/discover";
+  const vibe = useSearchParams().get("vibe");
+  return <VibeChips active={onDiscover ? vibe : null} />;
+}
+
+function VibeChips({ active }: { active: string | null }) {
+  return (
+    <>
+      {QUICK_VIBES.map((vibe) => (
+        <Link
+          key={vibe.slug}
+          href={`/discover?vibe=${vibe.slug}`}
+          aria-current={active === vibe.slug ? "page" : undefined}
+          className={`${active === vibe.slug ? barButtonActiveClass : barButtonClass} !h-9 !px-3`}
+        >
+          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white/[0.06] text-[13px] leading-none" aria-hidden="true">
+            {vibe.emoji}
+          </span>
+          {QUICK_VIBE_LABEL[vibe.slug]}
+        </Link>
+      ))}
+    </>
   );
 }
