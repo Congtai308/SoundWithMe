@@ -1,3 +1,4 @@
+import { safeAvatarUrl } from "@soundwithme/validation";
 import { GENRE_SLUGS } from "@soundwithme/constants";
 import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
@@ -166,7 +167,7 @@ export class UsersService {
       id: user.id,
       username: user.username,
       displayName: user.displayName,
-      avatarUrl: user.avatarUrl ?? null,
+      avatarUrl: safeAvatarUrl(user.avatarUrl),
       bio: user.bio ?? null,
       isGuest: user.isGuest,
     };
@@ -178,7 +179,7 @@ export class UsersService {
       id: user.id,
       username: user.username,
       displayName: user.displayName,
-      avatarUrl: user.avatarUrl ?? null,
+      avatarUrl: safeAvatarUrl(user.avatarUrl),
       bio: user.bio ?? null,
       authMethods: user.authMethods,
       isGuest: user.isGuest,

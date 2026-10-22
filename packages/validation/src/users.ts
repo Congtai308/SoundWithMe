@@ -19,6 +19,22 @@ export type AvatarPreset = (typeof AVATAR_PRESETS)[number];
 
 export const avatarPresetUrl = (id: AvatarPreset) => `/avatars/${id}.svg`;
 
+const PRESET_URLS = new Set<string>(AVATAR_PRESETS.map(avatarPresetUrl));
+
+/**
+ * An avatar that's safe to show other people: one of the presets, or a
+ * Google profile photo set by Google sign-in. Anything else (an address
+ * saved before avatars were limited to presets) is dropped.
+ */
+export function safeAvatarUrl(url: string | null | undefined): string | null {
+  if (!url) return null;
+  if (PRESET_URLS.has(url)) return url;
+  return GOOGLE_PHOTO.test(url) ? url : null;
+}
+
+/** https, a googleusercontent.com host, no user or port, then a path. */
+const GOOGLE_PHOTO = /^https:\/\/([a-z0-9-]+\.)+googleusercontent\.com\/[^\s"'<>]*$/i;
+
 export const updateProfileSchema = z.object({
   displayName: z.string().trim().min(1).max(50).optional(),
   bio: z.string().trim().max(300).nullable().optional(),

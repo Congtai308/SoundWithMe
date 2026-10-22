@@ -1,4 +1,5 @@
 import { SOCKET_EVENTS } from "@soundwithme/constants";
+import { safeAvatarUrl } from "@soundwithme/validation";
 import type { AuthenticatedUser } from "@soundwithme/types";
 import { RealtimeHarness, nextEventMatching } from "./support/realtime-harness";
 
@@ -44,5 +45,13 @@ describe("Profile avatar", () => {
     );
     await h.api("/users/me", { method: "PATCH", cookie: listener.cookie, body: { avatarUrl: "/avatars/cat.svg" } });
     await updated;
+  });
+
+  it("never passes on an avatar address saved before presets", () => {
+    expect(safeAvatarUrl("/avatars/frog.svg")).toBe("/avatars/frog.svg");
+    expect(safeAvatarUrl("https://lh3.googleusercontent.com/a/photo")).toBe("https://lh3.googleusercontent.com/a/photo");
+    for (const old of ["https://evil.example/pixel.png", "http://lh3.googleusercontent.com/a", "https://googleusercontent.com.evil.example/x", "javascript:alert(1)"]) {
+      expect(safeAvatarUrl(old)).toBeNull();
+    }
   });
 });
