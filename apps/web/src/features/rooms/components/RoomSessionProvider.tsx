@@ -103,6 +103,19 @@ export function RoomSessionProvider({ children }: { children: ReactNode }) {
     if ((room && room.status !== "active") || roomQuery.isError || closedOrKicked || (!isUserLoading && !user)) exit();
   }, [activeRoomId, room, roomQuery.isError, closedOrKicked, isUserLoading, user, exit]);
 
+  // A song this tab can't play (removed, blocked in this country, age-gated)
+  // would otherwise sit there until it "ends": vote to skip it. One tab alone
+  // can't skip for everyone; when it can't play for half the room, it goes.
+  const engineError = usePlayerStore((s) => s.engineError);
+  const stateVersion = usePlayerStore((s) => s.stateVersion);
+  const skippedVersionRef = useRef<number | null>(null);
+  useEffect(() => {
+    if (!engineError || membership !== "member" || skippedVersionRef.current === stateVersion) return;
+    if (!usePlayerStore.getState().serverState?.isPlaying || useRoomLiveStore.getState().queue.length === 0) return;
+    skippedVersionRef.current = stateVersion;
+    commands.skipVote(true);
+  }, [engineError, stateVersion, membership, commands]);
+
   const pushRecent = useRecentTracks((s) => s.push);
   useEffect(() => {
     if (track && membership === "member") pushRecent(track);
