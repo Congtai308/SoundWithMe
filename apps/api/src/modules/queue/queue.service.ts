@@ -223,6 +223,17 @@ export class QueueService {
     return docs.map((doc) => ({ trackId: doc.trackId, title: doc.track.title, artistName: doc.track.artistName }));
   }
 
+  /** Who queued the song a room is playing now (null if it was started directly, not from the queue). */
+  async queuedByOfPlaying(roomId: string, trackId: string): Promise<string | null> {
+    const item = await this.queueModel.findOne({ roomId, trackId, status: "played" }).sort({ _id: -1 }).select({ addedBy: 1 }).exec();
+    return item?.addedBy ?? null;
+  }
+
+  /** The room's playback right now, if anything has played. */
+  currentPlayback(roomId: string): Promise<PlaybackState | null> {
+    return this.playbackService.getPlaybackState(roomId);
+  }
+
   async upcomingCount(roomId: string): Promise<number> {
     return this.queueModel.countDocuments({ roomId, status: "queued" }).exec();
   }

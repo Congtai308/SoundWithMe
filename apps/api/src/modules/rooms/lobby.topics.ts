@@ -9,6 +9,8 @@ export interface LobbyTopic extends RoomTopic {
    * (100 quota units) at most once every three days: the pool is cached (LobbyService).
    */
   queries: string[];
+  /** Only artists' official videos (no fan uploads, lyric re-posts or covers). */
+  officialOnly?: boolean;
 }
 
 /**
@@ -48,7 +50,19 @@ export const LOBBY_TOPICS: LobbyTopic[] = [
     emoji: "📈",
     name: "V-Pop Thịnh Hành",
     description: "Những bài nhạc trẻ đang được nghe nhiều nhất",
-    queries: ["HIEUTHUHAI official mv", "Sơn Tùng M-TP official mv", "MONO official mv", "tlinh official mv", "AMEE official mv", "GREY D official mv"],
+    queries: [
+      "HIEUTHUHAI official mv",
+      "Sơn Tùng M-TP official mv",
+      "MONO official mv",
+      "tlinh official mv",
+      "AMEE official mv",
+      "GREY D official mv",
+      "SOOBIN official mv",
+      "Hòa Minzy official mv",
+      "RHYDER official mv",
+      "Đen Vâu official mv",
+    ],
+    officialOnly: true,
   },
   {
     slug: "tiktok",
