@@ -1,4 +1,6 @@
-import { Body, Controller, ForbiddenException, Get, NotFoundException, Param, Post, UseGuards } from "@nestjs/common";
+import { Body, Controller, ForbiddenException, Get, NotFoundException, Param, Post, Req, UseGuards } from "@nestjs/common";
+import type { Request } from "express";
+import { clientIp, rateLimitAddress } from "../../common/utils/client-ip";
 import type { AuthenticatedUser } from "@soundwithme/types";
 import { lyricsOffsetSchema, type LyricsOffsetInput } from "@soundwithme/validation";
 import { CurrentUser } from "../../common/decorators/current-user.decorator";
@@ -54,6 +56,7 @@ export class TracksController {
     @Param("id") id: string,
     @CurrentUser() user: AuthenticatedUser,
     @Body(new ZodValidationPipe(lyricsOffsetSchema)) body: LyricsOffsetInput,
+    @Req() req: Request,
   ) {
     if (user.isGuest || !user.emailVerified) {
       throw new ForbiddenException({
@@ -61,7 +64,8 @@ export class TracksController {
         error: { code: ERROR_CODES.FORBIDDEN, message: "Only accounts with a verified email help tune lyrics for everyone" },
       });
     }
-    const sharedOffset = await this.lyricsService.recordOffset(await this.findTrack(id), user.id, body.offsetMs);
+    const address = rateLimitAddress(clientIp(req));
+    const sharedOffset = await this.lyricsService.recordOffset(await this.findTrack(id), user.id, address, body.offsetMs);
     return { success: true, data: { sharedOffset } };
   }
 

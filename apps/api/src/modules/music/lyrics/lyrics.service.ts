@@ -17,11 +17,24 @@ const OFFSET_TTL_SECONDS = 60 * 60 * 24 * 90;
 /** One vote per listener, the latest this many count: a new vote pushes out the oldest. */
 const MAX_OFFSET_VOTES = 500;
 /**
+ * Listeners who may vote on one song from one network address. Email
+ * aliases make many verified accounts cheap for one person; addresses
+ * aren't, so this is what keeps one person from outvoting a song's listeners.
+ */
+const VOTERS_PER_ADDRESS = 2;
+/**
  * Records a vote and keeps only the newest MAX votes, in one step.
- * KEYS[1] = hash userId → offset, KEYS[2] = sorted set userId → time voted.
- * ARGV = userId, offsetMs, now, max, ttl seconds.
+ * KEYS[1] = hash userId → offset, KEYS[2] = sorted set userId → time voted,
+ * KEYS[3] = set of the voters seen from this address.
+ * ARGV = userId, offsetMs, now, max, ttl seconds, voters per address.
+ * Returns 0 when the address already has its voters (the vote isn't counted).
  */
 const RECORD_VOTE_SCRIPT = `
+if redis.call("SISMEMBER", KEYS[3], ARGV[1]) == 0 and redis.call("SCARD", KEYS[3]) >= tonumber(ARGV[6]) then
+  return 0
+end
+redis.call("SADD", KEYS[3], ARGV[1])
+redis.call("EXPIRE", KEYS[3], ARGV[5])
 redis.call("HSET", KEYS[1], ARGV[1], ARGV[2])
 redis.call("ZADD", KEYS[2], ARGV[3], ARGV[1])
 while redis.call("ZCARD", KEYS[2]) > tonumber(ARGV[4]) do
@@ -97,14 +110,34 @@ export class LyricsService {
     return { offsetMs: Math.round(median / 100) * 100, votes: votes.length };
   }
 
-  /** A listener's own sync for a song (their latest one counts; callers check who may vote). */
-  async recordOffset(track: TrackWithArtist, userId: string, offsetMs: number): Promise<SharedLyricsOffset | null> {
+  /**
+   * A listener's own sync for a song (their latest one counts; callers check
+   * who may vote). `address`: where it came from (see rateLimitAddress).
+   */
+  async recordOffset(
+    track: TrackWithArtist,
+    userId: string,
+    address: string,
+    offsetMs: number,
+  ): Promise<SharedLyricsOffset | null> {
     const lyrics = await this.getLyrics(track);
     if (!lyrics || lyrics.lines.length === 0) return null;
     const key = this.offsetKey(track, lyrics);
     await this.redisService
       .getClient()
-      .eval(RECORD_VOTE_SCRIPT, 2, key, `${key}:voted-at`, userId, String(offsetMs), String(Date.now()), String(MAX_OFFSET_VOTES), String(OFFSET_TTL_SECONDS));
+      .eval(
+        RECORD_VOTE_SCRIPT,
+        3,
+        key,
+        `${key}:voted-at`,
+        `${key}:from:${address}`,
+        userId,
+        String(offsetMs),
+        String(Date.now()),
+        String(MAX_OFFSET_VOTES),
+        String(OFFSET_TTL_SECONDS),
+        String(VOTERS_PER_ADDRESS),
+      );
     return this.sharedOffset(track, lyrics);
   }
 
