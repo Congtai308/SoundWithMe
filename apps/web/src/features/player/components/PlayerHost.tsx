@@ -41,6 +41,29 @@ export function PlayerHost({
   const tapVideoToStart = usePlayerStore((s) => s.tapVideoToStart);
   const engineError = usePlayerStore((s) => s.engineError);
   const isBuffering = usePlayerStore((s) => s.isBuffering);
+  const waitingForGesture = hasTrack && !engineError && needsUserGesture && !tapVideoToStart;
+
+  // Browsers keep sound off until the page gets its first click, tap or key
+  // press. The room already plays muted and in sync, so whichever comes
+  // first, anywhere on the page, turns the sound on: no button to find.
+  useEffect(() => {
+    if (!waitingForGesture) return;
+    if (navigator.userActivation?.hasBeenActive) {
+      onUnlock();
+      return;
+    }
+    const events = ["pointerup", "touchend", "keydown"] as const;
+    const onGesture = (event: Event) => {
+      // Escape doesn't count as a gesture for the browser.
+      if (event instanceof KeyboardEvent && event.key === "Escape") return;
+      for (const name of events) document.removeEventListener(name, onGesture, true);
+      onUnlock();
+    };
+    for (const name of events) document.addEventListener(name, onGesture, true);
+    return () => {
+      for (const name of events) document.removeEventListener(name, onGesture, true);
+    };
+  }, [waitingForGesture, onUnlock]);
 
   useEffect(() => {
     const host = hostRef.current;
@@ -148,18 +171,11 @@ export function PlayerHost({
         </span>
       )}
 
-      {hasTrack && !engineError && needsUserGesture && !tapVideoToStart && (
-        <button
-          type="button"
-          onClick={onUnlock}
-          className="absolute inset-0 flex flex-col items-center justify-center gap-xs bg-black/60 text-on-surface backdrop-blur-sm"
-        >
-          <span className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-[#8B5CF6] to-[#d946ef] shadow-[0_0_32px_rgba(139,92,246,0.5)]">
-            <Icon name="headphones" className="text-[26px] text-white" />
-          </span>
-          <span className="text-headline-sm">Chạm để nghe cùng</span>
-          <span className="px-sm text-body-sm text-on-surface-variant">Trình duyệt cần bạn bấm một lần trước khi phát tiếng</span>
-        </button>
+      {waitingForGesture && (
+        <span className="pointer-events-none absolute inset-x-0 top-xs mx-auto flex w-fit items-center gap-1.5 rounded-full bg-black/70 px-md py-1 text-body-sm font-semibold text-on-surface">
+          <Icon name="volume_off" className="text-[18px] text-[#f472b6]" />
+          Chạm bất kỳ đâu để bật tiếng
+        </span>
       )}
 
       {hasTrack && !engineError && isBuffering && !needsUserGesture && (
