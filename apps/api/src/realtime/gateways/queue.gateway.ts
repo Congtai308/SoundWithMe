@@ -25,6 +25,7 @@ import type { QueueItem } from "@soundwithme/types";
 import { ZodValidationPipe } from "../../common/pipes/zod-validation.pipe";
 import { QueueService } from "../../modules/queue/queue.service";
 import { PlaybackService } from "../../modules/playback/playback.service";
+import { RoomsService } from "../../modules/rooms/rooms.service";
 import { AppEventsService } from "../../common/events/app-events.service";
 import { WsExceptionFilter } from "../ws-exception.filter";
 import { RATE_LIMITS, assertJoined, consumeRateLimit } from "../socket-guards";
@@ -34,6 +35,8 @@ import type { AppServer, AppSocket } from "../realtime.types";
 const ADVANCE_TICK_MS = 1_000;
 /** Tabs usually report a song's end themselves; the server steps in this long after it. */
 const ADVANCE_GRACE_MS = 1_200;
+/** An end left behind by a room this server doesn't know (another deployment's database) is dropped after this. */
+const FOREIGN_END_TTL_MS = 24 * 60 * 60_000;
 
 /** Shared room queue. Permissions are checked against the stored room in QueueService. */
 @UseFilters(WsExceptionFilter)
@@ -49,6 +52,7 @@ export class QueueGateway implements OnModuleInit, OnModuleDestroy {
   constructor(
     private readonly queueService: QueueService,
     private readonly playbackService: PlaybackService,
+    private readonly roomsService: RoomsService,
     private readonly events: AppEventsService,
   ) {}
 
@@ -189,8 +193,17 @@ export class QueueGateway implements OnModuleInit, OnModuleDestroy {
     if (this.advancing) return;
     this.advancing = true;
     try {
-      for (const roomId of await this.playbackService.roomsDueToEnd(Date.now() - ADVANCE_GRACE_MS)) {
+      for (const { roomId, endsAt } of await this.playbackService.roomsDueToEnd(Date.now() - ADVANCE_GRACE_MS)) {
         try {
+          // Not a live room here: another server sharing this Redis may own it (a dev machine and its tests).
+          if (!(await this.roomsService.findRoomSettings(roomId))) {
+            if (endsAt < Date.now() - FOREIGN_END_TTL_MS) await this.playbackService.unscheduleEnd(roomId);
+            continue;
+          }
+          if (!(await this.playbackService.getPlaybackState(roomId))) {
+            await this.playbackService.unscheduleEnd(roomId);
+            continue;
+          }
           const { needed, version } = await this.queueService.needsNextSong(roomId);
           if (!needed) continue; // seeked or paused since: its new end is scheduled
           const advanced = await this.queueService.playNext(roomId, null, version);

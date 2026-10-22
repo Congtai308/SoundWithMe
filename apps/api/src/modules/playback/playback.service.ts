@@ -232,9 +232,12 @@ export class PlaybackService {
     await redis.zadd(PLAYBACK_ENDS_KEY, Math.round(endsAt), state.roomId);
   }
 
-  /** Rooms whose song should have ended by `now`. */
-  async roomsDueToEnd(now: number): Promise<string[]> {
-    return this.redisService.getClient().zrangebyscore(PLAYBACK_ENDS_KEY, 0, now);
+  /** Rooms whose song should have ended by `now`, with when it did. */
+  async roomsDueToEnd(now: number): Promise<{ roomId: string; endsAt: number }[]> {
+    const flat = await this.redisService.getClient().zrangebyscore(PLAYBACK_ENDS_KEY, 0, now, "WITHSCORES");
+    const due: { roomId: string; endsAt: number }[] = [];
+    for (let i = 0; i < flat.length; i += 2) due.push({ roomId: flat[i]!, endsAt: Number(flat[i + 1]) });
+    return due;
   }
 
   /** Forgets a room's end (it moved on, or has nothing left to play). */
