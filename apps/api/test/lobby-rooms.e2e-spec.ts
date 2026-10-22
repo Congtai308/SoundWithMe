@@ -10,9 +10,10 @@ import { RealtimeHarness } from "./support/realtime-harness";
 /** The six always-open themed rooms: listed to everyone, songs waiting, never ending. */
 process.env.LOBBY_ROOMS = "1";
 // Every topic search finds the whole mock catalog (YouTube is off in tests).
-const search = MusicService.prototype.search;
-jest.spyOn(MusicService.prototype, "search").mockImplementation(function (this: MusicService) {
-  return search.call(this, "", 25);
+const CATALOG = ["track_1", "track_2", "track_3", "track_4"];
+jest.spyOn(MusicService.prototype, "search").mockImplementation(async function (this: MusicService) {
+  const tracks = await Promise.all(CATALOG.map((id) => this.getTrackWithArtist(id)));
+  return tracks.filter((track) => track !== null);
 });
 
 const h = new RealtimeHarness();

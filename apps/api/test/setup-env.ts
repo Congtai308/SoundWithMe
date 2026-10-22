@@ -17,6 +17,9 @@ process.env.GOOGLE_CLIENT_SECRET ??= "test-google-client-secret";
 process.env.SMTP_USER = "";
 process.env.SMTP_PASS = "";
 process.env.BREVO_API_KEY = "";
+// Nor search YouTube (quota is real): the mock catalog answers instead.
+process.env.YOUTUBE_API_KEY = "";
+process.env.YOUTUBE_API_KEY_BACKUP = "";
 
 // Suites expect an empty room list; the lobby rooms have a suite of their own.
 process.env.LOBBY_ROOMS = "0";
