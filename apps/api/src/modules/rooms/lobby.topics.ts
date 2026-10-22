@@ -6,60 +6,65 @@ export interface LobbyTopic extends RoomTopic {
   description: string;
   /**
    * YouTube searches the room's songs come from. Each one is a cold search
-   * (100 quota units) at most once a day: the pool is cached (LobbyService).
+   * (100 quota units) at most once every three days: the pool is cached (LobbyService).
    */
   queries: string[];
 }
 
-/** The always-open rooms, in the order they're listed. */
+/**
+ * The always-open rooms, in the order they're listed. Slugs stay put (each
+ * one is its room's host account); names, descriptions and searches can
+ * change freely. Searches lean on artists young listeners follow now, so
+ * the rooms play hits rather than whatever a generic query turns up.
+ */
 export const LOBBY_TOPICS: LobbyTopic[] = [
   {
     slug: "acoustic",
     label: "Acoustic",
     emoji: "☕",
     name: "Cà Phê Acoustic",
-    description: "Mộc mạc, nhẹ nhàng như một buổi chiều ở quán quen",
-    queries: ["acoustic cover tiếng việt", "nhạc acoustic nhẹ nhàng"],
+    description: "Guitar mộc, giọng hát mộc — như một buổi chiều ở quán quen",
+    queries: ["acoustic cover nhạc trẻ hay nhất", "nhạc acoustic chill tiếng việt", "Vũ. official mv", "Chillies official mv", "Ngọt band official mv"],
   },
   {
     slug: "lofi",
-    label: "Lofi",
-    emoji: "🎧",
-    name: "Lofi Học Bài",
-    description: "Nhạc nền êm để học và làm việc tập trung",
-    queries: ["lofi chill", "nhạc lofi chill việt"],
-  },
-  {
-    slug: "vpop",
-    label: "Thịnh hành",
-    emoji: "📈",
-    name: "V-Pop Thịnh Hành",
-    description: "Những bài nhạc trẻ đang được nghe nhiều nhất",
-    queries: ["nhạc trẻ hot nhất", "vpop hits mới nhất"],
+    label: "Chill",
+    emoji: "📚",
+    name: "Chill Học Bài",
+    description: "Nhạc nhẹ, chill chill để học và làm việc tập trung",
+    queries: ["nhạc lofi chill nhạc trẻ", "nhạc chill nhẹ nhàng tiếng việt", "indie việt chill", "Wren Evans official mv", "Thịnh Suy official mv"],
   },
   {
     slug: "ballad",
-    label: "Ballad",
+    label: "Tâm trạng",
     emoji: "💔",
-    name: "Ballad Tâm Trạng",
+    name: "Tâm Trạng",
     description: "Cho những ngày muốn nghe chậm lại một chút",
-    queries: ["ballad buồn tâm trạng", "nhạc ballad việt hay nhất"],
+    queries: ["nhạc buồn tâm trạng nhạc trẻ", "ballad buồn hay nhất", "Erik official mv", "Quang Hùng MasterD official mv", "Dương Domic official mv"],
   },
   {
-    slug: "remix",
-    label: "Remix",
-    emoji: "⚡",
-    name: "Remix Sôi Động",
-    description: "Bật lên là quẩy, không cần suy nghĩ",
-    queries: ["nhạc remix sôi động", "vinahouse remix hay nhất"],
+    slug: "vpop",
+    label: "V-Pop",
+    emoji: "📈",
+    name: "V-Pop Thịnh Hành",
+    description: "Những bài nhạc trẻ đang được nghe nhiều nhất",
+    queries: ["HIEUTHUHAI official mv", "Sơn Tùng M-TP official mv", "MONO official mv", "tlinh official mv", "AMEE official mv", "GREY D official mv"],
+  },
+  {
+    slug: "tiktok",
+    label: "TikTok",
+    emoji: "🔥",
+    name: "Nhạc Hot TikTok",
+    description: "Những bài đang viral, nghe là muốn quay video",
+    queries: ["nhạc hot tiktok", "nhạc trend tiktok việt", "nhạc trẻ hot tiktok mới nhất", "Negav official mv", "Bích Phương official mv"],
   },
   {
     slug: "usuk",
     label: "US-UK",
     emoji: "🌍",
-    name: "US-UK Hits",
+    name: "US-UK Hit",
     description: "Hit quốc tế, vừa nghe vừa luyện tiếng Anh",
-    queries: ["english songs with lyrics", "top us uk hits"],
+    queries: ["Sabrina Carpenter official music video", "Taylor Swift official music video", "The Weeknd official music video", "Billie Eilish official music video", "Bruno Mars official music video", "Dua Lipa official music video"],
   },
 ];
 

@@ -8,6 +8,7 @@ import { QueueService } from "../queue/queue.service";
 import { RoomsService } from "../rooms/rooms.service";
 import { LOBBY_TOPICS, lobbyTopic, type LobbyTopic } from "../rooms/lobby.topics";
 import { UsersService } from "../users/users.service";
+import { artistParts, isGoodSong, pickDistinct, songKeys, type PoolSong } from "./song-picks";
 
 /** Songs added at a time, and the fewest a lobby room keeps waiting. */
 export const LOBBY_BATCH = 10;
@@ -15,9 +16,7 @@ export const LOBBY_BATCH = 10;
 const LOW_QUEUE = 3;
 /** Songs a room played lately that it won't pick again while it has others. */
 const RECENT_WINDOW = 40;
-const MIN_SONG_MS = 90_000;
-const MAX_SONG_MS = 10 * 60_000;
-const POOL_TTL_SECONDS = 24 * 60 * 60;
+const POOL_TTL_SECONDS = 3 * 24 * 60 * 60;
 /** An empty pool (search off or out of quota) is asked again sooner. */
 const EMPTY_POOL_TTL_SECONDS = 10 * 60;
 const REFRESH_LOCK_MS = 30_000;
@@ -68,6 +67,10 @@ export class LobbyService implements OnApplicationBootstrap, OnModuleDestroy {
 
   /** Opens any lobby room that isn't live and gives each one songs. */
   async ensureRooms(): Promise<void> {
+    // A topic taken off the list: its room ends like any other.
+    for (const roomId of await this.roomsService.closeLobbyRoomsOutside(LOBBY_TOPICS.map((topic) => topic.slug))) {
+      this.rooms.delete(roomId);
+    }
     for (const topic of LOBBY_TOPICS) {
       try {
         const host = await this.hostFor(topic);
@@ -96,6 +99,7 @@ export class LobbyService implements OnApplicationBootstrap, OnModuleDestroy {
       const host = { id: room.hostId, displayName: HOST_DISPLAY_NAME };
 
       let queue = null;
+      if (await this.tidyQueue(roomId, host.id)) queue = await this.queueService.listUpcoming(roomId);
       if ((await this.queueService.upcomingCount(roomId)) < LOBBY_BATCH) {
         const picks = await this.pickSongs(roomId, topic);
         if (picks.length > 0) queue = await this.queueService.addMany(roomId, host, picks);
@@ -127,34 +131,62 @@ export class LobbyService implements OnApplicationBootstrap, OnModuleDestroy {
     }
   }
 
-  /** LOBBY_BATCH songs from the topic's pool, ones the room hasn't played lately first. */
+  /** LOBBY_BATCH different songs from the topic's pool, none the same as one queued or played lately. */
   private async pickSongs(roomId: string, topic: LobbyTopic): Promise<string[]> {
     const pool = await this.poolFor(topic);
-    const recent = new Set(await this.queueService.recentTrackIds(roomId, RECENT_WINDOW));
-    const fresh = shuffle(pool.filter((id) => !recent.has(id)));
-    const again = shuffle(pool.filter((id) => recent.has(id)));
-    return [...fresh, ...again].slice(0, LOBBY_BATCH);
+    const recent = await this.queueService.recentTracks(roomId, RECENT_WINDOW);
+    let picks = pickDistinct(pool, recent, LOBBY_BATCH);
+    if (picks.length < LOBBY_BATCH) {
+      // The room has played most of the pool: songs from a while ago may come back, still no repeats in the queue.
+      const queued = (await this.queueService.listUpcoming(roomId)).map((item) => item.track);
+      const more = pickDistinct(pool, [...queued, ...picks], LOBBY_BATCH - picks.length);
+      picks = [...picks, ...more];
+    }
+    return picks.map((song) => song.id);
   }
 
-  /** Track ids found by the topic's searches, cached for a day. */
-  private async poolFor(topic: LobbyTopic): Promise<string[]> {
-    const redis = this.redisService.getClient();
-    const key = `lobby:pool:${topic.slug}`;
-    const cached = await redis.get(key);
-    if (cached !== null) return JSON.parse(cached) as string[];
+  /**
+   * Takes out what the app queued itself that shouldn't be there: clips and
+   * compilations from before the filter, and a second copy of a song.
+   * Songs people added stay, whatever they are.
+   */
+  private async tidyQueue(roomId: string, hostId: string): Promise<boolean> {
+    const seen = new Set<string>();
+    let removed = false;
+    const upcoming = await this.queueService.listUpcoming(roomId);
+    const artists = artistParts(upcoming.map((item) => item.track));
+    for (const item of upcoming) {
+      const keys = songKeys(item.track.title, artists);
+      const duplicate = keys.some((key) => seen.has(key));
+      for (const key of keys) seen.add(key);
+      if (item.addedBy !== hostId) continue;
+      if (duplicate || !isGoodSong({ id: item.trackId, title: item.track.title, durationMs: item.track.durationMs })) {
+        await this.queueService.remove(roomId, hostId, item.id);
+        removed = true;
+      }
+    }
+    return removed;
+  }
 
-    const ids = new Set<string>();
+  /** Songs found by the topic's searches, cached for a few days (each search costs quota). */
+  private async poolFor(topic: LobbyTopic): Promise<PoolSong[]> {
+    const redis = this.redisService.getClient();
+    const key = `lobby:pool:v2:${topic.slug}`;
+    const cached = await redis.get(key);
+    if (cached !== null) return JSON.parse(cached) as PoolSong[];
+
+    const songs = new Map<string, PoolSong>();
     for (const query of topic.queries) {
       try {
         for (const track of await this.musicService.search(query, 25)) {
-          // Songs, not Shorts, clips or hour-long mixes.
-          if (track.durationMs >= MIN_SONG_MS && track.durationMs <= MAX_SONG_MS) ids.add(track.id);
+          const song = { id: track.id, title: track.title, artistName: track.artistName, durationMs: track.durationMs };
+          if (isGoodSong(song)) songs.set(song.id, song);
         }
       } catch (error: unknown) {
         this.logger.warn(`Lobby search "${query}" failed: ${error instanceof Error ? error.message : String(error)}`);
       }
     }
-    const pool = [...ids];
+    const pool = [...songs.values()];
     await redis.set(key, JSON.stringify(pool), "EX", pool.length > 0 ? POOL_TTL_SECONDS : EMPTY_POOL_TTL_SECONDS);
     return pool;
   }
@@ -186,12 +218,4 @@ function asAppAccount<T extends { authMethods: unknown[]; isGuest: boolean; user
 function isQueueEmpty(error: unknown): boolean {
   const response = (error as { getResponse?: () => unknown }).getResponse?.();
   return (response as { error?: { code?: string } } | undefined)?.error?.code === ERROR_CODES.QUEUE_EMPTY;
-}
-
-function shuffle<T>(items: T[]): T[] {
-  for (let i = items.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [items[i], items[j]] = [items[j]!, items[i]!];
-  }
-  return items;
 }

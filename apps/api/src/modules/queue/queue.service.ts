@@ -212,10 +212,15 @@ export class QueueService {
     return { needed: await this.hasEnded(roomId, state.version), version: state.version };
   }
 
-  /** Songs a room played or queued lately, newest first. */
-  async recentTrackIds(roomId: string, limit: number): Promise<string[]> {
-    const docs = await this.queueModel.find({ roomId }).sort({ _id: -1 }).limit(limit).select({ trackId: 1 }).exec();
-    return docs.map((doc) => doc.trackId);
+  /** Songs a room played or queued lately (queued ones included), newest first. */
+  async recentTracks(roomId: string, limit: number): Promise<{ trackId: string; title: string; artistName: string }[]> {
+    const docs = await this.queueModel
+      .find({ roomId, status: { $ne: "removed" } })
+      .sort({ _id: -1 })
+      .limit(limit)
+      .select({ trackId: 1, "track.title": 1, "track.artistName": 1 })
+      .exec();
+    return docs.map((doc) => ({ trackId: doc.trackId, title: doc.track.title, artistName: doc.track.artistName }));
   }
 
   async upcomingCount(roomId: string): Promise<number> {

@@ -69,8 +69,17 @@ describe("Lobby rooms", () => {
     expect((await queue.listUpcoming(room!.id)).length).toBeGreaterThan(1);
   });
 
+  it("ends the room of a topic taken off the list", async () => {
+    const rooms = h.get(RoomsService);
+    const host = await h.createGuest("Retired host");
+    const retired = await rooms.ensureLobbyRoom(host.userId, { ...LOBBY_TOPICS[0]!, slug: "retired", name: "Retired" });
+    await h.get(LobbyService).ensureRooms();
+    expect((await listRooms()).some((room) => room.id === retired.id)).toBe(false);
+    expect((await listRooms()).filter((room) => room.topic).length).toBe(6);
+  });
+
   it("lets go of members who aren't connected instead of ending the room", async () => {
-    const [room] = (await listRooms()).filter((r) => r.topic?.slug === "remix");
+    const [room] = (await listRooms()).filter((r) => r.topic?.slug === "tiktok");
     const guest = await h.createGuest("Gone");
     await h.joinRest(room!.id, guest.cookie);
     const rooms = h.get(RoomsService);
