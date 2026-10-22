@@ -99,7 +99,7 @@ export class LobbyService implements OnApplicationBootstrap, OnModuleDestroy {
       const host = { id: room.hostId, displayName: HOST_DISPLAY_NAME };
 
       let queue = null;
-      if (await this.tidyQueue(roomId, host.id)) queue = await this.queueService.listUpcoming(roomId);
+      if (await this.tidyQueue(roomId, host.id, topic)) queue = await this.queueService.listUpcoming(roomId);
       if ((await this.queueService.upcomingCount(roomId)) < LOBBY_BATCH) {
         const picks = await this.pickSongs(roomId, topic);
         if (picks.length > 0) queue = await this.queueService.addMany(roomId, host, picks);
@@ -107,7 +107,7 @@ export class LobbyService implements OnApplicationBootstrap, OnModuleDestroy {
 
       let state = null;
       const { needed, version } = await this.queueService.needsNextSong(roomId);
-      if (needed) {
+      if (needed || (await this.playingSomethingWrong(roomId, topic, host.id))) {
         try {
           const advanced = await this.queueService.playNext(roomId, null, version);
           if (advanced) ({ state, queue } = advanced);
@@ -150,7 +150,7 @@ export class LobbyService implements OnApplicationBootstrap, OnModuleDestroy {
    * compilations from before the filter, and a second copy of a song.
    * Songs people added stay, whatever they are.
    */
-  private async tidyQueue(roomId: string, hostId: string): Promise<boolean> {
+  private async tidyQueue(roomId: string, hostId: string, topic: LobbyTopic): Promise<boolean> {
     const seen = new Set<string>();
     let removed = false;
     const upcoming = await this.queueService.listUpcoming(roomId);
@@ -160,7 +160,7 @@ export class LobbyService implements OnApplicationBootstrap, OnModuleDestroy {
       const duplicate = keys.some((key) => seen.has(key));
       for (const key of keys) seen.add(key);
       if (item.addedBy !== hostId) continue;
-      if (duplicate || !isGoodSong({ id: item.trackId, title: item.track.title, durationMs: item.track.durationMs })) {
+      if (duplicate || !isGoodSong({ id: item.trackId, title: item.track.title, durationMs: item.track.durationMs }, topic.officialOnly)) {
         await this.queueService.remove(roomId, hostId, item.id);
         removed = true;
       }
@@ -168,10 +168,24 @@ export class LobbyService implements OnApplicationBootstrap, OnModuleDestroy {
     return removed;
   }
 
+  /**
+   * Whether the room is playing something the app queued that it wouldn't
+   * pick now (an old compilation that would run for an hour): the room moves
+   * on instead of playing it out. What people chose plays on.
+   */
+  private async playingSomethingWrong(roomId: string, topic: LobbyTopic, hostId: string): Promise<boolean> {
+    const state = await this.queueService.currentPlayback(roomId);
+    if (!state?.isPlaying) return false;
+    if ((await this.queueService.queuedByOfPlaying(roomId, state.trackId)) !== hostId) return false;
+    const track = await this.musicService.getTrack(state.trackId);
+    if (!track) return false;
+    return !isGoodSong({ id: track.id, title: track.title, durationMs: track.durationMs }, topic.officialOnly);
+  }
+
   /** Songs found by the topic's searches, cached for a few days (each search costs quota). */
   private async poolFor(topic: LobbyTopic): Promise<PoolSong[]> {
     const redis = this.redisService.getClient();
-    const key = `lobby:pool:v2:${topic.slug}`;
+    const key = `lobby:pool:v3:${topic.slug}`;
     const cached = await redis.get(key);
     if (cached !== null) return JSON.parse(cached) as PoolSong[];
 
@@ -180,7 +194,7 @@ export class LobbyService implements OnApplicationBootstrap, OnModuleDestroy {
       try {
         for (const track of await this.musicService.search(query, 25)) {
           const song = { id: track.id, title: track.title, artistName: track.artistName, durationMs: track.durationMs };
-          if (isGoodSong(song)) songs.set(song.id, song);
+          if (isGoodSong(song, topic.officialOnly)) songs.set(song.id, song);
         }
       } catch (error: unknown) {
         this.logger.warn(`Lobby search "${query}" failed: ${error instanceof Error ? error.message : String(error)}`);

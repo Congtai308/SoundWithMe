@@ -19,7 +19,20 @@ describe("isGoodSong", () => {
     "Karaoke Hẹn Ước Từ Hư Vô - Tone Nữ",
     "Anh Trai Say Hi - Tập 6 FULL",
     "Reaction: HIEUTHUHAI new MV",
+    "TOP 50 BÀI HÁT V-POP HAY NHẤT",
+    "50 Bài Hát Nhạc Trẻ Hay Nhất 2026",
+    "Tổng Hợp Những Bài Hát Của HIEUTHUHAI",
+    "Những Ca Khúc Hay Nhất Của Sơn Tùng M-TP",
+    "Nhạc Trẻ Hay Nhất Tháng 10",
   ])("drops what isn't one song: %s", (title) => expect(isGoodSong(song("a", title))).toBe(false));
+
+  it("takes only artists' official videos for official-only rooms", () => {
+    expect(isGoodSong(song("a", "MONO - 'Em Xinh' (Official Music Video)"), true)).toBe(true);
+    expect(isGoodSong(song("a", "BÍCH PHƯƠNG - Bùa Yêu (M/V)"), true)).toBe(true);
+    expect(isGoodSong(song("a", "tlinh - nếu lúc đó | OFFICIAL VISUALIZER"), true)).toBe(true);
+    expect(isGoodSong(song("a", "Em Xinh - MONO (Lyrics)"), true)).toBe(false);
+    expect(isGoodSong(song("a", "Em Xinh - MONO (Lyrics)"), false)).toBe(true);
+  });
 
   it("drops clips and hour-long videos", () => {
     expect(isGoodSong(song("a", "Some Song", undefined, 60_000))).toBe(false);

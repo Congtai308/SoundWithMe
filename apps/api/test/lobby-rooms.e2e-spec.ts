@@ -9,8 +9,18 @@ import { RealtimeHarness } from "./support/realtime-harness";
 
 /** The six always-open themed rooms: listed to everyone, songs waiting, never ending. */
 process.env.LOBBY_ROOMS = "1";
-// Every topic search finds the whole mock catalog (YouTube is off in tests).
+// Every topic search finds the whole mock catalog (YouTube is off in tests),
+// titled like official videos so official-only rooms take them too.
 const CATALOG = ["track_1", "track_2", "track_3", "track_4"];
+const getTrack = MusicService.prototype.getTrack;
+/** A track that looks like an old compilation (one test sets it). */
+let compilationId: string | null = null;
+jest.spyOn(MusicService.prototype, "getTrack").mockImplementation(async function (this: MusicService, id: string) {
+  const track = await getTrack.call(this, id);
+  if (!track) return track;
+  if (id === compilationId) return { ...track, title: "TOP 50 BÀI HÁT V-POP HAY NHẤT" };
+  return track.title.includes("Official") ? track : { ...track, title: `${track.title} (Official MV)` };
+});
 jest.spyOn(MusicService.prototype, "search").mockImplementation(async function (this: MusicService) {
   const tracks = await Promise.all(CATALOG.map((id) => this.getTrackWithArtist(id)));
   return tracks.filter((track) => track !== null);
@@ -76,6 +86,26 @@ describe("Lobby rooms", () => {
     await h.get(LobbyService).ensureRooms();
     expect((await listRooms()).some((room) => room.id === retired.id)).toBe(false);
     expect((await listRooms()).filter((room) => room.topic).length).toBe(6);
+  });
+
+  it("moves on from something the app queued that it wouldn't pick now", async () => {
+    const [room] = (await listRooms()).filter((r) => r.topic?.slug === "vpop");
+    const playback = h.get(PlaybackService);
+    const queue = h.get(QueueService);
+    // An old compilation the app queued before the filter, playing now.
+    const before = (await playback.getPlaybackState(room!.id))!;
+    compilationId = before.trackId;
+    try {
+      expect(await queue.queuedByOfPlaying(room!.id, before.trackId)).toBe(room!.hostId);
+      const guest = await h.createGuest("Listener");
+      await h.joinRest(room!.id, guest.cookie);
+      await waitFor(async () => (await playback.getPlaybackState(room!.id))!.version > before.version);
+      const after = (await playback.getPlaybackState(room!.id))!;
+      expect(after.trackId).not.toBe(before.trackId);
+      expect(after.positionMs).toBe(0);
+    } finally {
+      compilationId = null;
+    }
   });
 
   it("lets go of members who aren't connected instead of ending the room", async () => {
