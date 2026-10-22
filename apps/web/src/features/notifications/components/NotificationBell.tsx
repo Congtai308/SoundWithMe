@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { AppNotification, NotificationType } from "@soundwithme/types";
 import { useCurrentUser } from "@/features/auth/hooks/use-auth";
+import { barIconButtonClass } from "@/components/ui/bar-controls";
 import { Icon } from "@/components/ui/Icon";
 import { useMarkAllRead, useMarkRead, useNotifications } from "../hooks/use-notifications";
 
@@ -72,7 +73,7 @@ export function NotificationBell() {
           // Asking once, from a click, is the only way browsers allow it.
           if ("Thông báo" in window && Notification.permission === "default") void Notification.requestPermission();
         }}
-        className="relative flex h-9 w-9 items-center justify-center rounded-full bg-surface-container-low text-on-surface-variant transition-colors hover:text-on-surface"
+        className={`relative ${barIconButtonClass}`}
       >
         <Icon name="notifications" className="text-[20px]" filled={unread > 0} />
         {unread > 0 && (
