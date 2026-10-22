@@ -85,7 +85,8 @@ describe("Shared lyrics offset", () => {
   });
 
   it("keeps the newest votes when full, instead of locking the first ones in", async () => {
-    const key = (await h.redis().keys("lyrics:offsets:track_1:*")).find((k) => !k.endsWith(":voted-at"))!;
+    // The votes hash itself, not its ":voted-at" or ":from:<address>" companions.
+    const key = (await h.redis().keys("lyrics:offsets:track_1:*")).find((k) => /^lyrics:offsets:track_1:[0-9a-f]{12}$/.test(k))!;
     // Fill the song to the cap with old votes of +9 s.
     const old = Array.from({ length: 500 }, (_, i) => `old-${i}`);
     await h.redis().del(key, `${key}:voted-at`);
