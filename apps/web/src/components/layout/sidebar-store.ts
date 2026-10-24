@@ -6,7 +6,12 @@ export const SIDEBAR_STORAGE_KEY = "swm.sidebar.collapsed";
  * Applied before hydration by the inline script in the root layout, so a
  * collapsed sidebar doesn't flash open on load. Kept in sync with the store.
  */
-export const SIDEBAR_INIT_SCRIPT = `try{if(localStorage.getItem("${SIDEBAR_STORAGE_KEY}")==="1")document.documentElement.dataset.sidebar="collapsed"}catch(e){}`;
+export const SIDEBAR_INIT_SCRIPT = `try{if(location.pathname.indexOf("/room/")===0)document.documentElement.dataset.rail="";if(localStorage.getItem("${SIDEBAR_STORAGE_KEY}")==="1")document.documentElement.dataset.sidebar="collapsed"}catch(e){}`;
+
+/** Inside a room the stage needs the width: the desktop dock narrows to its icon rail (`rail:` variant). */
+export function isRailPath(pathname: string): boolean {
+  return pathname.startsWith("/room/");
+}
 
 function readCollapsed(): boolean {
   try {

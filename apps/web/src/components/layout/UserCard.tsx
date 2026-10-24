@@ -11,7 +11,7 @@ export function UserCard() {
 
   if (isLoading) {
     return (
-      <div className="p-xs md:p-md">
+      <div className="p-xs md:p-md rail:p-xs">
         <div className="h-[52px] animate-pulse rounded-lg bg-surface-container-low" />
       </div>
     );
@@ -19,14 +19,14 @@ export function UserCard() {
 
   if (!user) {
     return (
-      <div className="p-xs md:p-md">
+      <div className="p-xs md:p-md rail:p-xs">
         <Link
           href="/login"
           title="Đăng nhập"
           className="flex items-center justify-center gap-xs rounded-lg bg-surface-container-low px-sm py-sm text-headline-sm text-on-surface transition-colors hover:bg-surface-container"
         >
           <Icon name="login" className="text-[20px]" />
-          <span className="hidden md:inline">Đăng nhập</span>
+          <span className="hidden md:inline rail:hidden">Đăng nhập</span>
         </Link>
       </div>
     );
@@ -35,13 +35,13 @@ export function UserCard() {
   return (
     <AccountMenu
       placement="above"
-      className="p-xs md:p-md"
-      triggerClassName="flex w-full items-center justify-center rounded-lg bg-surface-container-low p-xs text-left transition-colors hover:bg-surface-container md:justify-between"
+      className="p-xs md:p-md rail:p-xs"
+      triggerClassName="flex w-full items-center justify-center rounded-lg bg-surface-container-low p-xs text-left transition-colors hover:bg-surface-container md:justify-between rail:justify-center"
       trigger={
         <>
           <span className="flex min-w-0 items-center gap-xs">
             <Avatar name={user.displayName} src={user.avatarUrl} size={36} online />
-            <span className="hidden min-w-0 md:block">
+            <span className="hidden min-w-0 md:block rail:hidden">
               <span className="block truncate text-headline-sm text-on-surface">
                 {user.displayName}
               </span>
@@ -50,7 +50,7 @@ export function UserCard() {
               </span>
             </span>
           </span>
-          <Icon name="settings" className="hidden text-[20px] text-outline md:inline-block" />
+          <Icon name="settings" className="hidden text-[20px] text-outline md:inline-block rail:hidden" />
         </>
       }
     />

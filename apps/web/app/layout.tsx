@@ -38,8 +38,14 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         {/* Song artwork: connect while the page's scripts are still loading. */}
         <link rel="preconnect" href="https://i.ytimg.com" />
+        {/* Google's sheet also sets `font-size: 24px` on the icon class, and it
+            loads after ours, so it beat every `text-[18px]` on an icon. Imported
+            into a cascade layer, it loses to any unlayered rule whatever the
+            order; the preload keeps it fetching as early as the plain link did. */}
         {/* eslint-disable-next-line @next/next/no-page-custom-font, @next/next/google-font-display */}
-        <link rel="stylesheet" href={ICON_FONT_URL} />
+        <link rel="preload" as="style" href={ICON_FONT_URL} />
+        {/* Raw, or the server render would escape the URL's quotes and `&`s. */}
+        <style dangerouslySetInnerHTML={{ __html: `@import url("${ICON_FONT_URL}") layer(icon-font);` }} />
       </head>
       <body>
         <AppProviders>{children}</AppProviders>

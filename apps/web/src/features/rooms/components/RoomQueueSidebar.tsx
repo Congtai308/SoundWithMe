@@ -129,17 +129,20 @@ export function RoomQueueSidebar({
                       >
                         {item.track.title}
                       </p>
-                      <p className="mt-0.5 truncate text-body-sm text-on-surface-variant">
-                        {item.addedByName}
-                        {item.track.durationMs > 0 && (
-                          <span className="text-outline">
-                            {" "}
-                            · {formatClock(item.track.durationMs)}
-                          </span>
-                        )}
-                      </p>
+                      {/* Votes sit under the title so the title gets the card's full width. */}
+                      <div className="mt-1 flex items-center justify-between gap-xs">
+                        <p className="min-w-0 truncate text-body-sm text-on-surface-variant">
+                          {item.addedByName}
+                          {item.track.durationMs > 0 && (
+                            <span className="text-outline">
+                              {" "}
+                              · {formatClock(item.track.durationMs)}
+                            </span>
+                          )}
+                        </p>
+                        <QueueVotes item={item} currentUserId={currentUserId} onVote={onVote} />
+                      </div>
                     </div>
-                    <QueueVotes item={item} currentUserId={currentUserId} onVote={onVote} />
                     {canRemove && (
                       <button
                         type="button"
@@ -191,19 +194,22 @@ function QueueVotes({
   const up = item.upvotes.includes(currentUserId);
   const down = item.downvotes.includes(currentUserId);
   return (
-    <div className="flex shrink-0 flex-col items-center" aria-label={`Điểm ${item.score}`}>
+    <div
+      className="flex shrink-0 items-center gap-0.5 rounded-full border border-white/[0.06] bg-black/20 px-0.5"
+      aria-label={`Điểm ${item.score}`}
+    >
       <button
         type="button"
         aria-pressed={up}
         aria-label={up ? "Rút lại bình chọn" : `Phát ${item.track.title} sớm hơn`}
         title="Phát sớm hơn"
         onClick={() => onVote(item.id, up ? 0 : 1)}
-        className={`rounded-full p-0.5 transition-colors ${up ? "text-[#4ade80]" : "text-outline hover:text-on-surface"}`}
+        className={`flex h-6 w-6 items-center justify-center rounded-full transition-colors ${up ? "text-[#4ade80]" : "text-outline hover:text-on-surface"}`}
       >
-        <Icon name="thumb_up" filled={up} className="text-[16px]" />
+        <Icon name="thumb_up" filled={up} className="text-[15px]" />
       </button>
       <span
-        className={`font-technical text-label-mono-sm ${
+        className={`font-technical min-w-[1.25rem] text-center text-label-mono-sm ${
           item.score > 0 ? "text-[#4ade80]" : item.score < 0 ? "text-error" : "text-on-surface-variant"
         }`}
       >
@@ -215,9 +221,9 @@ function QueueVotes({
         aria-label={down ? "Rút lại bình chọn" : `Phát ${item.track.title} muộn hơn`}
         title="Phát muộn hơn"
         onClick={() => onVote(item.id, down ? 0 : -1)}
-        className={`rounded-full p-0.5 transition-colors ${down ? "text-error" : "text-outline hover:text-on-surface"}`}
+        className={`flex h-6 w-6 items-center justify-center rounded-full transition-colors ${down ? "text-error" : "text-outline hover:text-on-surface"}`}
       >
-        <Icon name="thumb_down" filled={down} className="text-[16px]" />
+        <Icon name="thumb_down" filled={down} className="text-[15px]" />
       </button>
     </div>
   );

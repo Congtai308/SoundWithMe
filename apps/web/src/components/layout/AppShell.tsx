@@ -13,7 +13,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <RoomSessionProvider>
         <Sidebar />
         <TopNav />
-        <main className="min-h-screen pb-20 pt-16 sm:pb-0 sm:pl-[72px] md:pl-72 undock:pl-0 md:transition-[padding] md:duration-300 md:ease-out">
+        <main className="min-h-screen pb-20 pt-16 sm:pb-0 sm:pl-[72px] md:pl-72 rail:pl-[72px] undock:pl-0 md:transition-[padding] md:duration-300 md:ease-out">
           <VerifyEmailBanner />
           {children}
         </main>

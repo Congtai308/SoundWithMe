@@ -156,9 +156,10 @@ export function RoomMainStage({
         <ReactionLayer />
       </div>
 
-      <div className={`flex items-start justify-between gap-md ${isVideo ? "md:hidden" : ""}`}>
-        <div className="min-w-0">
-          <h2 title={track?.title} className="line-clamp-1 text-headline-lg font-bold text-on-surface">
+      {/* The title keeps the row; the actions wrap under it when the column is narrow. */}
+      <div className={`flex flex-wrap items-start justify-between gap-x-md gap-y-xs ${isVideo ? "md:hidden" : ""}`}>
+        <div className="min-w-0 flex-1 basis-[16rem]">
+          <h2 title={track?.title} className="line-clamp-2 text-headline-md font-bold text-on-surface md:text-headline-lg">
             {title}
           </h2>
           <p className="truncate text-body-md text-on-surface-variant">
@@ -336,7 +337,8 @@ function SyncBadge() {
       }`}
     >
       <Icon name="sensors" className="text-[14px]" />
-      {inSync ? "Live" : "Đang đồng bộ"}
+      {/* On a phone the long label would run into the play button: the icon alone says it. */}
+      {inSync ? "Live" : <span className="sr-only sm:not-sr-only">Đang đồng bộ</span>}
       {driftMs !== null && isPlaying && (
         <span className="hidden normal-case opacity-70 min-[1600px]:inline">· {Math.round(driftMs)}ms</span>
       )}

@@ -12,7 +12,7 @@ import { BrandLogo } from "@/components/ui/BrandLogo";
 import { AccountMenu } from "./AccountMenu";
 import { TopNavSlotTarget } from "./TopNavSlot";
 import { SidebarToggle } from "./Sidebar";
-import { useSidebarStore } from "./sidebar-store";
+import { isRailPath, useSidebarStore } from "./sidebar-store";
 import { NotificationBell } from "@/features/notifications/components/NotificationBell";
 
 const QUICK_VIBE_LABEL: Record<string, string> = {
@@ -26,7 +26,7 @@ export function TopNav() {
   const [query, setQuery] = useState("");
   const router = useRouter();
   // The room fills the bar with its own title and actions, so search and vibes step back.
-  const inRoom = usePathname().startsWith("/room/");
+  const inRoom = isRailPath(usePathname());
   const { data: user } = useCurrentUser();
   const toggleSidebar = useSidebarStore((s) => s.toggle);
 
@@ -37,9 +37,10 @@ export function TopNav() {
   };
 
   return (
-    <header className="fixed left-0 right-0 top-0 z-30 h-16 border-b border-white/[0.06] bg-background/80 shadow-[0_1px_8px_rgba(0,0,0,0.3)] backdrop-blur-xl sm:left-[72px] md:left-72 undock:left-0 md:transition-[left] md:duration-300 md:ease-out">
-      <div className="flex h-16 w-full items-center justify-between gap-md px-md md:px-lg">
-        <Link href="/" className="sm:hidden" aria-label="SoundWithMe home">
+    <header className="fixed left-0 right-0 top-0 z-30 h-16 border-b border-white/[0.06] bg-background/80 shadow-[0_1px_8px_rgba(0,0,0,0.3)] backdrop-blur-xl sm:left-[72px] md:left-72 rail:left-[72px] undock:left-0 md:transition-[left] md:duration-300 md:ease-out">
+      <div className={`flex h-16 w-full items-center justify-between px-md md:px-lg ${inRoom ? "gap-sm sm:gap-md" : "gap-md"}`}>
+        {/* In a room on a phone the bar is full of the room's own buttons: its name needs the logo's space. */}
+        <Link href="/" className={inRoom ? "hidden" : "sm:hidden"} aria-label="SoundWithMe home">
           <BrandLogo showWordmark={false} />
         </Link>
 
