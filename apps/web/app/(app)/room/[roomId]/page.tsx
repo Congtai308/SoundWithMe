@@ -144,10 +144,10 @@ export default function RoomPage() {
         <StatePanel
           icon="lock"
           title="Đăng nhập để vào phòng"
-          body="Không tạo được tài khoản khách. Đăng nhập hoặc vào nhanh chỉ với một cái tên."
+          body="Không tạo được tài khoản khách. Đăng nhập để vào nghe cùng mọi người."
           action={
             <Link href="/login" className={primaryPillClass}>
-              Đăng nhập hoặc vào nhanh
+              Đăng nhập
             </Link>
           }
         />

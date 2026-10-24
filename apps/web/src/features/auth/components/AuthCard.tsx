@@ -6,31 +6,36 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
-  guestLoginSchema,
   loginSchema,
   registerSchema,
-  type GuestLoginInput,
   type LoginInput,
   type RegisterInput,
 } from "@soundwithme/validation";
 import { ApiClientError } from "@/services/api-client";
-import { GoogleIcon, AppleIcon } from "@/components/ui/icons";
+import { GoogleIcon } from "@/components/ui/icons";
 import { Icon } from "@/components/ui/Icon";
 import { googleLoginUrl } from "../services/auth-api";
-import { useGuestLogin, useLogin, useRegister } from "../hooks/use-auth";
+import { useLogin, useRegister } from "../hooks/use-auth";
 
-export type AuthTab = "login" | "register" | "guest";
+// Visitors who just want to listen get a guest account by opening a room; this page is for accounts.
+export type AuthTab = "login" | "register";
 
 const TABS: { id: AuthTab; label: string }[] = [
   { id: "login", label: "Đăng nhập" },
   { id: "register", label: "Tạo tài khoản" },
-  { id: "guest", label: "Vào nhanh" },
 ];
 
-const HEADINGS: Record<AuthTab, { eyebrow: string; title: string }> = {
-  login: { eyebrow: "Chào mừng trở lại", title: "Đăng nhập vào tài khoản của bạn" },
-  register: { eyebrow: "Người nghe mới", title: "Tạo tài khoản SoundWithMe" },
-  guest: { eyebrow: "Không cần tài khoản", title: "Vào nghe ngay chỉ với một cái tên" },
+const HEADINGS: Record<AuthTab, { eyebrow: string; title: string; lead: string }> = {
+  login: {
+    eyebrow: "Chào mừng trở lại",
+    title: "Đăng nhập",
+    lead: "Vào lại phòng của bạn, bạn bè và thư viện nhạc.",
+  },
+  register: {
+    eyebrow: "Người nghe mới",
+    title: "Tạo tài khoản",
+    lead: "Giữ phòng, danh sách phát và bạn bè của bạn ở một nơi.",
+  },
 };
 
 const AFTER_AUTH_PATH = "/";
@@ -45,74 +50,59 @@ export function AuthCard({
   const heading = HEADINGS[activeTab];
 
   return (
-    <div className="flex flex-col rounded-lg bg-surface-container-low p-lg shadow-2xl backdrop-blur-2xl md:col-span-7 md:self-start md:p-xl">
-      <div className="flex flex-col justify-between gap-md pb-md sm:flex-row sm:items-center">
-        <div>
-          <span className="font-technical block text-label-mono-sm uppercase text-primary">
-            {heading.eyebrow}
-          </span>
-          <h1 className="text-[26px] font-bold leading-[34px] tracking-tight text-on-surface sm:text-headline-xl">
-            {heading.title}
-          </h1>
-        </div>
-
-        <div
-          role="tablist"
-          aria-label="Cách đăng nhập"
-          className="inline-flex self-start rounded-full bg-surface-container p-1 shadow-inner sm:self-auto"
-        >
-          {TABS.map((tab) => (
-            <button
-              key={tab.id}
-              type="button"
-              role="tab"
-              aria-selected={activeTab === tab.id}
-              onClick={() => onTabChange(tab.id)}
-              className={`whitespace-nowrap rounded-full px-sm py-1.5 text-headline-sm transition-[color,background-color,border-color,box-shadow,transform,opacity,width] sm:px-md ${
-                activeTab === tab.id
-                  ? "bg-primary-container text-on-primary-container shadow-md"
-                  : "text-on-surface-variant hover:text-on-surface"
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
+    <div className="mx-auto flex w-full max-w-md flex-col gap-lg">
+      <div className="flex flex-col gap-2xs">
+        <span className="font-technical text-label-mono-sm uppercase tracking-widest text-primary">
+          {heading.eyebrow}
+        </span>
+        <h1 className="text-headline-xl text-on-surface">{heading.title}</h1>
+        <p className="text-body-md text-on-surface-variant">{heading.lead}</p>
       </div>
 
-      {activeTab !== "guest" && (
-        <>
-          <div className="grid grid-cols-1 gap-sm pb-md pt-xs sm:grid-cols-2">
-            <a
-              href={googleLoginUrl}
-              className="flex items-center justify-center gap-sm rounded-full bg-surface-container px-md py-2.5 text-headline-sm text-on-surface shadow-sm transition-[color,background-color,border-color,box-shadow,transform,opacity,width] hover:bg-surface-container-high active:scale-[0.98]"
-            >
-              <GoogleIcon className="h-4 w-4" />
-              Tiếp tục với Google
-            </a>
-            <button
-              type="button"
-              disabled
-              title="Đăng nhập bằng Apple sắp có"
-              className="flex cursor-not-allowed items-center justify-center gap-sm rounded-full bg-surface-container px-md py-2.5 text-headline-sm text-outline opacity-60"
-            >
-              <AppleIcon className="h-4 w-4" />
-              Apple · sắp có
-            </button>
-          </div>
+      <div
+        role="tablist"
+        aria-label="Đăng nhập hoặc tạo tài khoản"
+        className="grid grid-cols-2 rounded-full bg-surface-container p-1 shadow-inner"
+      >
+        {TABS.map((tab) => (
+          <button
+            key={tab.id}
+            type="button"
+            role="tab"
+            aria-selected={activeTab === tab.id}
+            onClick={() => onTabChange(tab.id)}
+            className={`rounded-full px-sm py-2 text-headline-sm transition-colors ${
+              activeTab === tab.id
+                ? "bg-primary-container text-on-primary-container shadow-md"
+                : "text-on-surface-variant hover:text-on-surface"
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
 
-          <div className="relative my-xs flex items-center justify-center">
-            <div className="h-px w-full bg-surface-container-highest" />
-            <span className="font-technical absolute bg-surface-container-low px-sm text-label-mono-sm uppercase text-outline">
-              {activeTab === "login" ? "hoặc dùng email" : "hoặc tạo tài khoản bằng email"}
-            </span>
-          </div>
-        </>
+      <a
+        href={googleLoginUrl}
+        className="flex items-center justify-center gap-sm rounded-full border border-white/[0.1] bg-white/[0.04] px-md py-3 text-headline-sm text-on-surface transition-[background-color,border-color,transform] hover:border-white/[0.2] hover:bg-white/[0.08] active:scale-[0.98]"
+      >
+        <GoogleIcon className="h-5 w-5" />
+        Tiếp tục với Google
+      </a>
+
+      <div className="flex items-center gap-sm" aria-hidden="true">
+        <span className="h-px flex-1 bg-white/[0.08]" />
+        <span className="font-technical text-label-mono-sm uppercase text-outline">
+          hoặc dùng email
+        </span>
+        <span className="h-px flex-1 bg-white/[0.08]" />
+      </div>
+
+      {activeTab === "login" ? (
+        <LoginForm onSwitchTab={onTabChange} />
+      ) : (
+        <RegisterForm onSwitchTab={onTabChange} />
       )}
-
-      {activeTab === "login" && <LoginForm onSwitchTab={onTabChange} />}
-      {activeTab === "register" && <RegisterForm onSwitchTab={onTabChange} />}
-      {activeTab === "guest" && <GuestForm onSwitchTab={onTabChange} />}
     </div>
   );
 }
@@ -179,36 +169,50 @@ const IconInput = forwardRef<HTMLInputElement, IconInputProps>(function IconInpu
           trailing ? "pr-10" : "pr-md"
         } ${invalid ? "ring-1 ring-error" : ""}`}
       />
-      {trailing && <div className="absolute right-3 top-1/2 -translate-y-1/2">{trailing}</div>}
+      {trailing && (
+        <div className="absolute right-3 top-1/2 -translate-y-1/2">{trailing}</div>
+      )}
     </div>
   );
 });
 
-const PasswordInput = forwardRef<HTMLInputElement, Omit<IconInputProps, "icon" | "trailing">>(
-  function PasswordInput(props, ref) {
-    const [visible, setVisible] = useState(false);
-    return (
-      <IconInput
-        ref={ref}
-        icon="lock"
-        type={visible ? "text" : "password"}
-        trailing={
-          <button
-            type="button"
-            onClick={() => setVisible((v) => !v)}
-            aria-label={visible ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
-            className="flex text-outline hover:text-on-surface"
-          >
-            <Icon name={visible ? "visibility_off" : "visibility"} className="text-[18px]" />
-          </button>
-        }
-        {...props}
-      />
-    );
-  },
-);
+const PasswordInput = forwardRef<
+  HTMLInputElement,
+  Omit<IconInputProps, "icon" | "trailing">
+>(function PasswordInput(props, ref) {
+  const [visible, setVisible] = useState(false);
+  return (
+    <IconInput
+      ref={ref}
+      icon="lock"
+      type={visible ? "text" : "password"}
+      trailing={
+        <button
+          type="button"
+          onClick={() => setVisible((v) => !v)}
+          aria-label={visible ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+          className="flex text-outline hover:text-on-surface"
+        >
+          <Icon
+            name={visible ? "visibility_off" : "visibility"}
+            className="text-[18px]"
+          />
+        </button>
+      }
+      {...props}
+    />
+  );
+});
 
-function SubmitButton({ pending, idle, busy }: { pending: boolean; idle: string; busy: string }) {
+function SubmitButton({
+  pending,
+  idle,
+  busy,
+}: {
+  pending: boolean;
+  idle: string;
+  busy: string;
+}) {
   return (
     <button
       type="submit"
@@ -222,12 +226,18 @@ function SubmitButton({ pending, idle, busy }: { pending: boolean; idle: string;
 }
 
 function SwitchHint({ children }: { children: ReactNode }) {
-  return <p className="pt-sm text-center text-body-sm text-on-surface-variant">{children}</p>;
+  return (
+    <p className="pt-sm text-center text-body-sm text-on-surface-variant">{children}</p>
+  );
 }
 
 function LinkButton({ onClick, children }: { onClick: () => void; children: ReactNode }) {
   return (
-    <button type="button" onClick={onClick} className="font-semibold text-primary hover:underline">
+    <button
+      type="button"
+      onClick={onClick}
+      className="font-semibold text-primary hover:underline"
+    >
       {children}
     </button>
   );
@@ -248,38 +258,42 @@ function LoginForm({ onSwitchTab }: { onSwitchTab: (tab: AuthTab) => void }) {
         login.mutate(data, { onSuccess: () => router.push(AFTER_AUTH_PATH) }),
       )}
       noValidate
-      className="flex flex-col gap-sm pt-sm"
+      className="flex flex-col gap-md"
     >
       <FormError error={login.error} />
-      <div className="grid grid-cols-1 gap-sm sm:grid-cols-2">
-        <Field label="Địa chỉ email" error={errors.email?.message}>
-          <IconInput
-            icon="mail"
-            type="email"
-            autoComplete="email"
-            placeholder="you@domain.com"
-            invalid={Boolean(errors.email)}
-            {...register("email")}
-          />
-        </Field>
-        <Field label="Mật khẩu" error={errors.password?.message}>
-          <PasswordInput
-            autoComplete="current-password"
-            placeholder="Mật khẩu của bạn"
-            invalid={Boolean(errors.password)}
-            {...register("password")}
-          />
-        </Field>
-      </div>
+      <Field label="Địa chỉ email" error={errors.email?.message}>
+        <IconInput
+          icon="mail"
+          type="email"
+          autoComplete="email"
+          placeholder="you@domain.com"
+          invalid={Boolean(errors.email)}
+          {...register("email")}
+        />
+      </Field>
+      <Field
+        label="Mật khẩu"
+        hint={
+          <Link
+            href="/reset-password"
+            className="font-semibold text-primary hover:underline"
+          >
+            Quên mật khẩu?
+          </Link>
+        }
+        error={errors.password?.message}
+      >
+        <PasswordInput
+          autoComplete="current-password"
+          placeholder="Mật khẩu của bạn"
+          invalid={Boolean(errors.password)}
+          {...register("password")}
+        />
+      </Field>
       <SubmitButton pending={login.isPending} idle="Đăng nhập" busy="Đang đăng nhập…" />
       <SwitchHint>
-        <Link href="/reset-password" className="font-semibold text-primary hover:underline">
-          Quên mật khẩu?
-        </Link>
-      </SwitchHint>
-      <SwitchHint>
-        New here? <LinkButton onClick={() => onSwitchTab("register")}>Tạo tài khoản</LinkButton>{" "}
-        or <LinkButton onClick={() => onSwitchTab("guest")}>vào nhanh không cần tài khoản</LinkButton>
+        Chưa có tài khoản?{" "}
+        <LinkButton onClick={() => onSwitchTab("register")}>Tạo tài khoản</LinkButton>
       </SwitchHint>
     </form>
   );
@@ -300,11 +314,13 @@ function RegisterForm({ onSwitchTab }: { onSwitchTab: (tab: AuthTab) => void }) 
         <Icon name="forward_to_inbox" className="text-[40px] text-primary" />
         <p className="text-headline-sm text-on-surface">Kiểm tra email của bạn</p>
         <p className="max-w-sm text-body-md text-on-surface-variant">
-          We sent a link to <span className="font-semibold text-on-surface">{getValues("email")}</span>. Open it and
-          enter your password to finish creating your account. Nothing there? Check spam.
+          Chúng tôi đã gửi link tới{" "}
+          <span className="font-semibold text-on-surface">{getValues("email")}</span>. Mở
+          link và nhập mật khẩu để hoàn tất tài khoản. Không thấy thư? Xem trong mục Spam.
         </p>
         <SwitchHint>
-          Wrong address? <LinkButton onClick={() => registerAccount.reset()}>Làm lại</LinkButton>
+          Nhập nhầm email?{" "}
+          <LinkButton onClick={() => registerAccount.reset()}>Làm lại</LinkButton>
         </SwitchHint>
       </div>
     );
@@ -314,10 +330,14 @@ function RegisterForm({ onSwitchTab }: { onSwitchTab: (tab: AuthTab) => void }) 
     <form
       onSubmit={handleSubmit((data) => registerAccount.mutate(data))}
       noValidate
-      className="flex flex-col gap-sm pt-sm"
+      className="flex flex-col gap-md"
     >
       <FormError error={registerAccount.error} />
-      <Field label="Tên hiển thị" hint="mọi người trong phòng sẽ thấy" error={errors.displayName?.message}>
+      <Field
+        label="Tên hiển thị"
+        hint="mọi người trong phòng sẽ thấy"
+        error={errors.displayName?.message}
+      >
         <IconInput
           icon="badge"
           type="text"
@@ -327,78 +347,36 @@ function RegisterForm({ onSwitchTab }: { onSwitchTab: (tab: AuthTab) => void }) 
           {...register("displayName")}
         />
       </Field>
-      <div className="grid grid-cols-1 gap-sm sm:grid-cols-2">
-        <Field label="Địa chỉ email" error={errors.email?.message}>
-          <IconInput
-            icon="mail"
-            type="email"
-            autoComplete="email"
-            placeholder="you@domain.com"
-            invalid={Boolean(errors.email)}
-            {...register("email")}
-          />
-        </Field>
-        <Field
-          label="Mật khẩu"
-          hint={<span className="text-primary-fixed-dim">từ 8 ký tự</span>}
-          error={errors.password?.message}
-        >
-          <PasswordInput
-            autoComplete="new-password"
-            placeholder="Ít nhất 8 ký tự"
-            invalid={Boolean(errors.password)}
-            {...register("password")}
-          />
-        </Field>
-      </div>
+      <Field label="Địa chỉ email" error={errors.email?.message}>
+        <IconInput
+          icon="mail"
+          type="email"
+          autoComplete="email"
+          placeholder="you@domain.com"
+          invalid={Boolean(errors.email)}
+          {...register("email")}
+        />
+      </Field>
+      <Field
+        label="Mật khẩu"
+        hint={<span className="text-primary-fixed-dim">từ 8 ký tự</span>}
+        error={errors.password?.message}
+      >
+        <PasswordInput
+          autoComplete="new-password"
+          placeholder="Ít nhất 8 ký tự"
+          invalid={Boolean(errors.password)}
+          {...register("password")}
+        />
+      </Field>
       <SubmitButton
         pending={registerAccount.isPending}
         idle="Tạo tài khoản"
         busy="Đang gửi link…"
       />
       <SwitchHint>
-        Already have an account? <LinkButton onClick={() => onSwitchTab("login")}>Đăng nhập</LinkButton>
-      </SwitchHint>
-    </form>
-  );
-}
-
-function GuestForm({ onSwitchTab }: { onSwitchTab: (tab: AuthTab) => void }) {
-  const router = useRouter();
-  const guestLogin = useGuestLogin();
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<GuestLoginInput>({ resolver: zodResolver(guestLoginSchema) });
-
-  return (
-    <form
-      onSubmit={handleSubmit((data) =>
-        guestLogin.mutate(data, { onSuccess: () => router.push(AFTER_AUTH_PATH) }),
-      )}
-      noValidate
-      className="flex flex-col gap-sm pt-sm"
-    >
-      <FormError error={guestLogin.error} />
-      <p className="text-body-md text-on-surface-variant">
-        Pick a name and you&apos;re in. Guest sessions can join and host rooms, but can&apos;t be
-        upgraded to a full account later.
-      </p>
-      <Field label="Tên hiển thị" hint="mọi người trong phòng sẽ thấy" error={errors.displayName?.message}>
-        <IconInput
-          icon="badge"
-          type="text"
-          autoComplete="nickname"
-          placeholder="Mọi người nên gọi bạn là gì?"
-          invalid={Boolean(errors.displayName)}
-          {...register("displayName")}
-        />
-      </Field>
-      <SubmitButton pending={guestLogin.isPending} idle="Vào với tư cách khách" busy="Đang vào…" />
-      <SwitchHint>
-        Want to keep your rooms?{" "}
-        <LinkButton onClick={() => onSwitchTab("register")}>Tạo tài khoản</LinkButton>
+        Đã có tài khoản?{" "}
+        <LinkButton onClick={() => onSwitchTab("login")}>Đăng nhập</LinkButton>
       </SwitchHint>
     </form>
   );

@@ -8,6 +8,12 @@ import { useCurrentUser } from "@/features/auth/hooks/use-auth";
 import { Icon } from "@/components/ui/Icon";
 import heroImage from "../../../public/images/login-hero.png";
 
+const HIGHLIGHTS: { icon: string; text: string }[] = [
+  { icon: "headphones", text: "Nghe cùng một khoảnh khắc, dù mỗi người một nơi" },
+  { icon: "forum", text: "Chat và thả cảm xúc ngay trong phòng" },
+  { icon: "mic", text: "Cầm mic hát karaoke cùng bạn bè" },
+];
+
 export default function LoginPage() {
   const router = useRouter();
   const { data: user } = useCurrentUser();
@@ -29,100 +35,66 @@ export default function LoginPage() {
   }, []);
 
   return (
-    <div className="relative flex min-h-[calc(100vh-10rem)] w-full items-center justify-center overflow-hidden px-md py-xl md:px-[40px]">
-      <div className="pointer-events-none absolute -left-32 -top-32 h-[520px] w-[520px] rounded-full bg-primary-container/20 blur-[130px]" />
-      <div className="pointer-events-none absolute bottom-10 right-10 h-[460px] w-[460px] rounded-full bg-secondary-container/15 blur-[140px]" />
+    <div className="relative flex min-h-[calc(100vh-4rem)] w-full items-center justify-center overflow-hidden px-md py-lg md:px-[40px] md:py-xl">
+      <div className="pointer-events-none absolute -left-32 -top-32 h-[520px] w-[520px] rounded-full bg-primary-container/15 blur-[130px]" />
+      <div className="pointer-events-none absolute -bottom-20 right-0 h-[460px] w-[460px] rounded-full bg-secondary-container/10 blur-[140px]" />
 
-      <div className="relative z-10 grid w-full max-w-7xl grid-cols-1 gap-xl md:grid-cols-12">
-        {googleError && (
-          <p role="alert" className="rounded-lg bg-error/10 px-md py-sm text-body-md text-error md:col-span-12">
-            {googleError}
-          </p>
-        )}
+      <div className="relative z-10 grid w-full max-w-6xl grid-cols-1 overflow-hidden rounded-[28px] border border-white/[0.07] bg-surface-container-lowest/60 shadow-[0_40px_80px_-30px_rgba(0,0,0,0.9)] md:grid-cols-[1.1fr_1fr]">
         <HeroPanel />
-        <AuthCard activeTab={activeTab} onTabChange={setActiveTab} />
+        <div className="flex flex-col justify-center p-lg sm:p-xl md:p-2xl">
+          {googleError && (
+            <p
+              role="alert"
+              className="mb-md flex items-center gap-xs rounded-md bg-error-container/40 px-md py-sm text-body-sm text-on-error-container"
+            >
+              <Icon name="error" className="text-[18px]" />
+              {googleError}
+            </p>
+          )}
+          <AuthCard activeTab={activeTab} onTabChange={setActiveTab} />
+        </div>
       </div>
     </div>
   );
 }
 
+/** The listening room at night: the artwork fills the panel, the pitch sits on its darkest part. */
 function HeroPanel() {
   return (
-    <section className="group relative hidden flex-col justify-between overflow-hidden rounded-lg bg-surface-container-low p-xl shadow-2xl md:col-span-5 md:flex">
-      <div className="pointer-events-none absolute -right-24 -top-20 flex h-80 w-80 items-center justify-center rounded-full bg-surface-container-highest/40 opacity-40 transition-transform duration-1000 ease-out group-hover:rotate-45">
-        <div className="flex h-64 w-64 items-center justify-center rounded-full bg-surface-container-low">
-          <div className="flex h-48 w-48 items-center justify-center rounded-full bg-surface-container-high">
-            <Icon name="album" className="text-[32px] text-primary" />
-          </div>
-        </div>
-      </div>
+    <section className="relative h-48 overflow-hidden sm:h-60 md:h-auto md:min-h-[620px]">
+      <Image
+        src={heroImage}
+        alt=""
+        priority
+        fill
+        sizes="(min-width: 1024px) 560px, 100vw"
+        className="object-cover object-[70%_center] md:object-[62%_center]"
+      />
+      <div className="absolute inset-0 bg-gradient-to-t from-surface-container-lowest via-surface-container-lowest/55 to-transparent md:via-surface-container-lowest/35" />
+      <div className="absolute inset-y-0 right-0 hidden w-24 bg-gradient-to-l from-surface-container-lowest/80 to-transparent md:block" />
 
-      <div className="relative z-10 flex flex-col gap-sm">
-        <span className="font-technical flex w-fit items-center gap-1.5 rounded-full bg-primary-container/25 px-xs py-0.5 text-label-mono-sm uppercase text-primary-fixed-dim">
-          <span className="h-1.5 w-1.5 rounded-full bg-secondary motion-safe:animate-ping" />
-          Nghe nhạc đồng bộ
-        </span>
-        <div className="pt-md">
-          <span className="font-technical mb-2xs block text-label-mono-md uppercase tracking-widest text-secondary">
-            Cùng một giai điệu
-          </span>
-          <h2 className="text-display-hero leading-none text-on-surface">
-            Music connects us <span className="text-primary">dù ở đâu</span> you are.
-          </h2>
-        </div>
-      </div>
+      <span className="font-technical absolute left-md top-md flex items-center gap-1.5 rounded-full border border-white/[0.12] bg-black/45 px-sm py-1 text-label-mono-sm uppercase text-on-surface backdrop-blur-md md:left-lg md:top-lg">
+        <span className="h-2 w-2 rounded-full bg-secondary motion-safe:animate-pulse" />
+        Đang phát cùng nhau
+      </span>
 
-      <div className="relative z-10 my-lg flex flex-col gap-md">
-        <div className="relative overflow-hidden rounded-lg bg-surface-container-high shadow-xl">
-          <Image
-            src={heroImage}
-            alt=""
-            priority
-            sizes="(min-width: 1024px) 40vw, 0px"
-            className="h-56 w-full object-cover opacity-85 transition-transform duration-700 ease-out group-hover:scale-105"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-surface-container-lowest via-surface-container-lowest/40 to-transparent" />
-          <div className="absolute left-3 top-3 flex items-center gap-xs rounded-full bg-surface-container-lowest/80 px-sm py-1 shadow-lg backdrop-blur-xl">
-            <span className="h-2 w-2 rounded-full bg-secondary motion-safe:animate-pulse" />
-            <span className="font-technical text-label-mono-sm text-on-surface">PHÒNG ĐỒNG BỘ</span>
-          </div>
-        </div>
-
-        <div className="flex flex-col gap-xs rounded-lg bg-surface-container-high/60 p-md shadow-inner backdrop-blur-md">
-          <div className="flex items-center gap-xs">
-            <Icon name="equalizer" className="text-[18px] text-primary" />
-            <span className="text-body-sm font-medium text-on-surface-variant">
-              Mọi người nghe cùng một khoảnh khắc
-            </span>
-          </div>
-          <svg className="h-10 w-full text-primary" fill="none" preserveAspectRatio="none" viewBox="0 0 360 40" aria-hidden="true">
-            <path
-              className="opacity-80"
-              d="M0 20 Q10 8 20 20 T40 20 T60 5 T80 32 T100 12 T120 28 T140 2 T160 38 T180 18 T200 24 T220 6 T240 34 T260 14 T280 26 T300 10 T320 30 T340 18 L360 20"
-              stroke="currentColor"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2.5"
-            />
-            <path
-              className="opacity-70"
-              d="M0 20 Q15 28 30 20 T60 22 T90 35 T120 10 T150 25 T180 8 T210 32 T240 15 T270 28 T300 12 T330 25 L360 20"
-              stroke="#03b5d3"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="1.5"
-            />
-          </svg>
-        </div>
-      </div>
-
-      <div className="relative z-10 rounded-l-lg bg-gradient-to-r from-primary/30 to-transparent py-xs pl-md">
-        <p className="text-body-lg font-light italic text-on-surface">
-          &ldquo;A place where music brings people together.&rdquo;
-        </p>
-        <span className="font-technical mt-1 block text-label-mono-sm uppercase text-outline">
-          — SoundWithMe Manifesto
-        </span>
+      <div className="absolute inset-x-0 bottom-0 flex flex-col gap-md p-md md:p-xl">
+        <h2 className="max-w-md text-[28px] font-bold leading-[34px] tracking-tight text-on-surface md:text-display-hero">
+          Âm nhạc kết nối chúng ta, <span className="text-primary">dù bạn ở đâu.</span>
+        </h2>
+        <ul className="hidden flex-col gap-sm md:flex">
+          {HIGHLIGHTS.map((item) => (
+            <li
+              key={item.icon}
+              className="flex items-center gap-sm text-body-md text-on-surface-variant"
+            >
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-white/[0.1] bg-white/[0.06] text-primary">
+                <Icon name={item.icon} className="text-[18px]" />
+              </span>
+              {item.text}
+            </li>
+          ))}
+        </ul>
       </div>
     </section>
   );
