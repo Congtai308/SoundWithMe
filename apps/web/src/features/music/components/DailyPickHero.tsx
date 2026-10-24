@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { isGoodSong } from "@soundwithme/validation";
 import { Icon } from "@/components/ui/Icon";
 import { useSearchTracks } from "@/features/music/hooks/use-search-tracks";
 import { useReportListen } from "@/features/music/hooks/use-listening";
@@ -60,7 +61,16 @@ export function DailyPickHero({
   useEffect(() => setTopicIndex(randomIndex(poolSize)), [poolSize]);
 
   const topic = topicIndex === null ? null : pool[topicIndex];
-  const { data: tracks, isError } = useSearchTracks(topic?.query ?? "");
+  const { data: found, isError } = useSearchTracks(topic?.query ?? "");
+  // Search also finds compilations, reactions and Shorts: the hero plays songs only.
+  const tracks = useMemo(() => found?.filter((t) => isGoodSong(t)), [found]);
+  // A topic with nothing playable hands over to another, once round the pool at most.
+  const emptyTopicsRef = useRef(0);
+  useEffect(() => {
+    if (!tracks || tracks.length > 0 || emptyTopicsRef.current >= poolSize) return;
+    emptyTopicsRef.current += 1;
+    setTopicIndex((current) => randomIndex(poolSize, current));
+  }, [tracks, poolSize]);
   useEffect(() => {
     if (tracks && tracks.length > 0 && trackIndex === null) setTrackIndex(randomIndex(tracks.length));
   }, [tracks, trackIndex]);

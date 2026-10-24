@@ -20,6 +20,7 @@ describe("isGoodSong", () => {
     "Anh Trai Say Hi - Tập 6 FULL",
     "Reaction: HIEUTHUHAI new MV",
     "TOP 50 BÀI HÁT V-POP HAY NHẤT",
+    "Boyce Avenue Acoustic Cover Collabs Greatest Hits Duets",
     "50 Bài Hát Nhạc Trẻ Hay Nhất 2026",
     "Tổng Hợp Những Bài Hát Của HIEUTHUHAI",
     "Những Ca Khúc Hay Nhất Của Sơn Tùng M-TP",

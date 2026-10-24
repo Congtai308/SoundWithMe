@@ -1,3 +1,8 @@
+import { isGoodSong } from "@soundwithme/validation";
+
+// Shared with the web app's random pick; re-exported for the lobby's callers.
+export { isGoodSong };
+
 /** A song found for a lobby room: enough to judge and de-duplicate it. */
 export interface PoolSong {
   id: string;
@@ -15,27 +20,9 @@ export interface TakenSong {
   artistName?: string;
 }
 
-const MIN_SONG_MS = 90_000;
-const MAX_SONG_MS = 9 * 60_000;
-
-/** Search results that aren't one song: clips, compilations, covers of covers, talk. */
-const NOT_A_SONG =
-  /#shorts|\bshorts?\b|playlist|tuyển tập|liên khúc|lien khuc|nonstop|non-stop|non stop|\bmix\b|mixtape|megamix|mashup|\bhours?\b|\d+ ?giờ|full album|album trọn|\btop ?\d+|bxh|karaoke|\bbeat\b|instrumental|tone (nam|nữ)|reaction|review|tutorial|lesson|how to|hướng dẫn|podcast|trailer|teaser|behind the scenes|hậu trường|vlog|interview|phỏng vấn|livestream|\bfull show\b|\btập \d+|\bep\.? ?\d+|episode|\d{2,} ?(bài|ca khúc|songs|tracks|hits)|tổng hợp|những bài hát|những ca khúc|nhạc trẻ hay nhất|nhạc hot nhất|hay nhất (năm )?20\d\d/i;
-
 /** Words in a video title that say which version it is, not which song. */
 const VERSION_WORDS =
   /\b(official|music|video|mv|m\/v|lyrics?|lyric video|audio|visuali[sz]er|performance|live|stage|version|ver|cover|acoustic|lofi|lo-fi|remix|speed ?up|sped ?up|slowed|reverb|4k|hd|vietsub|engsub)\b/g;
-
-/** An artist's own release: the official video, M/V or visualizer. */
-const OFFICIAL_RELEASE = /official|\bm\/v\b|\bmv\b|visuali[sz]er/i;
-
-/** Is this a single song of a sensible length, not a Short (and, for `officialOnly` rooms, an official release)? */
-export function isGoodSong(song: PoolSong, officialOnly = false): boolean {
-  if (song.vertical || song.durationMs < MIN_SONG_MS || song.durationMs > MAX_SONG_MS || NOT_A_SONG.test(song.title)) {
-    return false;
-  }
-  return !officialOnly || OFFICIAL_RELEASE.test(song.title);
-}
 
 function clean(text: string): string {
   return text

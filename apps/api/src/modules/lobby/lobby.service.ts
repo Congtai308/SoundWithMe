@@ -182,7 +182,7 @@ export class LobbyService implements OnApplicationBootstrap, OnModuleDestroy {
     if ((await this.queueService.queuedByOfPlaying(roomId, state.trackId)) !== hostId) return false;
     const track = await this.musicService.getTrack(state.trackId);
     if (!track) return false;
-    return !isGoodSong({ id: track.id, title: track.title, durationMs: track.durationMs, vertical: track.vertical }, topic.officialOnly);
+    return !isGoodSong(track, topic.officialOnly);
   }
 
   /** Songs found by the topic's searches, cached for a few days (each search costs quota). */

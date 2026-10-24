@@ -7,3 +7,4 @@ export * from "./music";
 export * from "./karaoke";
 export * from "./social";
 export * from "./messages";
+export * from "./songs";
