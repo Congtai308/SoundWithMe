@@ -38,6 +38,12 @@ describe("isGoodSong", () => {
     expect(isGoodSong(song("a", "Some Song", undefined, 60_000))).toBe(false);
     expect(isGoodSong(song("a", "Some Song", undefined, 15 * 60_000))).toBe(false);
   });
+
+  it("drops Shorts, even with a song-like title and length", () => {
+    const short = { ...song("a", "How much was The Beatles rooftop rig?", undefined, 167_000), vertical: true };
+    expect(isGoodSong(short)).toBe(false);
+    expect(isGoodSong({ ...short, vertical: false })).toBe(true);
+  });
 });
 
 describe("songKeys", () => {

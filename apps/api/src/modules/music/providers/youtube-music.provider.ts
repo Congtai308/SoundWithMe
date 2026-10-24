@@ -41,6 +41,8 @@ const oEmbedSchema = z.object({
   title: z.string(),
   author_name: z.string(),
   thumbnail_url: z.string().url().optional(),
+  width: z.coerce.number().optional(),
+  height: z.coerce.number().optional(),
 });
 
 const videosResponseSchema = z.object({
@@ -55,9 +57,18 @@ const videosResponseSchema = z.object({
       // Live streams and premieres have no duration yet.
       contentDetails: z.object({ duration: z.string().optional() }).optional(),
       status: z.object({ embeddable: z.boolean() }).optional(),
+      // Sized only because the request sets maxWidth; YouTube sends the numbers as strings.
+      player: z
+        .object({ embedWidth: z.coerce.number().optional(), embedHeight: z.coerce.number().optional() })
+        .optional(),
     }),
   ),
 });
+
+/** Taller than wide: a Short (or another phone-shot clip). */
+function isPortrait(width: number | undefined, height: number | undefined): boolean {
+  return width !== undefined && height !== undefined && height > width;
+}
 
 const channelSearchResponseSchema = z.object({
   items: z.array(
@@ -83,6 +94,8 @@ const cachedTrackSchema = z.object({
   provider: z.literal("youtube"),
   providerTrackId: z.string(),
   playbackSource: z.literal("youtube-embed"),
+  // Required, so tracks cached before it existed are fetched again and get it.
+  vertical: z.boolean(),
 });
 
 /** Extracts a video id from a YouTube URL (watch, youtu.be, shorts, embed, music) or a bare id. */
@@ -312,7 +325,8 @@ export class YouTubeMusicProvider implements MusicProvider {
 
   /** Up to 50 videos in one `videos` call (1 quota unit). Unplayable ones are dropped. */
   private async fetchViaDataApi(videoIds: string[]): Promise<Track[]> {
-    const params = new URLSearchParams({ part: "snippet,contentDetails,status", id: videoIds.join(",") });
+    // `player` with maxWidth adds the video's shape at no extra quota cost.
+    const params = new URLSearchParams({ part: "snippet,contentDetails,status,player", maxWidth: "640", id: videoIds.join(",") });
     const body = await this.fetchDataApi("videos", params, "videos");
     return videosResponseSchema
       .parse(body)
@@ -329,6 +343,7 @@ export class YouTubeMusicProvider implements MusicProvider {
           provider: "youtube",
           providerTrackId: item.id,
           playbackSource: "youtube-embed",
+          vertical: isPortrait(item.player?.embedWidth, item.player?.embedHeight),
         };
       });
   }
@@ -386,6 +401,7 @@ export class YouTubeMusicProvider implements MusicProvider {
       provider: "youtube",
       providerTrackId: videoId,
       playbackSource: "youtube-embed",
+      vertical: isPortrait(parsed.data.width, parsed.data.height),
     };
   }
 

@@ -36,6 +36,8 @@ export interface Track {
    * where providerTrackId is the YouTube video id).
    */
   playbackSource: "range-request" | "hls" | "youtube-embed";
+  /** A portrait video, like a YouTube Short: a clip rather than a song. Absent when unknown. */
+  vertical?: boolean;
 }
 
 /**

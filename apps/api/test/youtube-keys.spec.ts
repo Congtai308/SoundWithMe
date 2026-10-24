@@ -113,14 +113,42 @@ describe("YouTube lookups", () => {
     expect(new URL(String(videoCalls[0]![0])).searchParams.get("id")).toBe(ids.join(","));
   });
 
+  it("marks portrait videos (Shorts) as vertical", async () => {
+    const ids = ["eeeeeeeeeee", "fffffffffff"];
+    fetchMock.mockImplementation(async (url: string) => {
+      expect(new URL(url).searchParams.get("part")).toContain("player");
+      return json({
+        items: [
+          { ...video(ids[0]!), player: { embedWidth: "640", embedHeight: "360" } },
+          { ...video(ids[1]!), player: { embedWidth: "360", embedHeight: "640" } },
+        ],
+      });
+    });
+    const tracks = await memoryProvider(["main"]).getTracks(ids);
+    expect(tracks.map((t) => t.vertical)).toEqual([false, true]);
+  });
+
+  it("looks again at tracks cached before their shape was known", async () => {
+    const id = "ggggggggggg";
+    fetchMock.mockImplementation(async () => json({ items: [{ ...video(id), player: { embedWidth: "360", embedHeight: "640" } }] }));
+    const provider = memoryProvider(["main"]);
+    const client = (provider as unknown as { redisService: RedisService }).redisService.getClient();
+    const { vertical: _shape, ...old } = (await provider.getTracks([id]))[0]!;
+    await client.set(`music:yt:track:${id}`, JSON.stringify(old));
+    fetchMock.mockClear();
+
+    expect((await provider.getTrack(id))?.vertical).toBe(true);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
   it("falls back to oEmbed for a pasted link once the keys are out of quota", async () => {
     fetchMock.mockImplementation(async (url: string) =>
       url.includes("oembed")
-        ? json({ title: "Linked song", author_name: "Channel" })
+        ? json({ title: "Linked song", author_name: "Channel", width: 200, height: 113 })
         : new Response(JSON.stringify({ error: { code: 429 } }), { status: 429 }),
     );
     const track = await memoryProvider(["main"]).resolveUrl("https://youtu.be/ddddddddddd");
-    expect(track).toMatchObject({ title: "Linked song", providerTrackId: "ddddddddddd", durationMs: 0 });
+    expect(track).toMatchObject({ title: "Linked song", providerTrackId: "ddddddddddd", durationMs: 0, vertical: false });
   });
 
   it("caps uncached searches per visitor, while cached ones stay free", async () => {

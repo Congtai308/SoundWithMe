@@ -5,6 +5,8 @@ export interface PoolSong {
   /** The uploading channel; helps tell the artist's name from the song's. */
   artistName?: string;
   durationMs: number;
+  /** A portrait video (YouTube Shorts): never a lobby song. */
+  vertical?: boolean;
 }
 
 /** A title (and its channel) that's queued or played already. */
@@ -27,9 +29,11 @@ const VERSION_WORDS =
 /** An artist's own release: the official video, M/V or visualizer. */
 const OFFICIAL_RELEASE = /official|\bm\/v\b|\bmv\b|visuali[sz]er/i;
 
-/** Is this a single song of a sensible length (and, for `officialOnly` rooms, an official release)? */
+/** Is this a single song of a sensible length, not a Short (and, for `officialOnly` rooms, an official release)? */
 export function isGoodSong(song: PoolSong, officialOnly = false): boolean {
-  if (song.durationMs < MIN_SONG_MS || song.durationMs > MAX_SONG_MS || NOT_A_SONG.test(song.title)) return false;
+  if (song.vertical || song.durationMs < MIN_SONG_MS || song.durationMs > MAX_SONG_MS || NOT_A_SONG.test(song.title)) {
+    return false;
+  }
   return !officialOnly || OFFICIAL_RELEASE.test(song.title);
 }
 
