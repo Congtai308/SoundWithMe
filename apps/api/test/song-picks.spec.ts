@@ -20,6 +20,7 @@ describe("isGoodSong", () => {
     "Anh Trai Say Hi - Tập 6 FULL",
     "Reaction: HIEUTHUHAI new MV",
     "TOP 50 BÀI HÁT V-POP HAY NHẤT",
+    "Boyce Avenue Acoustic Cover Collabs Greatest Hits Duets",
     "50 Bài Hát Nhạc Trẻ Hay Nhất 2026",
     "Tổng Hợp Những Bài Hát Của HIEUTHUHAI",
     "Những Ca Khúc Hay Nhất Của Sơn Tùng M-TP",
@@ -37,6 +38,12 @@ describe("isGoodSong", () => {
   it("drops clips and hour-long videos", () => {
     expect(isGoodSong(song("a", "Some Song", undefined, 60_000))).toBe(false);
     expect(isGoodSong(song("a", "Some Song", undefined, 15 * 60_000))).toBe(false);
+  });
+
+  it("drops Shorts, even with a song-like title and length", () => {
+    const short = { ...song("a", "How much was The Beatles rooftop rig?", undefined, 167_000), vertical: true };
+    expect(isGoodSong(short)).toBe(false);
+    expect(isGoodSong({ ...short, vertical: false })).toBe(true);
   });
 });
 

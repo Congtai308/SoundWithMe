@@ -146,8 +146,8 @@ export class LobbyService implements OnApplicationBootstrap, OnModuleDestroy {
   }
 
   /**
-   * Takes out what the app queued itself that shouldn't be there: clips and
-   * compilations from before the filter, and a second copy of a song.
+   * Takes out what the app queued itself that shouldn't be there: clips,
+   * Shorts and compilations from before the filter, and a second copy of a song.
    * Songs people added stay, whatever they are.
    */
   private async tidyQueue(roomId: string, hostId: string, topic: LobbyTopic): Promise<boolean> {
@@ -160,7 +160,10 @@ export class LobbyService implements OnApplicationBootstrap, OnModuleDestroy {
       const duplicate = keys.some((key) => seen.has(key));
       for (const key of keys) seen.add(key);
       if (item.addedBy !== hostId) continue;
-      if (duplicate || !isGoodSong({ id: item.trackId, title: item.track.title, durationMs: item.track.durationMs }, topic.officialOnly)) {
+      // The queue's snapshot doesn't know the video's shape; the track cache does.
+      const vertical = (await this.musicService.getTrack(item.trackId))?.vertical;
+      const song = { id: item.trackId, title: item.track.title, durationMs: item.track.durationMs, vertical };
+      if (duplicate || !isGoodSong(song, topic.officialOnly)) {
         await this.queueService.remove(roomId, hostId, item.id);
         removed = true;
       }
@@ -179,13 +182,13 @@ export class LobbyService implements OnApplicationBootstrap, OnModuleDestroy {
     if ((await this.queueService.queuedByOfPlaying(roomId, state.trackId)) !== hostId) return false;
     const track = await this.musicService.getTrack(state.trackId);
     if (!track) return false;
-    return !isGoodSong({ id: track.id, title: track.title, durationMs: track.durationMs }, topic.officialOnly);
+    return !isGoodSong(track, topic.officialOnly);
   }
 
   /** Songs found by the topic's searches, cached for a few days (each search costs quota). */
   private async poolFor(topic: LobbyTopic): Promise<PoolSong[]> {
     const redis = this.redisService.getClient();
-    const key = `lobby:pool:v3:${topic.slug}`;
+    const key = `lobby:pool:v4:${topic.slug}`;
     const cached = await redis.get(key);
     if (cached !== null) return JSON.parse(cached) as PoolSong[];
 
@@ -193,7 +196,13 @@ export class LobbyService implements OnApplicationBootstrap, OnModuleDestroy {
     for (const query of topic.queries) {
       try {
         for (const track of await this.musicService.search(query, 25)) {
-          const song = { id: track.id, title: track.title, artistName: track.artistName, durationMs: track.durationMs };
+          const song = {
+            id: track.id,
+            title: track.title,
+            artistName: track.artistName,
+            durationMs: track.durationMs,
+            vertical: track.vertical,
+          };
           if (isGoodSong(song, topic.officialOnly)) songs.set(song.id, song);
         }
       } catch (error: unknown) {
