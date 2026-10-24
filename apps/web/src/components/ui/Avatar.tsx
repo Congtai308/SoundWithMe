@@ -27,7 +27,7 @@ export function Avatar({
     <span className="relative inline-flex shrink-0" style={{ width: size, height: size }}>
       {src ? (
         // eslint-disable-next-line @next/next/no-img-element -- avatars come from arbitrary OAuth hosts
-        <img src={src} alt="" className="h-full w-full rounded-full object-cover" />
+        <img src={src} alt="" width={size} height={size} className="h-full w-full rounded-full object-cover" />
       ) : (
         <span
           className={`flex h-full w-full items-center justify-center rounded-full font-semibold ${tintFor(name)}`}

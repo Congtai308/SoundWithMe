@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import { Plus_Jakarta_Sans, Space_Grotesk } from "next/font/google";
 import { AppProviders } from "@/providers/app-providers";
@@ -25,9 +25,15 @@ export const metadata: Metadata = {
   description: "Âm nhạc kết nối chúng ta, dù bạn ở đâu.",
 };
 
+// The browser's own chrome (mobile address bar, overscroll) matches the page.
+export const viewport: Viewport = {
+  themeColor: "#121318",
+  colorScheme: "dark",
+};
+
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning className={`${plusJakartaSans.variable} ${spaceGrotesk.variable}`}>
+    <html lang="vi" suppressHydrationWarning className={`${plusJakartaSans.variable} ${spaceGrotesk.variable}`}>
       <head>
         <script dangerouslySetInnerHTML={{ __html: SIDEBAR_INIT_SCRIPT }} />
         {/* Icon font used throughout the Stitch designs, cut down to the icons

@@ -6,6 +6,32 @@
   color-scheme: dark;
 }
 
+@layer base {
+  /* One visible focus ring for keyboard users wherever a control doesn't draw its own. */
+  :focus-visible {
+    outline: 2px solid theme("colors.primary");
+    outline-offset: 2px;
+  }
+
+  /* No double-tap zoom delay, and no grey flash on tap: controls show their own pressed state. */
+  a,
+  button,
+  input,
+  label,
+  select,
+  summary,
+  textarea {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+}
+
 body {
   background-color: theme("colors.background");
   color: theme("colors.text-primary");

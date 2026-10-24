@@ -334,7 +334,7 @@ export function DailyPickHero({
                 type="button"
                 onClick={togglePlay}
                 disabled={!ready || !track}
-                className="flex items-center gap-xs rounded-full bg-primary-container px-lg py-sm text-headline-sm text-on-primary-container shadow-[0_0_24px_rgba(160,120,255,0.4)] transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50"
+                className="flex items-center gap-xs rounded-full bg-primary-container px-lg py-sm text-headline-sm text-on-primary-container shadow-[0_0_24px_rgba(160,120,255,0.4)] transition-[color,background-color,border-color,box-shadow,transform,opacity,width] hover:scale-[1.02] active:scale-95 disabled:opacity-50"
               >
                 <Icon name={isPlaying ? "pause" : "play_arrow"} className="text-[22px]" filled />
                 {isPlaying ? "Tạm dừng" : "Nghe ngay"}

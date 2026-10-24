@@ -42,7 +42,7 @@ export function RoomReadyPanel({ room, playTrackId = null }: { room: Room; playT
 
       <div className="flex w-full flex-col gap-xs text-left">
         <span className="font-technical text-label-mono-sm uppercase text-outline">Link mời</span>
-        <div className="flex items-center gap-xs rounded-md bg-surface-container p-xs pl-md shadow-inner">
+        <div className="flex items-center gap-xs rounded-md bg-surface-container p-xs pl-md shadow-inner focus-within:ring-2 focus-within:ring-primary/40">
           <Icon name="link" className="text-[18px] text-outline" />
           <input
             readOnly
@@ -82,7 +82,7 @@ export function RoomReadyPanel({ room, playTrackId = null }: { room: Room; playT
         <Link
           href={`/room/${room.id}`}
           onClick={() => playTrackId && setPendingPlay(room.id, playTrackId)}
-          className="flex flex-1 items-center justify-center gap-xs rounded-full bg-primary-container px-md py-sm text-headline-sm text-on-primary-container shadow-[0_0_24px_rgba(160,120,255,0.35)] transition-all active:scale-[0.96]"
+          className="flex flex-1 items-center justify-center gap-xs rounded-full bg-primary-container px-md py-sm text-headline-sm text-on-primary-container shadow-[0_0_24px_rgba(160,120,255,0.35)] transition-transform active:scale-[0.96]"
         >
           <Icon name="login" className="text-[20px]" />
           Vào phòng

@@ -68,7 +68,7 @@ export function AuthCard({
               role="tab"
               aria-selected={activeTab === tab.id}
               onClick={() => onTabChange(tab.id)}
-              className={`whitespace-nowrap rounded-full px-sm py-1.5 text-headline-sm transition-all sm:px-md ${
+              className={`whitespace-nowrap rounded-full px-sm py-1.5 text-headline-sm transition-[color,background-color,border-color,box-shadow,transform,opacity,width] sm:px-md ${
                 activeTab === tab.id
                   ? "bg-primary-container text-on-primary-container shadow-md"
                   : "text-on-surface-variant hover:text-on-surface"
@@ -85,7 +85,7 @@ export function AuthCard({
           <div className="grid grid-cols-1 gap-sm pb-md pt-xs sm:grid-cols-2">
             <a
               href={googleLoginUrl}
-              className="flex items-center justify-center gap-sm rounded-full bg-surface-container px-md py-2.5 text-headline-sm text-on-surface shadow-sm transition-all hover:bg-surface-container-high active:scale-[0.98]"
+              className="flex items-center justify-center gap-sm rounded-full bg-surface-container px-md py-2.5 text-headline-sm text-on-surface shadow-sm transition-[color,background-color,border-color,box-shadow,transform,opacity,width] hover:bg-surface-container-high active:scale-[0.98]"
             >
               <GoogleIcon className="h-4 w-4" />
               Tiếp tục với Google
@@ -213,7 +213,7 @@ function SubmitButton({ pending, idle, busy }: { pending: boolean; idle: string;
     <button
       type="submit"
       disabled={pending}
-      className="mt-xs flex w-full items-center justify-center gap-xs rounded-full bg-primary-container px-md py-sm text-headline-md text-on-primary-container shadow-[0_0_24px_rgba(160,120,255,0.35)] transition-all hover:shadow-[0_0_32px_rgba(160,120,255,0.5)] active:scale-[0.98] disabled:opacity-60 disabled:shadow-none"
+      className="mt-xs flex w-full items-center justify-center gap-xs rounded-full bg-primary-container px-md py-sm text-headline-md text-on-primary-container shadow-[0_0_24px_rgba(160,120,255,0.35)] transition-[color,background-color,border-color,box-shadow,transform,opacity,width] hover:shadow-[0_0_32px_rgba(160,120,255,0.5)] active:scale-[0.98] disabled:opacity-60 disabled:shadow-none"
     >
       {pending ? busy : idle}
       {!pending && <Icon name="arrow_forward" className="text-[20px]" />}

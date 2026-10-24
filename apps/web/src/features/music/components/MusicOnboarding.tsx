@@ -98,7 +98,7 @@ export function MusicOnboarding({ initial, habitGenres, habitArtists, isSaving, 
         <div className="mb-lg flex items-center justify-between">
           <div className="flex items-center gap-xs">
             {[1, 2].map((n) => (
-              <span key={n} className={`h-1.5 rounded-full transition-all ${n === step ? "w-10 bg-primary-container" : "w-5 bg-white/20"}`} />
+              <span key={n} className={`h-1.5 rounded-full transition-[color,background-color,border-color,box-shadow,transform,opacity,width] ${n === step ? "w-10 bg-primary-container" : "w-5 bg-white/20"}`} />
             ))}
             <span className="font-technical ml-xs text-label-mono-sm text-on-surface-variant">Bước {step}/2</span>
           </div>
@@ -131,7 +131,7 @@ export function MusicOnboarding({ initial, habitGenres, habitArtists, isSaving, 
                     type="button"
                     onClick={() => setGenres((current) => toggle(current, genre.slug))}
                     aria-pressed={selected}
-                    className={`relative flex h-24 overflow-hidden rounded-xl bg-gradient-to-br ${genre.color} p-sm text-left transition-all hover:scale-[1.02] active:scale-[0.98] md:h-28 ${
+                    className={`relative flex h-24 overflow-hidden rounded-xl bg-gradient-to-br ${genre.color} p-sm text-left transition-[color,background-color,border-color,box-shadow,transform,opacity,width] hover:scale-[1.02] active:scale-[0.98] md:h-28 ${
                       selected ? "ring-4 ring-white/90 ring-offset-2 ring-offset-[#121318]" : "opacity-90 hover:opacity-100"
                     }`}
                   >
@@ -196,7 +196,7 @@ export function MusicOnboarding({ initial, habitGenres, habitArtists, isSaving, 
                     className="group flex flex-col items-center gap-xs"
                   >
                     <span
-                      className={`relative flex aspect-square w-full max-w-[112px] items-center justify-center rounded-full text-[26px] font-bold text-white shadow-lg transition-all group-hover:scale-105 ${
+                      className={`relative flex aspect-square w-full max-w-[112px] items-center justify-center rounded-full text-[26px] font-bold text-white shadow-lg transition-[color,background-color,border-color,box-shadow,transform,opacity,width] group-hover:scale-105 ${
                         selected ? "ring-4 ring-primary-container ring-offset-2 ring-offset-[#121318]" : ""
                       }`}
                       style={{ background: `linear-gradient(135deg, hsl(${hue} 70% 55%), hsl(${(hue + 60) % 360} 65% 25%))` }}
@@ -246,7 +246,7 @@ export function MusicOnboarding({ initial, habitGenres, habitArtists, isSaving, 
                   type="button"
                   onClick={() => setStep(2)}
                   disabled={genres.length === 0}
-                  className="flex items-center gap-xs rounded-full bg-primary-container px-lg py-sm text-headline-sm text-on-primary-container shadow-[0_0_24px_rgba(160,120,255,0.4)] transition-all hover:scale-[1.02] disabled:opacity-40 disabled:hover:scale-100"
+                  className="flex items-center gap-xs rounded-full bg-primary-container px-lg py-sm text-headline-sm text-on-primary-container shadow-[0_0_24px_rgba(160,120,255,0.4)] transition-[color,background-color,border-color,box-shadow,transform,opacity,width] hover:scale-[1.02] disabled:opacity-40 disabled:hover:scale-100"
                 >
                   Tiếp tục
                   <Icon name="arrow_forward" className="text-[20px]" />
@@ -265,7 +265,7 @@ export function MusicOnboarding({ initial, habitGenres, habitArtists, isSaving, 
                   type="button"
                   onClick={finish}
                   disabled={isSaving}
-                  className="flex items-center gap-xs rounded-full bg-primary-container px-lg py-sm text-headline-sm text-on-primary-container shadow-[0_0_24px_rgba(160,120,255,0.4)] transition-all hover:scale-[1.02] disabled:opacity-60"
+                  className="flex items-center gap-xs rounded-full bg-primary-container px-lg py-sm text-headline-sm text-on-primary-container shadow-[0_0_24px_rgba(160,120,255,0.4)] transition-[color,background-color,border-color,box-shadow,transform,opacity,width] hover:scale-[1.02] disabled:opacity-60"
                 >
                   {isSaving ? <Icon name="progress_activity" className="animate-spin text-[20px]" /> : <Icon name="check" className="text-[20px]" />}
                   {artists.length === 0 ? "Bỏ qua & xong" : "Xong"}

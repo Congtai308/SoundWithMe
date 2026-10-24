@@ -72,7 +72,7 @@ export function TopNav() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Tìm bài hát, nghệ sĩ…"
-            className="h-10 w-full rounded-full border border-white/[0.1] bg-white/[0.04] pl-11 pr-md text-body-sm text-on-surface transition-all placeholder:text-outline hover:border-white/[0.18] focus:border-primary/60 focus:bg-white/[0.06] focus:outline-none focus:ring-2 focus:ring-primary/25"
+            className="h-10 w-full rounded-full border border-white/[0.1] bg-white/[0.04] pl-11 pr-md text-body-sm text-on-surface transition-[background-color,border-color,box-shadow] placeholder:text-outline hover:border-white/[0.18] focus:border-primary/60 focus:bg-white/[0.06] focus:outline-none focus:ring-2 focus:ring-primary/25"
           />
         </form>
 
@@ -89,7 +89,7 @@ export function TopNav() {
           {user ? (
             <AccountMenu
               placement="below"
-              triggerClassName="flex h-10 w-10 items-center justify-center rounded-full border border-white/[0.1] bg-white/[0.04] transition-all hover:border-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
+              triggerClassName="flex h-10 w-10 items-center justify-center rounded-full border border-white/[0.1] bg-white/[0.04] transition-colors hover:border-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
               trigger={
                 <>
                   <span className="sr-only">Tài khoản</span>

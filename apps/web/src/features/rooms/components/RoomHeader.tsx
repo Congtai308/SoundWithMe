@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { Room } from "@soundwithme/types";
 import { barButtonActiveClass, barButtonClass, barDangerButtonClass } from "@/components/ui/bar-controls";
 import { Icon } from "@/components/ui/Icon";
@@ -16,6 +16,9 @@ const CONNECTION_COPY: Record<ConnectionStatus, { label: string; tone: string } 
   reconnecting: { label: "Đang kết nối lại — nhạc sẽ tự đồng bộ", tone: "text-[#f59e0b]" },
   error: { label: "Không kết nối được máy chủ phòng", tone: "text-error" },
 };
+
+/** How long "end the room?" waits for the second tap. */
+const END_CONFIRM_MS = 4_000;
 
 const TYPE_ICON: Record<Room["type"], string> = {
   public: "public",
@@ -60,6 +63,18 @@ export function RoomHeader({
   const status = CONNECTION_COPY[connection];
   const effectsOn = useRoomEffects((s) => s.enabled);
   const toggleEffects = useRoomEffects((s) => s.toggle);
+  // Ending the room sends everyone out: the host taps twice.
+  const [confirmingEnd, setConfirmingEnd] = useState(false);
+  useEffect(() => {
+    if (!confirmingEnd) return;
+    const timer = window.setTimeout(() => setConfirmingEnd(false), END_CONFIRM_MS);
+    return () => window.clearTimeout(timer);
+  }, [confirmingEnd]);
+
+  const leaveOrEnd = () => {
+    if (isHost && !confirmingEnd) setConfirmingEnd(true);
+    else onLeave();
+  };
 
   const share = async () => {
     try {
@@ -159,13 +174,18 @@ export function RoomHeader({
         </button>
         <button
           type="button"
-          onClick={onLeave}
+          onClick={leaveOrEnd}
           disabled={isLeaving}
-          aria-label={isHost ? "Kết thúc phòng" : "Rời phòng"}
+          aria-label={confirmingEnd ? "Bấm lần nữa để kết thúc phòng cho mọi người" : isHost ? "Kết thúc phòng" : "Rời phòng"}
           className={barDangerButtonClass}
         >
-          <Icon name="logout" className="text-[18px]" />
-          <span className="hidden md:inline">{isLeaving ? "Đang rời…" : isHost ? "Kết thúc phòng" : "Rời phòng"}</span>
+          <Icon name={confirmingEnd ? "warning" : "logout"} className="text-[18px]" />
+          {confirmingEnd ? (
+            // Shown at every width: on a phone this is the only warning.
+            <span aria-live="polite">Bấm lần nữa để kết thúc</span>
+          ) : (
+            <span className="hidden md:inline">{isLeaving ? "Đang rời…" : isHost ? "Kết thúc phòng" : "Rời phòng"}</span>
+          )}
         </button>
       </TopNavSlot>
     </>

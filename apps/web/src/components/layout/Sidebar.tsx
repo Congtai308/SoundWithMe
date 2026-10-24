@@ -177,7 +177,7 @@ export function SidebarToggle({
         type="button"
         onClick={onClick}
         aria-label={`${label} (Ctrl+B)`}
-        className="flex h-9 w-9 items-center justify-center rounded-full border border-white/[0.1] bg-white/[0.04] text-on-surface-variant shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] transition-all duration-200 hover:border-primary/50 hover:bg-primary-container/25 hover:text-primary hover:shadow-[0_0_18px_rgba(160,120,255,0.35)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary active:scale-90"
+        className="flex h-9 w-9 items-center justify-center rounded-full border border-white/[0.1] bg-white/[0.04] text-on-surface-variant shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] transition-[color,background-color,border-color,box-shadow,transform] duration-200 hover:border-primary/50 hover:bg-primary-container/25 hover:text-primary hover:shadow-[0_0_18px_rgba(160,120,255,0.35)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary active:scale-90"
       >
         <Icon
           name={action === "hide" ? "keyboard_double_arrow_left" : "keyboard_double_arrow_right"}

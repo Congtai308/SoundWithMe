@@ -293,7 +293,7 @@ export function CreateRoomForm({ onCreated }: { onCreated: (room: Room) => void 
           <button
             type="submit"
             disabled={createRoom.isPending}
-            className="flex w-full items-center justify-center gap-xs rounded-full bg-primary-container px-md py-sm text-headline-sm text-on-primary-container shadow-[0_0_24px_rgba(160,120,255,0.35)] transition-all active:scale-[0.96] disabled:opacity-60 disabled:shadow-none"
+            className="flex w-full items-center justify-center gap-xs rounded-full bg-primary-container px-md py-sm text-headline-sm text-on-primary-container shadow-[0_0_24px_rgba(160,120,255,0.35)] transition-[transform,opacity,box-shadow] active:scale-[0.96] disabled:opacity-60 disabled:shadow-none"
           >
             <Icon name="podcasts" className="text-[20px]" />
             {createRoom.isPending ? "Đang mở phòng…" : "Mở phòng"}

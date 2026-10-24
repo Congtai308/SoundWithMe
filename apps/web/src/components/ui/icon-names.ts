@@ -23,7 +23,7 @@ export const ICON_NAMES = [
   "skip_next", "skip_previous", "smart_display", "speaker_notes_off", "speed", "stadium", "start", "step",
   "stop_circle", "switch", "sync", "sync_problem", "tab", "thumb_down", "thumb_up", "timer", "title",
   "token", "topic", "touch_app", "tune", "undo", "verified", "visibility", "visibility_off", "volume_down",
-  "volume_off", "volume_up", "wifi_off", "workspace_premium",
+  "volume_off", "volume_up", "warning", "wifi_off", "workspace_premium",
 ] as const;
 
 /** Only the axes the app uses: 24 px optical size, weight 400, grade 0, outline and filled. */

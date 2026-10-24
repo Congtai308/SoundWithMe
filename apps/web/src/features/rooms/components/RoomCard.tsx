@@ -44,7 +44,7 @@ export function RoomCard({ room, featured = false }: { room: Room; featured?: bo
   return (
     <Link
       href={`/room/${room.id}`}
-      className={`group relative flex flex-col gap-sm overflow-hidden rounded-2xl border bg-surface-container-low p-md transition-all duration-300 hover:-translate-y-0.5 hover:border-primary-container/40 hover:shadow-[0_12px_32px_rgba(160,120,255,0.18)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary ${
+      className={`group relative flex flex-col gap-sm overflow-hidden rounded-2xl border bg-surface-container-low p-md transition-[transform,border-color,box-shadow] duration-300 hover:-translate-y-0.5 hover:border-primary-container/40 hover:shadow-[0_12px_32px_rgba(160,120,255,0.18)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary ${
         featured ? "border-primary-container/40" : "border-white/[0.06]"
       }`}
     >
@@ -52,7 +52,7 @@ export function RoomCard({ room, featured = false }: { room: Room; featured?: bo
       <span aria-hidden="true" className="pointer-events-none absolute -left-10 -top-12 h-40 w-56 opacity-25 blur-3xl transition-opacity duration-300 group-hover:opacity-40">
         {coverUrl ? (
           // eslint-disable-next-line @next/next/no-img-element -- same thumbnail as the cover below, already cached
-          <img src={artworkAt(coverUrl, 96)} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
+          <img src={artworkAt(coverUrl, 96)} alt="" width={224} height={160} loading="lazy" decoding="async" className="h-full w-full object-cover" />
         ) : (
           <span className="block h-full w-full" style={{ background: coverGradient(room.id) }} />
         )}
@@ -65,7 +65,7 @@ export function RoomCard({ room, featured = false }: { room: Room; featured?: bo
           >
             {coverUrl ? (
               // eslint-disable-next-line @next/next/no-img-element -- artwork comes from provider CDNs
-              <img src={artworkAt(coverUrl, 96)} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
+              <img src={artworkAt(coverUrl, 96)} alt="" width={44} height={44} loading="lazy" decoding="async" className="h-full w-full object-cover" />
             ) : (
               <Icon name="graphic_eq" className="text-[22px] text-white/80" />
             )}
