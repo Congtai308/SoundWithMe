@@ -95,7 +95,7 @@ export function JoinRoomGate({ room, needsPasscode, isJoining, error, onJoin }: 
         <button
           type="submit"
           disabled={isJoining || (askPasscode && passcode.trim().length === 0)}
-          className="flex items-center gap-xs rounded-full bg-primary-container px-lg py-sm text-headline-sm text-on-primary-container shadow-[0_0_24px_rgba(160,120,255,0.35)] transition-all active:scale-[0.96] disabled:opacity-60"
+          className="flex items-center gap-xs rounded-full bg-primary-container px-lg py-sm text-headline-sm text-on-primary-container shadow-[0_0_24px_rgba(160,120,255,0.35)] transition-[transform,opacity] active:scale-[0.96] disabled:opacity-60"
         >
           <Icon name={askPasscode ? "key" : "login"} className="text-[20px]" />
           {isJoining ? "Đang vào…" : askPasscode ? "Mở khoá & vào" : "Vào nghe cùng"}

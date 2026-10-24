@@ -12,7 +12,7 @@ import { BrandLogo } from "@/components/ui/BrandLogo";
 import { AccountMenu } from "./AccountMenu";
 import { TopNavSlotTarget } from "./TopNavSlot";
 import { SidebarToggle } from "./Sidebar";
-import { useSidebarStore } from "./sidebar-store";
+import { isRailPath, useSidebarStore } from "./sidebar-store";
 import { NotificationBell } from "@/features/notifications/components/NotificationBell";
 
 const QUICK_VIBE_LABEL: Record<string, string> = {
@@ -26,7 +26,7 @@ export function TopNav() {
   const [query, setQuery] = useState("");
   const router = useRouter();
   // The room fills the bar with its own title and actions, so search and vibes step back.
-  const inRoom = usePathname().startsWith("/room/");
+  const inRoom = isRailPath(usePathname());
   const { data: user } = useCurrentUser();
   const toggleSidebar = useSidebarStore((s) => s.toggle);
 
@@ -37,9 +37,10 @@ export function TopNav() {
   };
 
   return (
-    <header className="fixed left-0 right-0 top-0 z-30 h-16 border-b border-white/[0.06] bg-background/80 shadow-[0_1px_8px_rgba(0,0,0,0.3)] backdrop-blur-xl sm:left-[72px] md:left-72 undock:left-0 md:transition-[left] md:duration-300 md:ease-out">
-      <div className="flex h-16 w-full items-center justify-between gap-md px-md md:px-lg">
-        <Link href="/" className="sm:hidden" aria-label="SoundWithMe home">
+    <header className="fixed left-0 right-0 top-0 z-30 h-16 border-b border-white/[0.06] bg-background/80 shadow-[0_1px_8px_rgba(0,0,0,0.3)] backdrop-blur-xl sm:left-[72px] md:left-72 rail:left-[72px] undock:left-0 md:transition-[left] md:duration-300 md:ease-out">
+      <div className={`flex h-16 w-full items-center justify-between px-md md:px-lg ${inRoom ? "gap-sm sm:gap-md" : "gap-md"}`}>
+        {/* In a room on a phone the bar is full of the room's own buttons: its name needs the logo's space. */}
+        <Link href="/" className={inRoom ? "hidden" : "sm:hidden"} aria-label="SoundWithMe home">
           <BrandLogo showWordmark={false} />
         </Link>
 
@@ -71,7 +72,7 @@ export function TopNav() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Tìm bài hát, nghệ sĩ…"
-            className="h-10 w-full rounded-full border border-white/[0.1] bg-white/[0.04] pl-11 pr-md text-body-sm text-on-surface transition-all placeholder:text-outline hover:border-white/[0.18] focus:border-primary/60 focus:bg-white/[0.06] focus:outline-none focus:ring-2 focus:ring-primary/25"
+            className="h-10 w-full rounded-full border border-white/[0.1] bg-white/[0.04] pl-11 pr-md text-body-sm text-on-surface transition-[background-color,border-color,box-shadow] placeholder:text-outline hover:border-white/[0.18] focus:border-primary/60 focus:bg-white/[0.06] focus:outline-none focus:ring-2 focus:ring-primary/25"
           />
         </form>
 
@@ -88,7 +89,7 @@ export function TopNav() {
           {user ? (
             <AccountMenu
               placement="below"
-              triggerClassName="flex h-10 w-10 items-center justify-center rounded-full border border-white/[0.1] bg-white/[0.04] transition-all hover:border-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
+              triggerClassName="flex h-10 w-10 items-center justify-center rounded-full border border-white/[0.1] bg-white/[0.04] transition-colors hover:border-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
               trigger={
                 <>
                   <span className="sr-only">Tài khoản</span>

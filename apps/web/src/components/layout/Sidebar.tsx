@@ -10,13 +10,13 @@ import { Icon } from "@/components/ui/Icon";
 import { BrandLogo } from "@/components/ui/BrandLogo";
 import { NAV_ITEMS, isActivePath } from "./nav-items";
 import { UserCard } from "./UserCard";
-import { useSidebarStore } from "./sidebar-store";
+import { isRailPath, useSidebarStore } from "./sidebar-store";
 
 /**
  * Desktop (≥1024px): full 288px dock, which the user can slide fully out of
  * view (button or Ctrl/⌘+B; TopNav shows the button to bring it back).
- * Tablet (768–1023px): 72px icon rail. Mobile: hidden — MobileTabBar takes
- * over navigation.
+ * Tablet (768–1023px), and desktop inside a room: 72px icon rail. Mobile:
+ * hidden — MobileTabBar takes over navigation.
  */
 export function Sidebar() {
   const pathname = usePathname();
@@ -32,33 +32,40 @@ export function Sidebar() {
   useEffect(hydrate, [hydrate]);
   useSidebarShortcut(toggle);
 
+  // The root layout's script sets it on load; this keeps it right on client-side navigation.
+  const rail = isRailPath(pathname);
+  useEffect(() => {
+    if (rail) document.documentElement.dataset.rail = "";
+    else delete document.documentElement.dataset.rail;
+  }, [rail]);
+
   return (
     <aside
       aria-hidden={collapsed || undefined}
-      className="fixed bottom-0 left-0 top-0 z-40 hidden w-[72px] flex-col justify-between border-r border-white/[0.06] bg-surface-container-lowest/90 shadow-[0_1px_8px_rgba(0,0,0,0.5)] backdrop-blur-2xl sm:flex md:w-72 md:transition-[transform,visibility] md:duration-300 md:ease-out undock:invisible undock:-translate-x-full"
+      className="fixed bottom-0 left-0 top-0 z-40 hidden w-[72px] flex-col justify-between border-r border-white/[0.06] bg-surface-container-lowest/90 shadow-[0_1px_8px_rgba(0,0,0,0.5)] backdrop-blur-2xl sm:flex md:w-72 rail:w-[72px] md:transition-[transform,visibility,width] md:duration-300 md:ease-out undock:invisible undock:-translate-x-full"
     >
-      <div className="scrollbar-none flex flex-1 flex-col overflow-y-auto px-xs pt-lg md:px-md">
-        <div className="mb-xl flex items-center justify-center md:justify-between">
-          <Link href="/" className="flex items-center rounded-md md:px-sm" aria-label="SoundWithMe home">
-            <span className="md:hidden">
+      <div className="scrollbar-none flex flex-1 flex-col overflow-y-auto px-xs pt-lg md:px-md rail:px-xs">
+        <div className="mb-xl flex items-center justify-center md:justify-between rail:justify-center">
+          <Link href="/" className="flex items-center rounded-md md:px-sm rail:px-0" aria-label="SoundWithMe home">
+            <span className="md:hidden rail:block">
               <BrandLogo showWordmark={false} />
             </span>
-            <span className="hidden md:block">
+            <span className="hidden md:block rail:hidden">
               <BrandLogo />
             </span>
           </Link>
-          <SidebarToggle action="hide" onClick={toggle} tooltipSide="bottom-end" className="hidden md:block" />
+          <SidebarToggle action="hide" onClick={toggle} tooltipSide="bottom-end" className="hidden md:block rail:hidden" />
         </div>
 
         <Link
           href={user ? "/rooms/new" : "/login"}
-          className="mb-md flex w-full items-center justify-center gap-sm rounded-full bg-primary-container px-sm py-sm text-headline-sm text-on-primary-container shadow-[0_0_24px_rgba(160,120,255,0.35)] transition-transform active:scale-95 md:px-md"
+          className="mb-md flex w-full items-center justify-center gap-sm rounded-full bg-primary-container px-sm py-sm text-headline-sm text-on-primary-container shadow-[0_0_24px_rgba(160,120,255,0.35)] transition-transform active:scale-95 md:px-md rail:px-sm"
         >
           <Icon name="graphic_eq" className="text-[20px]" />
-          <span className="hidden md:inline">Tạo phòng</span>
+          <span className="hidden md:inline rail:hidden">Tạo phòng</span>
         </Link>
 
-        <p className="font-technical mb-2xs hidden px-sm text-label-mono-sm uppercase text-outline md:block">
+        <p className="font-technical mb-2xs hidden px-sm text-label-mono-sm uppercase text-outline md:block rail:hidden">
           Điều hướng
         </p>
         <nav className="mb-lg flex flex-col gap-1" aria-label="Điều hướng chính">
@@ -69,13 +76,13 @@ export function Sidebar() {
                   key={item.href}
                   title={`${item.label} — sắp ra mắt`}
                   aria-disabled="true"
-                  className="flex cursor-not-allowed items-center justify-center rounded-lg px-sm py-xs text-outline/60 md:justify-between"
+                  className="flex cursor-not-allowed items-center justify-center rounded-lg px-sm py-xs text-outline/60 md:justify-between rail:justify-center"
                 >
                   <span className="flex items-center gap-sm">
                     <Icon name={item.icon} className="text-[20px]" />
-                    <span className="hidden text-body-md md:inline">{item.label}</span>
+                    <span className="hidden text-body-md md:inline rail:hidden">{item.label}</span>
                   </span>
-                  <span className="font-technical hidden rounded-full bg-surface-container-high px-xs py-0.5 text-label-mono-sm uppercase text-outline md:inline">
+                  <span className="font-technical hidden rounded-full bg-surface-container-high px-xs py-0.5 text-label-mono-sm uppercase text-outline md:inline rail:hidden">
                     Sắp có
                   </span>
                 </span>
@@ -89,7 +96,7 @@ export function Sidebar() {
                 href={item.href}
                 aria-current={active ? "page" : undefined}
                 title={item.label}
-                className={`flex items-center justify-center rounded-lg px-sm py-xs transition-colors md:justify-between ${
+                className={`flex items-center justify-center rounded-lg px-sm py-xs transition-colors md:justify-between rail:justify-center ${
                   active
                     ? "bg-surface-container-high text-primary"
                     : "text-on-surface-variant hover:bg-surface-container hover:text-on-surface"
@@ -99,22 +106,22 @@ export function Sidebar() {
                   <Icon name={item.icon} className="text-[20px]" filled={active} />
                   {item.href === "/messages" && unreadMessages > 0 && (
                     // The icon rail has no room for the count: a dot instead.
-                    <span aria-hidden="true" className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-primary md:hidden" />
+                    <span aria-hidden="true" className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-primary md:hidden rail:block" />
                   )}
-                  <span className={`hidden md:inline ${active ? "text-headline-sm" : "text-body-md"}`}>
+                  <span className={`hidden md:inline rail:hidden ${active ? "text-headline-sm" : "text-body-md"}`}>
                     {item.label}
                   </span>
                 </span>
                 {item.href === "/messages" && unreadMessages > 0 && (
                   <span
                     aria-label={`${unreadMessages} chưa đọc`}
-                    className="font-technical hidden rounded-full bg-primary-container px-xs py-0.5 text-label-mono-sm text-on-primary-container md:inline"
+                    className="font-technical hidden rounded-full bg-primary-container px-xs py-0.5 text-label-mono-sm text-on-primary-container md:inline rail:hidden"
                   >
                     {unreadMessages > 99 ? "99+" : unreadMessages}
                   </span>
                 )}
                 {item.href === "/rooms" && hasLiveRooms && (
-                  <span className="font-technical hidden rounded-full bg-tertiary-container px-xs py-0.5 text-label-mono-sm uppercase text-on-tertiary-container motion-safe:animate-pulse md:inline">
+                  <span className="font-technical hidden rounded-full bg-tertiary-container px-xs py-0.5 text-label-mono-sm uppercase text-on-tertiary-container motion-safe:animate-pulse md:inline rail:hidden">
                     Live
                   </span>
                 )}
@@ -170,7 +177,7 @@ export function SidebarToggle({
         type="button"
         onClick={onClick}
         aria-label={`${label} (Ctrl+B)`}
-        className="flex h-9 w-9 items-center justify-center rounded-full border border-white/[0.1] bg-white/[0.04] text-on-surface-variant shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] transition-all duration-200 hover:border-primary/50 hover:bg-primary-container/25 hover:text-primary hover:shadow-[0_0_18px_rgba(160,120,255,0.35)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary active:scale-90"
+        className="flex h-9 w-9 items-center justify-center rounded-full border border-white/[0.1] bg-white/[0.04] text-on-surface-variant shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] transition-[color,background-color,border-color,box-shadow,transform] duration-200 hover:border-primary/50 hover:bg-primary-container/25 hover:text-primary hover:shadow-[0_0_18px_rgba(160,120,255,0.35)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary active:scale-90"
       >
         <Icon
           name={action === "hide" ? "keyboard_double_arrow_left" : "keyboard_double_arrow_right"}
@@ -244,7 +251,7 @@ function SidebarHint({ collapsed }: { collapsed: boolean }) {
     <div
       role="dialog"
       aria-label="Mẹo"
-      className="absolute left-full top-[30px] z-50 ml-3 hidden w-72 motion-safe:animate-[hint-in_300ms_ease-out] md:block"
+      className="absolute left-full top-[30px] z-50 ml-3 hidden w-72 motion-safe:animate-[hint-in_300ms_ease-out] md:block rail:hidden"
     >
       {/* Arrow pointing back at the button. */}
       <span className="absolute -left-[7px] top-[14px] h-3.5 w-3.5 rotate-45 border-b border-l border-primary/40 bg-surface-container-highest" />

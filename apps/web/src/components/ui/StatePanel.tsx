@@ -35,7 +35,7 @@ export function StatePanel({
 }
 
 export const primaryPillClass =
-  "inline-flex items-center gap-xs rounded-full bg-primary-container px-md py-xs text-headline-sm text-on-primary-container shadow-[0_0_16px_rgba(160,120,255,0.25)] transition-all active:scale-[0.96]";
+  "inline-flex items-center gap-xs rounded-full bg-primary-container px-md py-xs text-headline-sm text-on-primary-container shadow-[0_0_16px_rgba(160,120,255,0.25)] transition-transform active:scale-[0.96]";
 
 export const ghostPillClass =
   "inline-flex items-center gap-xs rounded-full border border-white/[0.12] bg-white/[0.06] px-md py-xs text-headline-sm text-on-surface transition-colors hover:border-white/[0.18]";

@@ -62,6 +62,11 @@ const config: Config = {
     },
   },
   plugins: [
+    // `rail:` = desktop inside a room: the nav sidebar narrows to its icon rail (see sidebar-store).
+    // Registered before `undock:` so a sidebar the user hid stays hidden.
+    plugin(({ addVariant }) => {
+      addVariant("rail", `@media (min-width: ${breakpoints.desktop}px) { html[data-rail] & }`);
+    }),
     // `undock:` = desktop with the nav sidebar hidden by the user (see sidebar-store).
     plugin(({ addVariant }) => {
       addVariant("undock", `@media (min-width: ${breakpoints.desktop}px) { html[data-sidebar="collapsed"] & }`);

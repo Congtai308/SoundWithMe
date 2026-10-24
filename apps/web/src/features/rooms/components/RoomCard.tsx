@@ -44,11 +44,20 @@ export function RoomCard({ room, featured = false }: { room: Room; featured?: bo
   return (
     <Link
       href={`/room/${room.id}`}
-      className={`group relative flex flex-col gap-sm overflow-hidden rounded-2xl border bg-surface-container-low p-md transition-all duration-300 hover:-translate-y-0.5 hover:border-primary-container/40 hover:shadow-[0_12px_32px_rgba(160,120,255,0.18)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary ${
+      className={`group relative flex flex-col gap-sm overflow-hidden rounded-2xl border bg-surface-container-low p-md transition-[transform,border-color,box-shadow] duration-300 hover:-translate-y-0.5 hover:border-primary-container/40 hover:shadow-[0_12px_32px_rgba(160,120,255,0.18)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary ${
         featured ? "border-primary-container/40" : "border-white/[0.06]"
       }`}
     >
-      <div className="flex min-w-0 items-center gap-sm">
+      {/* Tinted by what's playing: the artwork, blurred, glows from the card's corner. */}
+      <span aria-hidden="true" className="pointer-events-none absolute -left-10 -top-12 h-40 w-56 opacity-25 blur-3xl transition-opacity duration-300 group-hover:opacity-40">
+        {coverUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element -- same thumbnail as the cover below, already cached
+          <img src={artworkAt(coverUrl, 96)} alt="" width={224} height={160} loading="lazy" decoding="async" className="h-full w-full object-cover" />
+        ) : (
+          <span className="block h-full w-full" style={{ background: coverGradient(room.id) }} />
+        )}
+      </span>
+      <div className="relative flex min-w-0 items-center gap-sm">
         <span className="relative shrink-0">
           <span
             className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-xl"
@@ -56,7 +65,7 @@ export function RoomCard({ room, featured = false }: { room: Room; featured?: bo
           >
             {coverUrl ? (
               // eslint-disable-next-line @next/next/no-img-element -- artwork comes from provider CDNs
-              <img src={artworkAt(coverUrl, 96)} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
+              <img src={artworkAt(coverUrl, 96)} alt="" width={44} height={44} loading="lazy" decoding="async" className="h-full w-full object-cover" />
             ) : (
               <Icon name="graphic_eq" className="text-[22px] text-white/80" />
             )}
@@ -80,7 +89,7 @@ export function RoomCard({ room, featured = false }: { room: Room; featured?: bo
         </div>
       </div>
 
-      <div className="flex min-w-0 items-center gap-xs">
+      <div className="relative flex min-w-0 items-center gap-xs">
         {faces > 0 && (
           <span className="flex shrink-0 items-center" aria-hidden="true">
             {Array.from({ length: faces }, (_, i) => (
@@ -118,7 +127,7 @@ export function RoomCard({ room, featured = false }: { room: Room; featured?: bo
         )}
       </div>
 
-      <div className="flex items-center justify-between border-t border-white/[0.05] pt-sm text-body-sm text-on-surface-variant transition-colors group-hover:text-primary">
+      <div className="relative flex items-center justify-between border-t border-white/[0.05] pt-sm text-body-sm text-on-surface-variant transition-colors group-hover:text-primary">
         Nghe cùng
         <Icon name="arrow_forward" className="text-[18px] transition-transform group-hover:translate-x-0.5" />
       </div>

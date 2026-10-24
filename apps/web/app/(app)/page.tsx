@@ -64,14 +64,14 @@ export default function HomePage() {
         <div className="flex shrink-0 items-center gap-sm self-start md:self-auto">
           <Link
             href="/discover"
-            className="group flex items-center gap-xs whitespace-nowrap rounded-full bg-surface-container-high px-md py-sm text-headline-sm text-on-surface transition-all hover:bg-surface-container-highest"
+            className="group flex items-center gap-xs whitespace-nowrap rounded-full bg-surface-container-high px-md py-sm text-headline-sm text-on-surface transition-colors hover:bg-surface-container-highest"
           >
             <Icon name="explore" className="text-[18px] text-secondary transition-transform group-hover:rotate-45" />
             Khám phá nhạc
           </Link>
           <Link
             href={createHref}
-            className="flex items-center gap-xs whitespace-nowrap rounded-full bg-primary-container px-md py-sm text-headline-sm text-on-primary-container shadow-[0_0_24px_rgba(160,120,255,0.35)] transition-all hover:scale-[1.02] active:scale-95"
+            className="flex items-center gap-xs whitespace-nowrap rounded-full bg-primary-container px-md py-sm text-headline-sm text-on-primary-container shadow-[0_0_24px_rgba(160,120,255,0.35)] transition-transform hover:scale-[1.02] active:scale-95"
           >
             <Icon name="add_circle" className="text-[20px]" />
             Tạo phòng

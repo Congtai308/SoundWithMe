@@ -26,6 +26,8 @@ export function TrackArt({
       <img
         src={artworkAt(artworkUrl, size)}
         alt=""
+        width={size}
+        height={size}
         loading="lazy"
         decoding="async"
         className={`shrink-0 rounded-sm object-cover ${className}`}
